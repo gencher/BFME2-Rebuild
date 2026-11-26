@@ -85,8 +85,52 @@ void EmotionTrackerUpdate::ForceEmotion(Int kind, Real seconds, Int source)
 // FUNCTION: BFME2 0x004B0E1F size=21 name=?bfmeValue@Gen_0028EF10@@QBEHXZ evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x004B0E34 size=32 name=?Rva004B0E34Get@@YG_NI@Z evidence=?:placeholder tier=B hypothesis:cohesion
+bool __stdcall Rva004B0E34Get(unsigned int state)
+{
+	switch (state)
+	{
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 10:
+			return true;
+		case 0:
+		case 1:
+		case 2:
+		case 8:
+		case 9:
+		case 11:
+			return false;
+		default:
+			return false;
+	}
+}
 
 // FUNCTION: BFME2 0x004B0E68 size=32 name=?Rva004B0E68Get@@YG_NI@Z evidence=?:placeholder tier=B hypothesis:cohesion
+bool __stdcall Rva004B0E68Get(unsigned int state)
+{
+	switch (state)
+	{
+		case 1:
+		case 2:
+		case 8:
+		case 11:
+			return true;
+		case 0:
+		case 3:
+		case 4:
+		case 5:
+		case 6:
+		case 7:
+		case 9:
+		case 10:
+			return false;
+		default:
+			return false;
+	}
+}
 
 // FUNCTION: BFME2 0x004B0E9C size=32 name=?rva004B0E9C@Rva004B0E9C@@QAEXXZ evidence=?:placeholder tier=A
 void EmotionTrackerUpdate::deactivateIfStateSet()
