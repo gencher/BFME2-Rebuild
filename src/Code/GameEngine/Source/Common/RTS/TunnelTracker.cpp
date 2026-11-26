@@ -10,6 +10,10 @@
 #include "Common/ThingTemplate.h"
 #include "GameLogic/GameLogic.h"
 #include "Common/Xfer.h"
+#include "Common/XferException.h"
+#include "GameClient/Drawable.h"
+#include "GameLogic/AI.h"
+#include "GameLogic/AIPathfind.h"
 
 // The list transfer xfer calls (map: Rva0036ABAFXfer).
 Xfer *Rva0036ABAFXfer(Xfer *xfer, std::list<ObjectID> *list);
@@ -214,6 +218,32 @@ void TunnelTracker::xfer(Xfer *xfer)
 }
 
 // FUNCTION: BFME2 0x004F585C size=188 name=?loadPostProcess@TunnelTracker@@MAEXXZ evidence=N:ledger
+void TunnelTracker::loadPostProcess()
+{
+	if (m_containList.size() != 0)
+		throw XferException(5, 0);
+
+	Object *obj;
+	std::list<ObjectID>::const_iterator it;
+	for (it = m_xferContainList.begin(); it != m_xferContainList.end(); ++it)
+	{
+		obj = TheGameLogic->findObjectByID(*it);
+		if (obj == NULL)
+			throw XferException(5, 0);
+
+		m_containList.push_back(obj);
+		obj->leaveGroup();
+		obj->rva0028BAC0();
+
+		if (obj->getDrawable())
+			obj->getDrawable()->setDrawableHidden(true);
+
+		if (TheAI)
+			TheAI->pathfinder()->RemoveObjectFromPathfindMap(obj);
+	}
+
+	m_xferContainList.clear();
+}
 
 // FUNCTION: BFME2 0x004F5935 size=74 name=?updateNemesis@TunnelTracker@@QAEXPBVObject@@@Z evidence=N:ledger
 void TunnelTracker::updateNemesis(const Object *target)
