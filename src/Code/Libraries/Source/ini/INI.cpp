@@ -1,6 +1,8 @@
 // cl: /O1 /D_STLP_USE_STATIC_LIB /EHsc
 // stlport46
+// platformsdk
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
+#include <windows.h>
 #include <ctype.h>
 #include <list>
 #include <malloc.h>
@@ -8,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <time.h>
 #include <vector>
 #include "Common/INI.h"
 #include "Common/INIBlockParse.h"
@@ -304,6 +308,38 @@ AsciiString INI::getFilename() const
 }
 
 // FUNCTION: BFME2 0x0002C025 size=155 name=?isFileNewer@@YA_NABVAsciiString@@PBU_SYSTEMTIME@@@Z evidence=N:ledger tier=A
+bool isFileNewer(const AsciiString &filename, const SYSTEMTIME *systemTime)
+{
+	if (filename.isEmpty())
+		return false;
+	struct _stat fileStat;
+	_stat(filename.str(), &fileStat);
+	struct tm *fileTime = localtime(&fileStat.st_mtime);
+	if (systemTime->wYear < fileTime->tm_year + 1900)
+		return true;
+	if (systemTime->wYear > fileTime->tm_year + 1900)
+		return false;
+	if (systemTime->wMonth < fileTime->tm_mon + 1)
+		return true;
+	if (systemTime->wMonth > fileTime->tm_mon + 1)
+		return false;
+	// Retail reads the day of the week here, not wDay.
+	if (systemTime->wDayOfWeek < fileTime->tm_mday)
+		return true;
+	if (systemTime->wDayOfWeek > fileTime->tm_mday)
+		return false;
+	if (systemTime->wHour < fileTime->tm_hour)
+		return true;
+	if (systemTime->wHour > fileTime->tm_hour)
+		return false;
+	if (systemTime->wMinute < fileTime->tm_min)
+		return true;
+	if (systemTime->wMinute > fileTime->tm_min)
+		return false;
+	if (systemTime->wSecond > fileTime->tm_sec)
+		return false;
+	return true;
+}
 
 // FUNCTION: BFME2 0x0002C0F5 size=321 name=?parseLine@INI@@QAEXAAVAsciiString@@@Z evidence=N:ledger tier=A
 void INI::parseLine(AsciiString &filename)
