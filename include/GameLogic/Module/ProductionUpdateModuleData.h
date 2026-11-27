@@ -62,7 +62,7 @@ class ProductionUpdateModuleData : public ModuleData
 public:
 	ProductionUpdateModuleData();
 	static void buildFieldParse(MultiIniFieldParse &parse);
-	static void parseAppendQuantityModifier(INI *ini, void *instance, void *store, const void *userData);
+	static void parseAppendQuantityModifier(INI *ini, ProductionUpdateModuleData *data);	// the QuantityModifier field parser (only the first two parser arguments are read)
 	static ModuleData *friend_newModuleData(INI *ini);
 
 	Int m_numDoorAnimations;                               // +0x8 NumDoorAnimations

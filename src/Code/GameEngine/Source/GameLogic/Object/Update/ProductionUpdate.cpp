@@ -221,7 +221,7 @@ Bool ProductionUpdate::get() const
 // A full queue refuses before a defected (disabled) factory does; the upgrade itself is not consulted.
 CanMakeType ProductionUpdate::canQueueUpgrade(const UpgradeTemplate *upgrade) const
 {
-	const ProductionUpdateModuleData *data = (const ProductionUpdateModuleData *)getModuleData();
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
 	if (m_productionCount >= data->m_maxQueueEntries)
 		return CANMAKE_QUEUE_FULL;
 	return getObject()->testStatus(OBJECT_STATUS_TEMPORARILY_DEFECTED) ? CANMAKE_FACTORY_IS_DISABLED : CANMAKE_OK;
@@ -233,7 +233,7 @@ CanMakeType ProductionUpdate::rva0049CFCD() const
 {
 	if (m_unk0x13C)
 		return CANMAKE_FACTORY_IS_DISABLED;
-	const ProductionUpdateModuleData *data = (const ProductionUpdateModuleData *)getModuleData();
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
 	return m_productionCount < data->m_maxQueueEntries ? CANMAKE_OK : CANMAKE_QUEUE_FULL;
 }
 
@@ -578,9 +578,8 @@ void ProductionUpdate::rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow
 // FUNCTION: BFME2 0x0049F91A size=1192 name=?xfer@ProductionUpdate@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0049FDF9 size=113 name=?Rva0049FDF9Parse@@YAXPAVINI@@PAVProductionUpdateModuleData@@@Z evidence=?:placeholder tier=B hypothesis:K
-void ProductionUpdateModuleData::parseAppendQuantityModifier(INI *ini, void *instance, void * /*store*/, const void * /*userData*/)
+void ProductionUpdateModuleData::parseAppendQuantityModifier(INI *ini, ProductionUpdateModuleData *data)
 {
-	ProductionUpdateModuleData *data = (ProductionUpdateModuleData *)instance;
 	const char *name = ini->getNextToken();
 	const char *countStr = ini->getNextTokenOrNull();
 	Int count = countStr ? ini->scanInt(countStr) : 1;
@@ -601,7 +600,7 @@ static const FieldParse s_productionUpdateModuleDataFieldParse[] =
 	{ "DoorWaitOpenTime", INI::parseDurationUnsignedInt, 0, 0x10 },
 	{ "DoorCloseTime", INI::parseDurationUnsignedInt, 0, 0x14 },
 	{ "ConstructionCompleteDuration", INI::parseDurationUnsignedInt, 0, 0x18 },
-	{ "QuantityModifier", ProductionUpdateModuleData::parseAppendQuantityModifier, 0, 0x1C },
+	{ "QuantityModifier", (INIFieldParseProc)ProductionUpdateModuleData::parseAppendQuantityModifier, 0, 0x1C },
 	{ "ProductionModifier", Rva0049DE6DParse, 0, 0x0 },
 	{ "DisabledTypesToProcess", Rva0049DD83::parseFromINI, 0, 0x2C },
 	{ "GiveNoXP", INI::parseBool, 0, 0x30 },
