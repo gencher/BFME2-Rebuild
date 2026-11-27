@@ -141,6 +141,15 @@ void AIUpdateInterface::setIgnoreCollisionTime(Int frames)
 // FUNCTION: BFME2 0x00262387 size=36 name=?set@Rva00149E60@@QAEAAV1@HHH@Z evidence=?:placeholder tier=B hypothesis:Z
 
 // FUNCTION: BFME2 0x002623C1 size=117 name=?parseTurret@AIUpdateModuleData@@CAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=B hypothesis:Z
+void AIUpdateModuleData::parseTurret(INI *ini, void *instance, void *store, const void *userData)
+{
+	TurretAIData **tdptr = static_cast<TurretAIData **>(store);
+	if (*tdptr)
+		throw INIException(3, "Only one turret to a customer, for now");
+	TurretAIData *td = new TurretAIData;
+	ini->initFromINIMultiProc(td, TurretAIData::buildFieldParse);
+	*tdptr = td;
+}
 
 // stlport46
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
