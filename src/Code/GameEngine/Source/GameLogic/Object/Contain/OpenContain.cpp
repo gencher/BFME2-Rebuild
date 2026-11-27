@@ -32,6 +32,8 @@
 #include "GameLogic/Waypoint.h"
 #include "GameLogic/Module/RunOffMapBehavior.h"
 #include "GameLogic/Module/RunOffMapBehaviorModuleData.h"
+#include "Common/XferException.h"
+#include "Common/Player.h"
 extern NameKeyGenerator *TheNameKeyGenerator;
 
 ContainmentList g_emptyContainmentList;
@@ -617,6 +619,55 @@ void OpenContain::pruneDeadWanters()
 // FUNCTION: BFME2 0x00463AD3 size=411 name=?rva00463AD3@Rva00463AD3@@QAEXH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00463C6E size=234 name=?loadPostProcess@OpenContain@@MAEXXZ evidence=N:ledger tier=A
+void OpenContain::loadPostProcess()
+{
+	Object *us = getObject();
+
+	UpdateModule::loadPostProcess();
+
+	// the containment list should be empty at this time
+	if (!m_containList.empty())
+		throw XferException(5, 0);
+
+	// riders are pulled out of the world when this or any outer container encloses them
+	Bool enclosed = false;
+	OpenContain *container = this;
+	do
+	{
+		if (container->getObjectStatusOfContained(0).test(OBJECT_STATUS_ENCLOSED))
+		{
+			enclosed = true;
+			break;
+		}
+		Object *containerObject = container->getObject();
+		if (containerObject == 0)
+			break;
+		Object *outer = containerObject->getContainedBy();
+		if (outer == 0)
+			break;
+		ContainModuleInterface *outerContain = outer->getContain();
+		if (outerContain == 0)
+			break;
+		container = outerContain->asOpenContain();
+	} while (container != 0);
+
+	// turn the contained id list into actual object pointers in the contain list
+	for (XferContainIDList::const_iterator idIt = m_xferContainIDList.begin(); idIt != m_xferContainIDList.end(); ++idIt)
+	{
+		Object *obj = TheGameLogic->findObjectByID(*idIt);
+		if (obj == 0)
+			throw XferException(5, 0);
+
+		m_containList.push_back(obj);
+
+		if (enclosed)
+			vslot24(obj, 0, 0);
+
+		obj->m_containedBy = us;
+	}
+
+	m_xferContainIDList.clear();
+}
 
 // FUNCTION: BFME2 0x00463D72 size=41 name=?rva00463D72@Rva00463782@@QAEXXZ evidence=?:placeholder tier=A
 
@@ -778,6 +829,43 @@ const Coord3D *OpenContain::containSlot88() const
 }
 
 // FUNCTION: BFME2 0x00464830 size=238 name=?addToContain@OpenContain@@UAEXPAVObject@@@Z evidence=N:ledger tier=A
+void OpenContain::addToContain(Object *rider)
+{
+	// sanity
+	if (rider == 0)
+		return;
+
+	Drawable *riderDraw = rider->getDrawable();
+	Bool wasSelected = FALSE;
+	if (riderDraw && riderDraw->m_selected)
+		wasSelected = TRUE;
+
+	// this object cannot be contained by this module if it is already contained in something
+	if (rider->getContainedBy() != 0)
+		return;
+
+	// Which list to physically add to needs to be overridable
+	addToContainList(rider);
+
+	m_playerEnteredMask = rider->getControllingPlayer()->getPlayerMask();
+
+	ContainModuleInterface *contain = getObject()->getContain();
+	if (contain)
+		contain->onContaining(rider, wasSelected);
+
+	redeployOccupants();
+
+	rider->onContainedBy(getObject());
+
+	doLoadSound();
+
+	// remember when the rider came in, for the modifier it is given on exit
+	if (!getOpenContainModuleData()->m_modifierToGiveOnExit.empty())
+		m_map0xF0.insert(std::make_pair(rider->getID(), TheGameLogic->getFrame()));
+
+	if (getObjectStatusOfContained(0).test(OBJECT_STATUS_ENCLOSED))
+		vslot24(rider, 0, 0);
+}
 
 // FUNCTION: BFME2 0x00464923 size=97 name=?rva00464923@Rva00464923@@QAEAAVWeaponTemplateSetHead@@ABI@Z evidence=?:placeholder tier=A
 

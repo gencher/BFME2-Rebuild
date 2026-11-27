@@ -141,6 +141,15 @@ void AIUpdateInterface::setIgnoreCollisionTime(Int frames)
 // FUNCTION: BFME2 0x00262387 size=36 name=?set@Rva00149E60@@QAEAAV1@HHH@Z evidence=?:placeholder tier=B hypothesis:Z
 
 // FUNCTION: BFME2 0x002623C1 size=117 name=?parseTurret@AIUpdateModuleData@@CAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=B hypothesis:Z
+void AIUpdateModuleData::parseTurret(INI *ini, void *instance, void *store, const void *userData)
+{
+	TurretAIData **tdptr = static_cast<TurretAIData **>(store);
+	if (*tdptr)
+		throw INIException(3, "Only one turret to a customer, for now");
+	TurretAIData *td = new TurretAIData;
+	ini->initFromINIMultiProc(td, TurretAIData::buildFieldParse);
+	*tdptr = td;
+}
 
 // stlport46
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
@@ -1882,6 +1891,13 @@ UnsignedInt AIUpdateInterface::getMoodMatrixActionAdjustment(MoodMatrixAction ac
 // Edges: left=rests-on:veto right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:name:invented
 // FUNCTION: BFME2 0x00265143 size=48 name=?rva00265143@AIUpdateInterface@@QAEHXZ evidence=?:placeholder tier=B hypothesis:name:invented
+// The number of queued goal-path points in two particular machine states, else zero.
+Int AIUpdateInterface::rva00265143()
+{
+	if (getCurrentStateID() == 6 || getCurrentStateID() == 0x43)
+		return m_stateMachine->m_goalPath.size();
+	return 0;
+}
 
 // FUNCTION: BFME2 0x00265667 size=26 name=?rva00265667@AIUpdateInterface@@QAEXPBVCoord3D@@H@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=B hypothesis:Z
 void AIUpdateInterface::rva00265667(const Coord3D *pos, Int cmdSource)
@@ -2280,6 +2296,38 @@ void AIUpdateInterface::loadPostProcess()
 }
 
 // FUNCTION: BFME2 0x0026872B size=471 name=?findNearestLabeledContactPointOnTarget@AIUpdateInterface@@QAE_NPAVObject@@PAVCoord3D@@PBU3@_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+Bool AIUpdateInterface::findNearestLabeledContactPointOnTarget(Object *target, Coord3D *result, const Coord3D *workingPos, Bool skipCollideTest)
+{
+	if (g_bfmeDockingTraceActive)
+	{
+		Object *me = getObject();
+		if (theLogicRandomLogFile)
+			theLogicRandomLogFile->addLine("      AIUpdateInterface::findNearestLabeledContactPointOnTarget BEGIN: Object %s(%d), target %s(%d), workingPos %g,%g,%g, skipCollideTest=%s",
+				me->getTemplate()->getName().str(), me->getID(),
+				target ? target->getTemplate()->getName().str() : "NULL", target ? target->getID() : INVALID_ID,
+				workingPos->x, workingPos->y, workingPos->z, skipCollideTest ? "TRUE" : "FALSE");
+	}
+
+	const AIUpdateModuleData *data = getAIUpdateModuleData();
+	for (_STL::vector<AsciiString>::const_iterator it = data->m_specialContactPoints.begin(); it != data->m_specialContactPoints.end(); ++it)
+	{
+		if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+			theLogicRandomLogFile->addLine("        handling contactPointName %s", it->str());
+		if (target->getWorldspaceBestContactPoint(result, workingPos, it->str(), 0, 0, skipCollideTest))
+		{
+			if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+				theLogicRandomLogFile->addLine("        handling contactPointName %s succeeded - result=%g,%g,%g, RETURN TRUE",
+					it->str(), result->x, result->y, result->z);
+			return true;
+		}
+		if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+			theLogicRandomLogFile->addLine("        handling contactPointName %s failed", it->str());
+	}
+
+	if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+		theLogicRandomLogFile->addLine("        end of contactPoints. return FALSE");
+	return false;
+}
 
 // FUNCTION: BFME2 0x00268902 size=29 name=?Rva00268902@PoolMember@@QAEXXZ evidence=?:placeholder tier=A
 
