@@ -63,6 +63,7 @@ public:
     int getStance(int);
     void rva0035B6FA(ObjectID, bool);
     void cacheButtonImage();
+    void preloadImages() const;	// 0x0035B3E7 (role name): for a button with +0x101 or +0x102 set, or command 25, calls Image 0x002D937E on every image in m_images; ControlBar 0x0031D61E calls it for each button of a command set
     void setButtonImage(const Image *image);	// 0x0035B750 (Zero Hour's name; ControlBar::updateSlotExitImage 0x0031BE58 calls it)
 
     const AsciiString &getName() const { return m_name; }

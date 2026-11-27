@@ -29,7 +29,7 @@
 #include "GameClient/GameWindowManager.h"
 #include "GameClient/AnimateWindowManager.h"
 // VA 0x00E01D0C (no map name; role name): set when a reloaded CommandSet or CommandButton block replaced an existing object, read by attemptReload 0x0031E7F0 to ask for a restart.
-extern bool ControlBarReloadNeedsRestart;
+static Bool ControlBarReloadNeedsRestart;
 #include "GameClient/GameWindowTransitionsHandler.h"
 extern GameWindowManager *TheWindowManager;
 extern NameKeyGenerator *TheNameKeyGenerator;
@@ -42,8 +42,10 @@ extern NameKeyGenerator *TheNameKeyGenerator;
 #include "Common/Recorder.h"
 #include "GameLogic/ScriptEngine.h"
 #include "Common/INI.h"
+#include "Common/INIException.h"
 #include "GameLogic/GameLogic.h"
 #include "GameClient/InGameUI.h"
+#include "Common/MessageStream.h"
 #include "GameNetwork/GameInfo.h"
 #include "Common/PlayerTemplate.h"
 
@@ -346,6 +348,22 @@ void ControlBar::hideSpecialPowerShortcut( void )
 }
 
 // FUNCTION: BFME2 0x0031AFDE size=83 name=?rva0031AFDE@Rva0031AFDE@@QAEHXZ evidence=?:placeholder tier=A
+int ControlBar::toggleControlBarVisibility()
+{
+	switch (field29C)
+	{
+		case 0:
+			field29C = 1;
+			break;
+		case 1:
+			field29C = 0;
+			break;
+	}
+	GameMessage *msg = TheMessageStream->appendMessage(GameMessage::MSG_DESTROY_SELECTED_GROUP);
+	msg->appendBooleanArgument(true);
+	TheInGameUI->deselectAllDrawables();
+	return field29C;
+}
 
 // FUNCTION: BFME2 0x0031B05B size=115 name=?rva0031B05B@ControlBar@@QAEPAVCommandSet@@PAV2@@Z evidence=?:placeholder tier=A
 CommandSet *ControlBar::newCommandSetOverride(CommandSet *setToOverride)
@@ -694,7 +712,27 @@ const CommandSet *ControlBar::findCommandSet(const AsciiString &name)
 	return NULL;
 }
 
+CommandSet *ControlBar::findNonConstCommandSet(const AsciiString &name)
+{
+	CommandSetMap::iterator it = m_commandSets.find(name);
+	if (it != m_commandSets.end())
+		return it->second;
+	return NULL;
+}
+
 // FUNCTION: BFME2 0x0031D61E size=49 name=?rva0031D61E@ControlBar@@QAEXPBVAsciiString@@@Z evidence=?:placeholder tier=A
+void ControlBar::preloadCommandSetImages(const AsciiString &name)
+{
+	const CommandSet *commandSet = findCommandSet(name);
+	if (commandSet == NULL)
+		return;
+	for (Int i = 0; i < 32; ++i)
+	{
+		const CommandButton *button = commandSet->getCommandButton(i);
+		if (button)
+			button->preloadImages();
+	}
+}
 
 // FUNCTION: BFME2 0x0031D64F size=526 name=?rva0031D64F@ControlBar@@QAEXXZ evidence=?:placeholder tier=A
 
@@ -788,6 +826,26 @@ bool ControlBar::rva0031E068(Player *player, int science)
 // FUNCTION: BFME2 0x0031E25E size=604 name=?update@ControlBar@@UAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0031E7F0 size=137 name=?rva0031E7F0@Rva0031DCF0@@QAE_NPA_N@Z evidence=?:placeholder tier=A
+Bool ControlBar::attemptReload(Bool *needsRestart)
+{
+	Bool reloaded = false;
+	ControlBarReloadNeedsRestart = false;
+	if (loadIniFilesFromLegend())
+	{
+		TheInGameUI->multiplayerMessage(UnicodeString(L"RIF: ControlBar (CommandSet/CommandButton) reloaded. Changes effective immediately."));
+		for (CommandSetMap::iterator it = m_commandSets.begin(); it != m_commandSets.end(); ++it)
+			it->second->refreshIfStale();
+		postProcessCommands();
+		markUIDirty();
+		reloaded = true;
+	}
+	if (ControlBarReloadNeedsRestart)
+	{
+		*needsRestart = true;
+		ControlBarReloadNeedsRestart = false;
+	}
+	return reloaded;
+}
 
 // FUNCTION: BFME2 0x0031E879 size=92 name=?forgetStaleCommandSet@ControlBar@@QAEXABVAsciiString@@@Z evidence=N:ledger tier=A
 void ControlBar::forgetStaleCommandSet(const AsciiString &name)
@@ -812,6 +870,38 @@ void ControlBar::forgetStaleCommandSet(const AsciiString &name)
 // FUNCTION: BFME2 0x0031EB96 size=109 name=?rva0031EB96@Rva0031EB96@@QAEPAVRva0031AB1ENode@@PAV2@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0031EC03 size=253 name=?parseCommandSetDefinition@ControlBar@@SAXPAVINI@@@Z evidence=N:ledger tier=A
+void ControlBar::parseCommandSetDefinition(INI *ini)
+{
+	AsciiString name;
+	name.set(ini->getNextToken());
+
+	CommandSet *commandSet = TheControlBar->findNonConstCommandSet(name);
+	if (commandSet == NULL)
+	{
+		commandSet = TheControlBar->newCommandSet(name, 0);
+		if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+			commandSet->markAsOverride();
+	}
+	else if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		commandSet = TheControlBar->newCommandSetOverride(commandSet);
+	}
+	else if (ini->getLoadType() == INI_LOAD_RELOAD)
+	{
+		// a reload replaces the set: retire the old one, start a fresh one
+		if (commandSet->isOverride())
+			ControlBarReloadNeedsRestart = true;
+		TheControlBar->forgetStaleCommandSet(name);
+		commandSet = TheControlBar->newCommandSet(name, 0);
+		commandSet->setReloadState(0);
+	}
+	else
+	{
+		throw INIException(3, "Duplicate commandset %s found!", name.str());
+	}
+
+	ini->initFromINI(commandSet, CommandSet::m_commandSetFieldParseTable);
+}
 
 
 // Retail's two context-sensitive button entry points (0x0031ABCF, 0x0031ABD4) are five-byte jmp thunks (no row of their own).
