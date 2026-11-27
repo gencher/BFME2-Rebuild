@@ -101,6 +101,17 @@ UnicodeString LivingWorldRegion::GetFortressDisplayDescription()
 // FUNCTION: BFME2 0x003F055A size=46 name=?rva003F055A@Rva003F055A@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F0588 size=70 name=?rva003F0588@LivingWorldRegion@@QAEPAXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F05CE size=70 name=?rva003F05CE@LivingWorldRegion@@QAEHXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
+int LivingWorldRegion::rva003F05CE()
+{
+	int count = 0;
+	for (unsigned int i = 0; i < m_plots.size(); ++i)
+	{
+		RegionPlotRecord *plot = m_plots[i];
+		if (plot->m_building != NULL && !plot->m_unk0x34)
+			++count;
+	}
+	return count;
+}
 // FUNCTION: BFME2 0x003F0614 size=87 name=?rva003F0614@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F066B size=87 name=?rva003F066B@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F06C2 size=79 name=?rva003F06C2@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
@@ -259,6 +270,15 @@ int LivingWorldRegion::rva003F1053()
 // FUNCTION: BFME2 0x003F209C size=20 name=?rva003F209C@Rva003F209C@@QAEXXZ evidence=?:placeholder
 
 // FUNCTION: BFME2 0x003F20B0 size=53 name=?rva003F20B0@Rva003F20B0@@QAEXXZ evidence=?:placeholder
+void LivingWorldRegion::rva003F20B0()
+{
+	m_unk0x158.clear();
+	m_unk0x14C = 0;
+	m_unk0x150 = 0;
+	m_unk0x154 = 0;
+	m_unk0x1A0 = false;
+	m_unk0x1A1 = false;
+}
 
 // FUNCTION: BFME2 0x003F20E5 size=33 name=?rva003F20E5@Rva003F209C@@QAEXHH@Z evidence=?:placeholder
 
@@ -310,6 +330,10 @@ LivingWorldRegionConnection::~LivingWorldRegionConnection()
 // FUNCTION: BFME2 0x003F26AA size=143 name=?rva003F26AA@LivingWorldRegionConnection@@QAE_NPBVModuleData@@PAURva003F26AAPair@@@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x003F2739 size=19 name=?rva003F2739@Rva003F2739@@QAEXW4ScienceType@@@Z evidence=?:placeholder
+void LivingWorldRegion::rva003F2739(ScienceType science)
+{
+	m_unk0x164.push_back(science);
+}
 
 // FUNCTION: BFME2 0x003F274C size=204 name=?CreateBuildPlots@LivingWorldRegion@@QAEXXZ evidence=N:ledger
 
