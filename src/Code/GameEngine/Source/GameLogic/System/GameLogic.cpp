@@ -86,6 +86,45 @@ void GameLogic::processProgressComplete(Int slot)
 }
 
 // FUNCTION: BFME2 0x0023D793 size=241 name=?CallPlayerGiveMoney@GameLogic@@QAEXHHH@Z evidence=N:ledger tier=A
+void GameLogic::CallPlayerGiveMoney(Int fromPlayerIndex, Int toPlayerIndex, Int amount)
+{
+	if (!canPlayersTransferMoneyYet())
+		return;
+	if (fromPlayerIndex < 0 || fromPlayerIndex >= MAX_PLAYER_COUNT || toPlayerIndex < 0 || toPlayerIndex >= MAX_PLAYER_COUNT)
+		return;
+
+	Player *toPlayer = NULL;
+	Player *fromPlayer = NULL;
+	for (Int i = 0; i < MAX_PLAYER_COUNT; ++i)
+	{
+		Player *player = ThePlayerList->getNthPlayer(i);
+		if (player == NULL)
+			continue;
+		if (player->getPlayerIndex() == fromPlayerIndex)
+			fromPlayer = player;
+		else if (player->getPlayerIndex() == toPlayerIndex)
+			toPlayer = player;
+		if (fromPlayer && toPlayer)
+			break;
+	}
+
+	if (fromPlayer == NULL || toPlayer == NULL)
+		return;
+	if (fromPlayer->isPlayerDead() || toPlayer->isPlayerDead())
+		return;
+
+	Money *money = fromPlayer->getMoney();
+	if (money == NULL)
+		return;
+
+	UnsignedInt request = amount;
+	UnsignedInt cash = money->countMoney();
+	UnsignedInt given = money->withdraw(_STL::min(request, cash), fromPlayer->getScoreKeeper(), true);
+	toPlayer->getMoney()->deposit(given, toPlayer->getScoreKeeper(), true);
+	fromPlayer->getScoreKeeper()->rva0039B7E3(given);
+	toPlayer->getScoreKeeper()->rva0039B7CB(given);
+}
+
 
 // FUNCTION: BFME2 0x0023D884 size=144 name=?GetLivingWorldTacticalVictor@GameLogic@@QAEPAURva003F468DParticipant@@XZ evidence=N:ledger tier=A
 
