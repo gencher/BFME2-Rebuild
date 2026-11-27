@@ -211,6 +211,10 @@ ProductionUpdateInterface *ProductionUpdate::getProductionUpdateInterfaceFromObj
 // FUNCTION: BFME2 0x0049CF25 size=121 name=?rva0049CF25@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0049CF9E size=11 name=?get@Rva0049CF9ESub@@QBE_NXZ evidence=?:placeholder tier=B hypothesis:cohesion
+Bool ProductionUpdate::get() const
+{
+	return getProductionUpdateModuleData()->m_secondaryQueue ? true : false;
+}
 
 // FUNCTION: BFME2 0x0049CFA9 size=36 name=?canQueueUpgrade@ProductionUpdate@@UBE?AW4CanMakeType@@PBVUpgradeTemplate@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 // A full queue refuses before a defected (disabled) factory does; the upgrade itself is not consulted.
