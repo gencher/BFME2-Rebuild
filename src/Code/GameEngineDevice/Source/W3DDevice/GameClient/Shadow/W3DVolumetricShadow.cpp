@@ -5,7 +5,9 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:K, hypothesis:init-votes
-#include "GameClient/W3DShadowGeometryMesh.h"
+#include "GameClient/W3DShadowGeometry.h"
+#include "WW3D2/HLodClass.h"
+#include "WW3D2/MeshClass.h"
 // FUNCTION: BFME2 0x000F1BC5 size=72 name=?rva000F1BC5@Rva000F1BC5@@QAEXPBD@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-shared-data
 // FUNCTION: BFME2 0x000F1D24 size=292 name=?buildPolygonNormal@W3DShadowGeometryMesh@@IBEPAVVector3@@JPAV2@@Z evidence=N:ledger tier=B hypothesis:K
 
@@ -18,6 +20,26 @@
 // FUNCTION: BFME2 0x000F1F00 size=96 name=??1W3DShadowGeometry@@UAE@XZ evidence=N:ledger tier=B hypothesis:K
 
 // FUNCTION: BFME2 0x000F1F60 size=170 name=?initFromHLOD@W3DShadowGeometry@@QAEHPAVRenderObjClass@@@Z evidence=N:ledger tier=B hypothesis:K
+Int W3DShadowGeometry::initFromHLOD(RenderObjClass *robj)
+{
+	HLodClass *hlod = static_cast<HLodClass *>(robj);
+
+	m_numTotalsVerts = 0;
+	m_meshCount = 0;
+
+	Int top = hlod->Get_LOD_Count() - 1;
+	for (Int i = 0; i < hlod->Get_Lod_Model_Count(top); i++)
+	{
+		// only meshes cast volumetric shadows
+		if (hlod->Peek_Lod_Model(top, i) && hlod->Peek_Lod_Model(top, i)->Class_ID() == 0)
+		{
+			MeshClass *mesh = hlod->Peek_Lod_Model(top, i)->_bfme_ro_v3();
+			initFromMesh(mesh, i, this);
+		}
+	}
+
+	return m_meshCount != 0;
+}
 
 // FUNCTION: BFME2 0x000F200A size=505 name=?RenderMeshVolume@W3DVolumetricShadow@@IAEXHHPBVMatrix3D@@@Z evidence=N:ledger tier=B hypothesis:K
 
