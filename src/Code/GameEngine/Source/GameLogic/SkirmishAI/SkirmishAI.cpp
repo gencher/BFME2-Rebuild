@@ -141,6 +141,19 @@ void SkirmishAI::onHordeCreated(Object *factory, Object *unit)
 // FUNCTION: BFME2 0x002C6AFA size=152 name=?transferUnitsToPlayer@SkirmishAI@@QAEXPAVPlayer@@@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x002C6B92 size=79 name=?doSpecialMasterAIDying@SkirmishAI@@QAEXXZ evidence=N:ledger tier=A
+void SkirmishAI::doSpecialMasterAIDying()
+{
+	Int newMasterIndex = resetMaster();
+	if (newMasterIndex == -1)
+		return;
+
+	m_masterPlayerIndex = newMasterIndex;
+	doSpecialSlaveAIUpdate();
+	Player *newMaster = ThePlayerList->getNthPlayer(newMasterIndex);
+	newMaster->rva002AE2ED(m_player);
+	newMaster->m_sciencePurchasePoints = m_player->m_sciencePurchasePoints;
+	transferUnitsToPlayer(newMaster);
+}
 
 // FUNCTION: BFME2 0x002C6BE1 size=30 name=?doSpecialSlaveAIDying@SkirmishAI@@QAEXXZ evidence=N:ledger tier=A
 void SkirmishAI::doSpecialSlaveAIDying()
