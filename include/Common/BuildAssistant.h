@@ -3,6 +3,8 @@
 #include <list>
 
 #include "Common/SubsystemInterface.h"
+#include "Common/AsciiString.h"
+#include "Common/Coord3D.h"
 
 enum CanMakeType;
 enum LegalBuildCode;
@@ -11,8 +13,64 @@ class Object;
 class ObjectSellInfo;
 class Xfer;
 class Player;
-class Rva0039205C;
 class ThingTemplate;
+
+// One entry of the line-build list (0x1C bytes): where a piece goes, its angle and the
+// name of the template to build there.
+class Rva004D9A3C
+{
+public:
+	Rva004D9A3C()
+	{
+		m_position.zero();
+		m_angle = 0.0f;
+		m_templateName.clear();
+		m_unk0x18 = -1;
+		m_unk0x10 = false;
+	}
+
+	Coord3D m_position;			// +0x00
+	Real m_angle;				// +0x0C
+	Bool m_unk0x10;				// +0x10
+	AsciiString m_templateName;	// +0x14 looked up with ThingFactory::findTemplate
+	Int m_unk0x18;				// +0x18
+};
+
+// The line-build list (0x18 bytes); BuildAssistant keeps one at +0x10. The entry array holds
+// GlobalData's MaxLineBuildObjects entries, of which m_count are in use.
+class Rva0039205C
+{
+public:
+	Rva0039205C()
+	{
+		m_unk0x10 = -1;
+		m_count = 0;
+		m_tiles = NULL;
+		m_unk0x0C = false;
+		m_unk0x0D = false;
+		m_unk0x04 = 0;
+		m_unk0x14 = 0;
+	}
+	~Rva0039205C() { release(); }
+
+	void release()
+	{
+		if (m_tiles)
+		{
+			delete[] m_tiles;
+			m_tiles = NULL;
+			m_count = 0;
+		}
+	}
+
+	UnsignedInt m_count;		// +0x00
+	Int m_unk0x04;				// +0x04
+	Rva004D9A3C *m_tiles;		// +0x08
+	Bool m_unk0x0C;				// +0x0C
+	Bool m_unk0x0D;				// +0x0D
+	Int m_unk0x10;				// +0x10
+	Int m_unk0x14;				// +0x14
+};
 
 // The constructor initializes SubsystemInterface, then the sell list at +0xC.
 class BuildAssistant : public SubsystemInterface
@@ -47,6 +105,7 @@ public:
 	// Checks whether the factory's command set offers this template.
 	bool offersBuildCommand(const ThingTemplate *builder, const ThingTemplate *whatToBuild);
 	bool isRemovableForConstruction(Object *);
+	void clearRemovableForConstruction(const ThingTemplate *whatToBuild, const Coord3D *pos, float angle);
 	void xferTheSellList(Xfer *xfer);	// 0x003924FE: the list of objects being sold
 
 private:
@@ -59,7 +118,7 @@ private:
 	friend int countInProduction(Object *, void *);
 
 	_STL::list<ObjectSellInfo *> m_sellList;
-	unsigned char m_unk0x10[0x18];
+	Rva0039205C m_buildInfo;
 };
 
 // GameEngine allocates 0x28 bytes before calling the constructor.
