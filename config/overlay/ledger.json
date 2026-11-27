@@ -1,4 +1,122 @@
 {
   "schema": 1,
-  "entries": []
+  "entries": [
+    {
+      "id": "objectcreationlist-create-typed",
+      "rva": "0x001F081A",
+      "op": "add_name",
+      "name": "?create@ObjectCreationList@@QAEXPBVObject@@PBVCoord3D@@1_NI@Z",
+      "change": "add accepted name: the typed signature create(const Object *, const Coord3D *, const Coord3D *, Bool, UnsignedInt); the ledger spells the parameters as void */int stand-ins (PAX000H), which G4 refuses in source",
+      "pin": {
+        "size": 94,
+        "role": "owned",
+        "name": "?create@ObjectCreationList@@QAEXPAX000H@Z"
+      },
+      "evidence": {
+        "kind": "judge-reason",
+        "detail": "the judge pairs the compiled body with retail: bytes equal, only the name differs (MISNAMED)",
+        "verified": "verify_tu --overlay-effect ObjectCreationList.cpp"
+      },
+      "before": "MISNAMED",
+      "after": "MATCH"
+    },
+    {
+      "id": "detachableriderupdate-update-virtual",
+      "rva": "0x004AEC9B",
+      "op": "add_name",
+      "name": "?update@DetachableRiderUpdate@@UAE?AW4UpdateSleepTime@@XZ",
+      "change": "add accepted name: the row is DetachableRiderUpdate::update (virtual); the ledger names an invented non-virtual class DetachableRiderUpdateUpdateReceiver",
+      "pin": {
+        "size": 618,
+        "role": "owned",
+        "name": "?update@DetachableRiderUpdateUpdateReceiver@@QAE?AW4UpdateSleepTime@@XZ"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7DetachableRiderUpdate@@6B@ at 0x0085545C slot 0 -> 0x004AEC9B, its only data reference; judge: 'code target identity at 0x4AEC9B: compiled as ?update@DetachableRiderUpdate@@UAE...'",
+        "verified": "verify_tu --overlay-effect DetachableRiderUpdate.cpp"
+      },
+      "before": "0x004AEC9B MISNAMED; 0x004AE883 WRONG_REFERENCE (code target identity at 0x4AEC9B)",
+      "after": "0x004AEC9B MATCH; 0x004AE883 MATCH"
+    },
+    {
+      "id": "vector3solidboxrandomizer-class-id",
+      "rva": "0x0065CE90",
+      "op": "add_name",
+      "name": "?Class_ID@Vector3SolidBoxRandomizer@@UBEIXZ",
+      "change": "add accepted name to ICF fold F0065CE90 (xor eax,eax; ret): Vector3SolidBoxRandomizer::Class_ID returns CLASSID_SOLIDBOX = 0",
+      "pin": {
+        "size": 3,
+        "role": "icf_fold",
+        "name": "?sync@?$basic_streambuf@GV?$char_traits@G@_STL@@@_STL@@MAEHXZ",
+        "fold_group": "F0065CE90"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7Vector3SolidBoxRandomizer@@6B@ at 0x008EFCE4 slot 1 -> 0x0065CE90 (xor eax,eax; ret); judge at base: 'code target identity at 0x65CE90: ... compiled symbol ?Class_ID@Vector3SolidBoxRandomizer@@UBEIXZ is a hand-written stand-in'",
+        "verified": "verify_tu --overlay-effect v3_rnd.cpp"
+      },
+      "before": "0x007230F0, 0x00723690 WRONG_REFERENCE",
+      "after": "0x007230F0, 0x00723690 MATCH"
+    },
+    {
+      "id": "vector3solidsphererandomizer-class-id",
+      "rva": "0x00756B00",
+      "op": "add_name",
+      "name": "?Class_ID@Vector3SolidSphereRandomizer@@UBEIXZ",
+      "change": "add accepted name to ICF fold F00756B00 (mov eax,1; ret): Vector3SolidSphereRandomizer::Class_ID returns CLASSID_SOLIDSPHERE = 1",
+      "pin": {
+        "size": 6,
+        "role": "icf_fold",
+        "name": "?do_encoding@?$codecvt@DDH@_STL@@MBEHXZ",
+        "fold_group": "F00756B00"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7Vector3SolidSphereRandomizer@@6B@ at 0x008EFD00 slot 1 -> 0x00756B00 (mov eax,1; ret); judge at base: 'code target identity at 0x756B00: ... compiled symbol ?Class_ID@Vector3SolidSphereRandomizer@@UBEIXZ is a hand-written stand-in'",
+        "verified": "verify_tu --overlay-effect v3_rnd.cpp"
+      },
+      "before": "0x00723230, 0x007235F0 WRONG_REFERENCE",
+      "after": "0x00723230, 0x007235F0 MATCH"
+    },
+    {
+      "id": "null3dobjclass-deleting-dtor",
+      "rva": "0x001811B0",
+      "op": "add_name",
+      "name": "??_GNull3DObjClass@@UAEPAXI@Z",
+      "change": "add accepted name to ICF fold F001811B0: the shared scalar deleting destructor body is also Null3DObjClass's",
+      "pin": {
+        "size": 30,
+        "role": "icf_fold",
+        "name": "??_GBoxRenderObjClass@@UAEPAXI@Z",
+        "fold_group": "F001811B0"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7Null3DObjClass@@6BRefCountClass@@@ at 0x007D50D0 slot 1 -> 0x001811B0 (shared body, 4 vtables); judge at base: 'inconsistent relocation binding for ??_GNull3DObjClass@@UAEPAXI@Z'",
+        "verified": "verify_tu --overlay-effect nullrobj.cpp O001810D0.cpp"
+      },
+      "before": "0x00180EB0, 0x00180EF0, 0x00180F70 WRONG_REFERENCE",
+      "after": "0x00180EB0, 0x00180EF0, 0x00180F70 MATCH"
+    },
+    {
+      "id": "aiupdateinterface-setemotionstate-nonvirtual",
+      "rva": "0x0026320D",
+      "op": "add_name",
+      "name": "?SetEmotionState@AIUpdateInterface@@QAEXHPAVObject@@@Z",
+      "change": "add accepted name: SetEmotionState is a public non-virtual member (QAE); the ledger spells it protected virtual (MAE)",
+      "pin": {
+        "size": 139,
+        "role": "owned",
+        "name": "?SetEmotionState@AIUpdateInterface@@MAEXHPAVObject@@@Z"
+      },
+      "evidence": {
+        "kind": "retail-bytes",
+        "detail": "no pointer to 0x0066320D exists anywhere in game.dat, so the function is in no vtable and cannot be virtual; it is called directly. The compiled body equals retail byte for byte (s1: 0 non-relocation differences) and is judged MISNAMED only because of the MAE spelling.",
+        "verified": "verify_tu --overlay AIUpdate.cpp: 0x0026320D MISSING -> MATCH with the source body"
+      },
+      "before": "MISNAMED with the body written (bytes identical)",
+      "after": "MATCH"
+    }
+  ]
 }
