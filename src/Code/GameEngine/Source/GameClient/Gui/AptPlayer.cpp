@@ -493,6 +493,11 @@ void AptPlayer::showBackground(int mode)
 // FUNCTION: BFME2 0x00224296 size=333 name=?rva00224296@Rva00062918Host@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0022453E size=70 name=?RemoveOverButtonHandler@AptPlayer@@QAEXABVAsciiString@@@Z evidence=N:ledger tier=A
+void AptPlayer::RemoveOverButtonHandler(const AsciiString &name)
+{
+	AsciiString key = name;
+	m_globalOverButtons.erase(key);
+}
 
 // FUNCTION: BFME2 0x002245FF size=77 name=?RemoveOverButtonHandler@AptPlayer@@QAEXHABVAsciiString@@@Z evidence=N:ledger tier=A
 
@@ -551,6 +556,15 @@ void AptPlayer::updateFocus()
 }
 
 // FUNCTION: BFME2 0x0022494F size=37 name=?rva0022494F@Rva0022494F@@QAEXXZ evidence=?:placeholder tier=A
+void AptPlayer::AptLevel::reset()
+{
+	m_name.clear();
+	m_directory.clear();
+	m_flags &= 0xF4;
+	m_window = 0;
+	m_index = -1;
+	m_overButtons.clear();
+}
 
 // FUNCTION: BFME2 0x002249ED size=68 name=?rva002249ED@Rva00056F61@@QAEAAVRva0022304A@@ABV2@@Z evidence=?:placeholder tier=A
 
@@ -561,6 +575,19 @@ void AptPlayer::updateFocus()
 // FUNCTION: BFME2 0x00224A90 size=237 name=??1AptPlayer@@UAE@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00224B7D size=76 name=?RemoveLevel@AptPlayer@@QAE_NH@Z evidence=N:ledger tier=A
+bool AptPlayer::RemoveLevel(int level)
+{
+	if ((unsigned int)level >= 14)
+		return false;
+	AptLevel *entry = &m_levels[level];
+	if (entry->m_index == -1)
+		return false;
+	if (entry->m_flags & 2)
+		UnloadLevel(level);
+	m_levelIndices.erase(entry->m_name);
+	entry->reset();
+	return true;
+}
 
 // FUNCTION: BFME2 0x00224BC9 size=18 name=?check@Rva00224BC9Owner@@QAE_NXZ evidence=?:placeholder tier=A
 void AptPlayer::removeBackground()
