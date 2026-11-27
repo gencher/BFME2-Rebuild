@@ -108,6 +108,7 @@ public:
 	Bool isPlayer(AsciiString userName) const;						// 0x003FFEF5
 	void setState(SlotState state, UnicodeString name, const GameSlotConnectInfo *info);	// 0x003FFC28
 	Bool hasMap() const { return m_hasMap; }						// +9, the map-availability flag
+	Int getStartPos() const { return m_startPos; }
 	void saveOffOriginalInfo();										// 0x003FF0D4
 	UnsignedByte encodeHero() const;								// 0x003FF16F (packs the hero kind and its two ids into one byte)
 	UnicodeString getApparentPlayerTemplateDisplayName() const;	// 0x003FFBB4 (the template name the lobby shows: Random or Observer where the slot hides it)

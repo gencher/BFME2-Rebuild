@@ -38,6 +38,10 @@
 #include <list>
 #include <set>
 
+class DataChunkInput;
+class DataChunkOutput;
+struct DataChunkInfo;
+
 bool operator<(const AsciiString &left, const AsciiString &right);			// 0x0005598C, the maps' key order
 
 // The map's named waypoints and how many of them are start spots. SIZE 0x10.
@@ -60,6 +64,8 @@ struct PlayerPosition
 	PlayerPosition() : m_allowHuman(true), m_allowComputer(true), m_loadAIScripts(true), m_forceTeam(-1) {}
 	~PlayerPosition();
 	void rva003023B8(const AsciiString &name);								// 0x003023B8
+	Bool parse(DataChunkInput &file, DataChunkInfo *info);					// reads one MPPositionInfo chunk (role-inferred name)
+	void write(DataChunkOutput *out);										// writes one MPPositionInfo chunk
 
 	bool m_allowHuman;														// +0x00 (role-inferred names)
 	bool m_allowComputer;													// +0x01
@@ -69,10 +75,17 @@ struct PlayerPosition
 };
 // SIZE 0x14
 
+Bool operator==(const PlayerPosition &left, const PlayerPosition &right);
+Bool operator!=(const PlayerPosition &left, const PlayerPosition &right);
+
 struct MapPlayers
 {
+	void write(DataChunkOutput *out);										// writes the MPPositionList chunk
+
 	PlayerPosition m_slot[8];												// 0xA0
 };
+
+Bool operator==(const MapPlayers &left, const MapPlayers &right);
 
 typedef _STL::list<Coord3D> MapCoordList;
 
