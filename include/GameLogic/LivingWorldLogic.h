@@ -95,3 +95,5 @@ private:
 #pragma pack(pop)
 
 typedef char LivingWorldLogicSizeCheck[sizeof(LivingWorldLogic) == 0x17C ? 1 : -1];
+
+extern LivingWorldLogic *TheLivingWorldLogic;

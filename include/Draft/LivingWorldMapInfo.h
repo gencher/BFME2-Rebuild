@@ -3,7 +3,7 @@
 // in Draft until one does. Types are what each entry's parse function stores; names are
 // the INI tokens.
 // SIZE not established: members reach 0x1ED; bases and vptr, if any, are the leading gap.
-// Unresolved members: m_mapObject (+0x0, INI::parseAsciiString), m_ambient (+0x38, INI::parseRGBColor), m_sunRGB (+0x4C, INI::parseRGBColor), m_accent1RGB (+0x60, INI::parseRGBColor), m_accent2RGB (+0x74, INI::parseRGBColor), m_armyLineColorAttacking (+0xF0, INI::parseRGBColor), m_armyLineColorNeutral (+0xFC, INI::parseRGBColor), m_armyLineColorAllied (+0x108, INI::parseRGBColor), m_animRaysColor (+0x12C, INI::parseRGBColor), m_animRaysCreateSound (+0x148, INI::parseAudioEventRTS), m_battleMarkerCreatedSound (+0x14C, INI::parseAudioEventRTS), m_enterMapSound (+0x150, INI::parseAudioEventRTS), m_addShadowSubObject (+0x188, INI::parseAsciiStringVectorAppend), m_shadowColor (+0x1D0, INI::parseColorInt).
+// Unresolved members: m_ambient (+0x38, INI::parseRGBColor), m_sunRGB (+0x4C, INI::parseRGBColor), m_accent1RGB (+0x60, INI::parseRGBColor), m_accent2RGB (+0x74, INI::parseRGBColor), m_armyLineColorAttacking (+0xF0, INI::parseRGBColor), m_armyLineColorNeutral (+0xFC, INI::parseRGBColor), m_armyLineColorAllied (+0x108, INI::parseRGBColor), m_animRaysColor (+0x12C, INI::parseRGBColor), m_addShadowSubObject (+0x188, INI::parseAsciiStringVectorAppend), m_shadowColor (+0x1D0, INI::parseColorInt).
 #pragma once
 #ifndef BFME2_LIVING_WORLD_MAP_INFO_H
 #define BFME2_LIVING_WORLD_MAP_INFO_H
@@ -13,13 +13,14 @@
 #include "Common/Coord2D.h"
 #include "Common/Coord3D.h"
 #include "Common/AsciiString.h"
+#include "Common/OpaqueRefElement4.h"
 
 
 class LivingWorldMapInfo
 {
 public:
 
-	UnsignedByte m_mapObject[0x4];                         // +0x0 MapObject (also EyeTower); unresolved: INI::parseAsciiString, parseEyeTowerDefinition
+	AsciiString m_mapObject;                               // +0x0 MapObject (EyeTower is a sub-block parsed by parseEyeTowerDefinition)
 	Int m_numWorldTiles;                                   // +0x4 NumWorldTiles
 	Coord2D m_center;                                      // +0x8 Center
 	Coord2D m_extent;                                      // +0x10 Extent
@@ -75,9 +76,9 @@ public:
 	Int m_animRaysEffectShells;                            // +0x13C AnimRaysEffectShells
 	Int m_animRaysEffectDiameter;                          // +0x140 AnimRaysEffectDiameter
 	Int m_animRaysEffectLifetime;                          // +0x144 AnimRaysEffectLifetime
-	UnsignedByte m_animRaysCreateSound[0x4];               // +0x148 AnimRaysCreateSound; unresolved: INI::parseAudioEventRTS
-	UnsignedByte m_battleMarkerCreatedSound[0x4];          // +0x14C BattleMarkerCreatedSound; unresolved: INI::parseAudioEventRTS
-	UnsignedByte m_enterMapSound[0x4];                     // +0x150 EnterMapSound; unresolved: INI::parseAudioEventRTS
+	OpaqueRefElement4 m_animRaysCreateSound;               // +0x148 AnimRaysCreateSound
+	OpaqueRefElement4 m_battleMarkerCreatedSound;          // +0x14C BattleMarkerCreatedSound
+	OpaqueRefElement4 m_enterMapSound;                     // +0x150 EnterMapSound
 	AsciiString m_animCloud;                               // +0x154 AnimCloud
 	AsciiString m_animCloudPartSys;                        // +0x158 AnimCloudPartSys
 	Int m_numAnimClouds;                                   // +0x15C NumAnimClouds
@@ -93,7 +94,7 @@ public:
 	Real m_cloudInitialSize;                               // +0x1A4 CloudInitialSize
 	Real m_cloudInitialOpacity;                            // +0x1A8 CloudInitialOpacity
 	Real m_cloudGrowthSize;                                // +0x1AC CloudGrowthSize
-	UnsignedByte m_unk0x1B0[0x4];
+	Bool m_isDefined;                                      // +0x1B0 set by parseLivingWorldMapInfoDefinition
 	Real m_cameraBoundX;                                   // +0x1B4 CameraBoundX
 	Real m_cameraBoundY;                                   // +0x1B8 CameraBoundY
 	Real m_mouseWheelZoomPerTick;                          // +0x1BC MouseWheelZoomPerTick
