@@ -32,6 +32,7 @@
 #include "GameLogic/Waypoint.h"
 #include "GameLogic/Module/RunOffMapBehavior.h"
 #include "GameLogic/Module/RunOffMapBehaviorModuleData.h"
+#include "Common/XferException.h"
 extern NameKeyGenerator *TheNameKeyGenerator;
 
 ContainmentList g_emptyContainmentList;
@@ -617,6 +618,55 @@ void OpenContain::pruneDeadWanters()
 // FUNCTION: BFME2 0x00463AD3 size=411 name=?rva00463AD3@Rva00463AD3@@QAEXH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00463C6E size=234 name=?loadPostProcess@OpenContain@@MAEXXZ evidence=N:ledger tier=A
+void OpenContain::loadPostProcess()
+{
+	Object *us = getObject();
+
+	UpdateModule::loadPostProcess();
+
+	// the containment list should be empty at this time
+	if (!m_containList.empty())
+		throw XferException(5, 0);
+
+	// riders are pulled out of the world when this or any outer container encloses them
+	Bool enclosed = false;
+	OpenContain *container = this;
+	do
+	{
+		if (container->getObjectStatusOfContained(0).test(OBJECT_STATUS_ENCLOSED))
+		{
+			enclosed = true;
+			break;
+		}
+		Object *containerObject = container->getObject();
+		if (containerObject == 0)
+			break;
+		Object *outer = containerObject->getContainedBy();
+		if (outer == 0)
+			break;
+		ContainModuleInterface *outerContain = outer->getContain();
+		if (outerContain == 0)
+			break;
+		container = outerContain->asOpenContain();
+	} while (container != 0);
+
+	// turn the contained id list into actual object pointers in the contain list
+	for (XferContainIDList::const_iterator idIt = m_xferContainIDList.begin(); idIt != m_xferContainIDList.end(); ++idIt)
+	{
+		Object *obj = TheGameLogic->findObjectByID(*idIt);
+		if (obj == 0)
+			throw XferException(5, 0);
+
+		m_containList.push_back(obj);
+
+		if (enclosed)
+			vslot24(obj, 0, 0);
+
+		obj->m_containedBy = us;
+	}
+
+	m_xferContainIDList.clear();
+}
 
 // FUNCTION: BFME2 0x00463D72 size=41 name=?rva00463D72@Rva00463782@@QAEXXZ evidence=?:placeholder tier=A
 
