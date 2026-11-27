@@ -89,6 +89,7 @@ public:
 	void removeFromIndex(Int index);					// Unlinks the slot from its index entry's override chain
 	void removeTeam(Int index);							// removeFromIndex, clear the Dict, move the slot to the free list
 	void removeOverriddenTeams();						// 0x0032C2C4: removeTeam on every active slot that another overrides
+	void addTeam(const Dict *d);						// 0x0032DA4E
 	void addToIndex(Int index);							// Files the slot under its (owner, name) key
 	void renameTeam(Int index, const AsciiString &owner, const AsciiString &name);
 	void moveTeamsToNewOwner(const AsciiString &oldOwner, const AsciiString &newOwner);

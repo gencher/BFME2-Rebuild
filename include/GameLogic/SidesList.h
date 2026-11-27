@@ -37,6 +37,9 @@ public:
 	void discardOverriddenScriptsAndTeams();
 	void removeSide(Int index);
 	void removeSideAndTeams(Int index);
+	Int addSide(const Dict *d);					// 0x0032D076
+	void addTeam(const Dict *d) { m_teamRec.addTeam(d); }	// inline: callers call TeamsInfoRec::addTeam on +0xF44
+	Bool validateSides();						// 0x0032E02B
 
 private:
 	virtual void loadPostProcess() {}			// Snapshot slot 1: bare ret at 0x000B3FD0.

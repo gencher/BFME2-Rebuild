@@ -6,6 +6,7 @@
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:cohesion
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
+#include <stdio.h>
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Bridge.h"
 #include "GameLogic/GameLogic.h"
@@ -17,6 +18,7 @@
 #include "GameLogic/Module/DestroyModule.h"
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameClient/GameClient.h"
+#include "GameClient/Drawable.h"
 #include "GameClient/LoadScreen.h"
 #include "Common/ThingTemplate.h"
 #include "Common/PlayerTemplate.h"
@@ -26,6 +28,22 @@
 #include "Common/Xfer.h"
 #include "debug/Debug.h"
 #include "Common/GlobalData.h"
+#include "Common/MultiplayerColorDefinition.h"
+#include "GameLogic/SidesList.h"
+#include "Common/StaticNameKey.h"
+#include "Common/Dict.h"
+#include "GameClient/MapCache.h"
+#include "GameClient/GameText.h"
+#include "Common/GameState.h"
+#include "Common/FileSystem.h"
+#include "Common/INI.h"
+#include "GameLogic/LuaScriptEngine.h"
+#include "Common/ThingFactory.h"
+#include "Common/RandomValue.h"
+#include "Common/Player.h"
+#include "Common/PlayerList.h"
+#include "Common/Money.h"
+#include "Common/ScoreKeeper.h"
 #include "GameLogic/LivingWorldLogic.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;

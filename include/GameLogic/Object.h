@@ -184,6 +184,7 @@ public:
     void rva0028C2DD(Coord3D *) const;
     void rva0029660C(const Coord3D *,int);
     void rva0028DA28();
+    void rva0028D680();	// 0x0028D680: refreshes the drawable against the controlling player's relationships
     void onReducedToRubble();	// 0x00298E6A: what the structure-rubble helper 0x004BDA67 tail-jumps to
     void rva0028DAB9();	// 0x0028DAB9 (ActiveBody structure-rubble helper 0x004BDA67, template CommandPointBonus > 0)
     const AsciiString *rva00290E67() const;		// 0x00290E67 (?rva00290E67@Object@@QBEPBVAsciiString@@XZ: the object's command-set name; CommandButtonHuntUpdate::xfer 0x004953EE)
