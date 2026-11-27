@@ -250,6 +250,9 @@ WaypointMap::~WaypointMap()
 // FUNCTION: BFME2 0x0022E1BC size=53 name=??1PlayerAITypeSet@@UAE@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0022E22E size=68 name=??1MapCache@@QAE@XZ evidence=N:ledger tier=A
+MapCache::~MapCache()
+{
+}
 
 // FUNCTION: BFME2 0x0022E28B size=61 name=??0MapCache@@QAE@XZ evidence=N:ledger tier=A
 MapCache::MapCache()
