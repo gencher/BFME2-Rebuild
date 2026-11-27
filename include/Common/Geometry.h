@@ -41,7 +41,7 @@ public:
 	Real m_offsetY;											// 0x14
 	Real m_offsetZ;											// 0x18
 	AsciiString m_name;										// 0x1C
-	Bool m_flag;											// 0x20 enabled (the max-height queries skip a shape without it)
+	char m_flag;											// 0x20 enabled (the max-height queries skip a shape without it); a char, as setFlag stores its char argument unconverted
 	Bool m_usedForHealthBox;								// 0x21 (0x006BD830 additionally requires it)
 	UnsignedByte m_unk0x22[2];
 

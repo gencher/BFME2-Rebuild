@@ -364,6 +364,17 @@ static inline Bool isShapeNamed(const GeometryShape &shape, const AsciiString &n
 
 // FUNCTION: BFME2 0x006BF3C0 size=143 name=?setFlag@BfmeObjF9@@QAEXABVBfmeStrF9@@D@Z evidence=N:ledger tier=A
 
+void GeometryInfo::setFlag(const AsciiString &name, char flag)
+{
+	for (_STL::vector<GeometryShape>::iterator shape = m_shapes.begin(); shape != m_shapes.end(); ++shape)
+	{
+		if (isShapeNamed(*shape, name))
+			shape->m_flag = flag;
+	}
+
+	calcBoundingStuff();
+}
+
 // FUNCTION: BFME2 0x006BF450 size=311 name=?rva0087FA50@BfmeObjF9@@QAEXABVBfmeStrF9@@D@Z evidence=?:placeholder tier=A
 
 void GeometryInfo::setShapesActiveExcept(const AsciiString &name, Bool active)
