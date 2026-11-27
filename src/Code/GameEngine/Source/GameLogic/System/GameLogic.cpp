@@ -64,6 +64,17 @@ GameLogic *TheGameLogic = NULL;
 // FUNCTION: BFME2 0x0023D6F0 size=10 name=?get@Rva0023D6F0SarAvgField@@QBEHXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023D6FA size=70 name=?rva0023D6FA@@YAHPAVObject@@@Z evidence=?:placeholder tier=A
+Int rva0023D6FA(Object *obj)
+{
+	if (obj && obj->isKindOf(KINDOF_COMMANDCENTER))
+	{
+		UnsignedInt playerMask = obj->getControllingPlayer()->getPlayerMask();
+		TheGameLogic->selectObject(obj, true, playerMask, obj->isLocallyControlled());
+		return 0;
+	}
+	return 1;
+}
+
 
 // FUNCTION: BFME2 0x0023D740 size=46 name=?processProgress@GameLogic@@QAEXHH@Z evidence=N:ledger tier=A
 void GameLogic::processProgress(Int slot, Int percent)
