@@ -486,6 +486,30 @@ void ProductionUpdate::rva0049DEC8()
 // FUNCTION: BFME2 0x0049DF81 size=185 name=?rva0049DF81@ProductionUpdate@@QAEXPAURva0049DF81Input@@PAVObject@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049E03A size=258 name=??0ProductionUpdate@@QAE@PAVThing@@PBVModuleData@@@Z evidence=N:ledger tier=A
+ProductionUpdate::ProductionUpdate(Thing *thing, const ModuleData *moduleData) :
+	UpdateModule(thing, moduleData),
+	m_productionQueue(NULL),
+	m_productionQueueTail(NULL),
+	m_uniqueID(1),
+	m_productionCount(0),
+	m_unk0x38(0),
+	m_flagsDirty(false),
+	m_unk0x118(0),
+	m_unk0x11C(false),
+	m_unk0x11D(false),
+	m_spawnedObjectID(INVALID_ID),
+	m_unk0x128(0),
+	m_unk0x12C(1),
+	m_unk0x13C(false)
+{
+	for (Int i = 0; i < 4; ++i)
+	{
+		m_doors[i].m_doorOpenedFrame = 0;
+		m_doors[i].m_doorWaitOpenFrame = 0;
+		m_doors[i].m_doorClosedFrame = 0;
+		m_doors[i].m_holdOpen = false;
+	}
+}
 
 // FUNCTION: BFME2 0x0049E13C size=6 name=?Rva0049E13CGet@@YAHXZ evidence=?:placeholder tier=A
 const char *ProductionUpdate::GetSnapshotName() const

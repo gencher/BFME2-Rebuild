@@ -31,6 +31,9 @@
 #include <stddef.h>
 #include "Common/GameType.h"
 #include "Common/BitFlags.h"
+#include "Common/ModelConditionFlags.h"
+#include "Common/GameAudio.h"
+#include "Common/StlList.h"
 #include "Common/AsciiString.h"
 #include "GameLogic/Module/UpdateModule.h"
 #include "GameLogic/Module/DieModuleInterface.h"
@@ -152,14 +155,19 @@ public:
 		UnsignedInt m_doorWaitOpenFrame;								// 0x4
 		UnsignedInt m_doorClosedFrame;									// 0x8
 		Bool m_holdOpen;												// 0xC
+
+		DoorInfo() : m_doorOpenedFrame(0), m_doorWaitOpenFrame(0), m_doorClosedFrame(0), m_holdOpen(false) {}
 	};
 
 	ProductionUpdate(Thing *thing, const ModuleData *moduleData);		// 0x0049E03A
+	virtual ~ProductionUpdate();
 	static Module *friend_newModuleInstance(Thing *thing, const ModuleData *moduleData);
 
 	// Death interface slot 0 adjusts from +0x24 to the production interface at +0x20.
 	virtual void onDie(const DamageInfo *damageInfo);
 
+	// BehaviorModuleInterface slot 7 returns the death interface at +0x24.
+	virtual DieModuleInterface *getDie() { return this; }
 	// BehaviorModuleInterface slot 28 returns the production interface at +0x20.
 	virtual ProductionUpdateInterface *getProductionUpdateInterface() { return this; }
 	virtual NameKeyType getModuleNameKey() const;						// 0x0049E15E
@@ -226,16 +234,16 @@ public:
 	UnsignedInt m_productionCount;										// 0x34 xfer UnsignedInt; entries in the queue (canQueueUpgrade compares it with MaxQueueEntries)
 	UnsignedInt m_unk0x38;												// 0x38 xfer UnsignedInt
 	DoorInfo m_doors[4];												// 0x3C
-	BitFlags<591> m_clearFlags;											// 0x7C
-	BitFlags<591> m_setFlags;											// 0xC8
+	ModelConditionFlags m_clearFlags;									// 0x7C
+	ModelConditionFlags m_setFlags;										// 0xC8
 	Bool m_flagsDirty;													// 0x114 xfer Bool; setHoldDoorOpen 0x0049D617 sets it after adding an opening flag
 	UnsignedInt m_unk0x118;												// 0x118 xfer UnsignedInt
 	Bool m_unk0x11C;													// 0x11C
 	Bool m_unk0x11D;													// 0x11D
 	ObjectID m_spawnedObjectID;											// 0x120 slot 16 (0x0049DEC8) looks it up in the game logic
-	UnsignedByte m_list0x124[0x4];										// 0x124 STLport list (element type not established)
+	_STL::list<Int> m_list0x124;										// 0x124 STLport list; the element type is not established (the constructor and destructor are the int list's folded bodies)
 	UnsignedInt m_unk0x128;												// 0x128 xfer UnsignedInt
-	Int m_unk0x12C;														// 0x12C = 1
+	AudioHandle m_unk0x12C;												// 0x12C = 1; the destructor removes it from TheAudio, xfer version 3 xfers it through the audio manager
 	_STL::vector<AsciiString> m_pendingTypeNames;						// 0x130 slot 13 push_back (0x0049F8A9), dtor 0x0049E1BF destroys it, 0x0049E368 walks and erases it
 	Bool m_unk0x13C;													// 0x13C xfer Bool
 protected:
