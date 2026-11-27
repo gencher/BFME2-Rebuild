@@ -2,6 +2,9 @@
 #include <stddef.h>
 #include "Common/SubsystemInterface.h"
 #include "Common/ICoord2D.h"
+#include "Common/STLTypedefs.h"
+#include <hash_map>
+#include <vector>
 
 // Portions derived from Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 // The command option bit names (retail VA 0x00DBFB68, 32 names and NULL; one copy, in
@@ -116,6 +119,8 @@ struct PopulateInvButtonData {
     Object *transport;
 };
 class ControlBar;
+// The command sets by name: find 0x0041534B, operator[] 0x0031DB83 and erase 0x003A37DC are its members.
+typedef _STL::hash_map<AsciiString, CommandSet *, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > CommandSetMap;
 struct PopulateButtonInfo {
     Object *source;
     int buttonIndex;
@@ -171,6 +176,7 @@ public:
     static void parseCommandButtonDefinition(INI *);
     static void parseCommandSetDefinition(INI *);
 
+    void onDrawableSelected(Drawable *);
     void onDrawableDeselected(Drawable *);
     void updateRadarAttackGlow();	// 0x0031AEFF
     unsigned char loadCommandIniFiles(INI *ini, int loadType);	// 0x0031B4D6 (role name): the three INI files in Data\INI
@@ -181,13 +187,13 @@ public:
     void rva0031AB77SetFlag();
     void rva0031AD14(int, int, int, int, int);
     void rva0031AD48(bool);
-    void rva0031AD94();
+    void togglePurchaseScience();
     void rva0031ADAE();
     void rva0031AE13();
     void rva0031AE93(int *, int *);
     void rva0031AEAE(int *, int *);
     void rva0031AEC9();
-    CommandSet *rva0031B05B(CommandSet *);
+    CommandSet *newCommandSetOverride(CommandSet *setToOverride);
     void rva0031B1BC(const Image *, const Image *, const Image *, const Image *, const Image *, const Image *, const Image *, const Image *);
     void rva0031B210();
     void onPlayerRankChanged(const Player *);	// 0x0031B5A3 (Zero Hour's name)
@@ -197,7 +203,7 @@ public:
     void rva0031D61E(const AsciiString *);
     void rva0031D64F();
     bool rva0031E068(Player *, int);
-    CommandSet *rva0031E8D5(const AsciiString &, int);
+    CommandSet *newCommandSet(const AsciiString &name, int mode);
     void rva00405D77();
     CommandSet *rva00406D95(const AsciiString &);
     void rva004C1B60(GameWindow *, void *);
@@ -228,7 +234,7 @@ public:
     bool m_uiDirty;                                     // +0x28 (UIDirty)
     unsigned char field29[0x3];
     CommandButton *m_commandButtons;                    // +0x2C list head (links at CommandButton +0x18)
-    unsigned char m_videoMap[0x14];                     // +0x30 hash_map<int, ?> (constructor 0x0031E92D); element type unresolved
+    CommandSetMap m_commandSets;                        // +0x30 (findCommandSet 0x0031D5F8, newCommandSet 0x0031E8D5)
     ControlBarSchemeManager *m_schemeManager;           // +0x44
     GameWindow *m_contextParent[9];                     // +0x48
     Drawable *m_currentSelectedDrawable;                // +0x6C
@@ -266,8 +272,8 @@ public:
     int m_commandButtonBorderSystemColor;               // +0x224
     int m_commandButtonBorderAlteredColor;              // +0x228 (a fifth colour)
     int field22C;                                       // +0x22C command bar border colour (getBorderColor; 0x64000000 after construction)
-    unsigned char m_unk0x230[0xC];                      // +0x230 vector (allocator-tagged constructor 0x00211E58); element type unresolved
-    unsigned char m_retiredCommandButtons[0xC];         // +0x23C vector of CommandButton * (removeCommandButton pushes with 0x004DFCB0)
+    _STL::vector<CommandSet *> m_retiredCommandSets;      // +0x230 (forgetStaleCommandSet pushes the replaced set)
+    _STL::vector<CommandButton *> m_retiredCommandButtons; // +0x23C (removeCommandButton pushes the replaced button)
     const Image *m_genStarOn;                           // +0x248
     const Image *m_genStarOff;                          // +0x24C
     const Image *m_unk0x250[6];                         // +0x250..+0x264, cleared by the constructor
