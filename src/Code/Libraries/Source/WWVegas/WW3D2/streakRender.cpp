@@ -15,6 +15,10 @@ int StreakRendererClass::Is_Merge_Intersections() const
 }
 
 // FUNCTION: BFME2 0x00742EC0 size=7 name=?get@Rva00742EC0MaskedDwordField@@QBEHXZ evidence=?:placeholder tier=B hypothesis:Z
+int StreakRendererClass::Is_Freeze_Random() const
+{
+	return Bits & FREEZE_RANDOM;
+}
 
 // FUNCTION: BFME2 0x00742ED0 size=7 name=?Is_Sorting_Disabled@StreakRendererClass@@QBEHXZ evidence=N:ledger tier=B hypothesis:Z
 int StreakRendererClass::Is_Sorting_Disabled() const
@@ -203,6 +207,10 @@ void StreakRendererClass::Init(const W3dEmitterLinePropertiesStruct &props)
 }
 
 // FUNCTION: BFME2 0x00743260 size=18 name=?set@Rva004F0700PairAssign@@QAEXABUPairRva004F0700PairAssign@@@Z evidence=?:placeholder tier=B hypothesis:Z
+void StreakRendererClass::Set_Current_UV_Offset(const Vector2 &offset)
+{
+	CurrentUVOffset = offset;
+}
 
 // FUNCTION: BFME2 0x00743280 size=1147 name=?subdivision_util@StreakRendererClass@@AAEXIPBVVector3@@PBMPAIPAV2@PAM@Z evidence=N:ledger tier=B hypothesis:K
 

@@ -55,6 +55,7 @@ public:
 	void RenderStreak(RenderInfoClass &rinfo, const Matrix3D &transform, unsigned int point_count, Vector3 *points, Vector4 *rgbas, float *widths, const SphereClass &obj_sphere, unsigned int *personalities);
 
 	int Is_Merge_Intersections() const;
+	int Is_Freeze_Random() const;
 	int Is_Sorting_Disabled() const;
 	void Set_Noise_Amplitude(float amplitude);
 	void Set_Current_Subdivision_Level(unsigned int level);	// (the level is not stored: retail writes 0)
@@ -63,6 +64,7 @@ public:
 	void Set_Disable_Sorting(int onoff);
 	void Set_End_Caps(int onoff);
 	TextureMapMode Get_Texture_Mapping_Mode() const;
+	void Set_Current_UV_Offset(const Vector2 &offset);
 	void Set_UV_Offset_Rate(const Vector2 &rate);
 	void Set_Texture(TextureClass *texture);				// 0x001911E0 (retail's body is shared with SegLineRendererClass::Set_Texture)
 	void Set_Shader(ShaderClass shader) { Shader = shader; }
