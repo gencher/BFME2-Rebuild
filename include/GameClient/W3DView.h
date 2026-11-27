@@ -295,7 +295,6 @@ private:
 	void getPickRay(const ICoord2D *screen, Vector3 *rayStart, Vector3 *rayEnd);
 	void moveAlongWaypointPath(Int milliseconds);	// (Zero Hour's name)
 	void rotateCameraOneFrame();	// (Zero Hour's name)
-	void calcDeltaScroll(Coord2D &screenDelta);	// 0x00085FA8: the screen-space movement of the look-at point since the last frame (the view filters read it)
 	void calcCameraConstraints();			// Recomputes m_cameraConstraint from the map extent and how far the view reaches ahead of the look-at point
 	void getAxisAlignedViewRegion(Region3D &axisAlignedRegion);	// The world-space box around the visible corners, widened by the overscan and the guard band
 	void zoomCameraOneFrame();				// 0x00086CDA: advances the record at +0x208 and writes View's zoom (+0x3C); Zero Hour's name
@@ -303,6 +302,7 @@ private:
 	void pitchOneFrame();					// 0x00086EBD: advances the record at +0x258 and writes View's +0x30; called by pitchCamera 0x0008907A for a one-millisecond move
 	void fieldOfViewCameraOneFrame();		// 0x00086D73: advances the record at +0x22C and writes the field of view (+0x6C) in radians
 public:
+	void calcDeltaScroll(Real *screenDelta);	// The screen-space movement of the look-at point since the last frame (the view filters read it)
 
 	// ---- slots 153..165, W3DView's own ----
 	virtual void slot153(Int);				// slot 153, 0x0047A69C (the shared `ret 4` stub)

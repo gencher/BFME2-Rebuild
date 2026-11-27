@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include "Common/GameType.h"
 #include "Common/ICoord2D.h"
+#include "Common/IRegion2D.h"
 
 // One 16x16-cell zone block (0x44 bytes: IsPassable steps y by 0x44; the map's
 // placeholder class Rva00531132). +0 counts the portal IDs held from +4 (at most 12:
@@ -46,6 +47,7 @@ public:
 	enum { ZONE_BLOCK_SIZE = 16 };	// cells per block side
 
 	UnsignedByte IsPassable(Int cellX, Int cellY);			// 0x00531512
+	void MarkDirty(IRegion2D *cells);
 	void MarkDirty(Int cellX, Int cellY);					// 0x00531431
 	void clearPassableFlags();								// 0x005312BE (provisional name): every block's passable byte = false
 	void markAllDirty();									// 0x00531481 (provisional name): the manager and every block dirty
