@@ -40,8 +40,18 @@ AsciiString MapCache::getMapExtension() const
 // FUNCTION: BFME2 0x0030050E size=286 name=?calcCRC@@YAIVAsciiString@@0@Z evidence=N:ledger
 
 // FUNCTION: BFME2 0x0030062C size=76 name=?Rva0030062CGet@@YAPAVAsciiString@@XZ evidence=?:placeholder
+AsciiString *Rva0030062CGet()
+{
+	static AsciiString livingWorldDir("LivingWorldScripts");
+	return &livingWorldDir;
+}
 
 // FUNCTION: BFME2 0x00300678 size=76 name=?Rva00300678Get@@YAPAVAsciiString@@XZ evidence=?:placeholder
+AsciiString *Rva00300678Get()
+{
+	static AsciiString livingWorldExtension("lws");
+	return &livingWorldExtension;
+}
 
 // FUNCTION: BFME2 0x003006C4 size=29 name=?rva003006C4@Rva003006C4@@QAE_NABVAsciiString@@@Z evidence=?:placeholder
 bool FileSystem::createDirectory(const AsciiString &path)
