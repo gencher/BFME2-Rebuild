@@ -13,6 +13,7 @@
 #include "Common/Coord3D.h"
 #include "Common/INI.h"
 #include <math.h>
+#include <string.h>
 
 // FUNCTION: BFME2 0x006BD590 size=61 name=?parseGeometryActive@GeometryInfo@@SAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=B hypothesis:Z
 /*static*/ void GeometryInfo::parseGeometryActive(INI *ini, void *instance, void *store, const void *userData)
@@ -192,6 +193,17 @@ Real GeometryInfo::getMaxHeightBelowPosition() const
 
 // FUNCTION: BFME2 0x006BD980 size=60 name=?getGeometryShape@BfmeObjE15@@QAEPAUBfmeShapeE15@@H@Z evidence=N:ledger tier=A
 
+// Returned for an index outside the shape list.
+static GeometryShape s_noShape;
+
+GeometryShape *GeometryInfo::getGeometryShape(Int index)
+{
+	if (index >= 0 && index < m_shapes.size())
+		return &m_shapes[index];
+
+	return &s_noShape;
+}
+
 // FUNCTION: BFME2 0x006BD9C0 size=567 name=?rva006BD9C0@GeometryInfo@@QBEXAAUGeometryShape@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x006BDC00 size=734 name=?method@Rva0087E370@@QBEXABVCoord3D@@MAAURegion2D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
@@ -199,6 +211,14 @@ Real GeometryInfo::getMaxHeightBelowPosition() const
 // FUNCTION: BFME2 0x006BDEE0 size=636 name=?rva0087E650@GeometryInfo@@QAEXPAURva0087E650Bounds@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x006BE160 size=47 name=?usePluralShadowName@BfmeThingTemplateShadowSelector@@QBE_NXZ evidence=N:ledger tier=A
+
+Bool GeometryInfo::usePluralShadowName() const
+{
+	if (m_shapes.size() != 1)
+		return false;
+
+	return m_shapes[0].m_type == GEOMETRY_BOX;
+}
 
 // FUNCTION: BFME2 0x006BE190 size=132 name=?Rva0087E900@@YAPAURva0087E900Coord@@PAU1@PBU1@PBURva0087E900Shape@@M@Z evidence=?:placeholder tier=A
 
@@ -328,9 +348,39 @@ void GeometryInfo::expandFootprint(Real radius)
 
 // FUNCTION: BFME2 0x006BEF80 size=1082 name=?getBestContactPoint@GeometryInfo@@QBE_NPAVCoord3D@@PBU2@PBDHH_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
+// Compares two texts by their common prefix, then by length (zero when equal).
+static inline int compareShapeName(const char *a, int alen, const char *b, int blen)
+{
+	int result = memcmp(a, b, alen < blen ? alen : blen);
+	if (result != 0)
+		return result;
+	return alen - blen;
+}
+
+static inline Bool isShapeNamed(const GeometryShape &shape, const AsciiString &name)
+{
+	return compareShapeName(shape.m_name.str(), shape.m_name.getLength(), name.str(), name.getLength()) == 0;
+}
+
 // FUNCTION: BFME2 0x006BF3C0 size=143 name=?setFlag@BfmeObjF9@@QAEXABVBfmeStrF9@@D@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x006BF450 size=311 name=?rva0087FA50@BfmeObjF9@@QAEXABVBfmeStrF9@@D@Z evidence=?:placeholder tier=A
+
+void GeometryInfo::setShapesActiveExcept(const AsciiString &name, Bool active)
+{
+	Bool found = active;
+	for (_STL::vector<GeometryShape>::iterator shape = m_shapes.begin(); shape != m_shapes.end(); ++shape)
+		found |= (isShapeNamed(*shape, name) && shape->m_flag);
+
+	if (!found)
+		return;
+
+	for (_STL::vector<GeometryShape>::iterator other = m_shapes.begin(); other != m_shapes.end(); ++other)
+	{
+		if (!isShapeNamed(*other, name))
+			other->m_flag = active;
+	}
+}
 
 // FUNCTION: BFME2 0x006BF590 size=77 name=?erase@BfmeVec60@@QAEPAUBfmeElem60@@PAU2@0@Z evidence=N:ledger tier=A
 
