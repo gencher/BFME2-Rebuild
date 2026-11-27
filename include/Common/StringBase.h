@@ -62,7 +62,7 @@ public:
 	void clear() { releaseBuffer(); }
 	void removeLastChar();								// wide 0x000376E0 (12 calls)
 	int compare(const StringBase<CharT> &s) const throw();	// char 0x000069D6; HeaderTemplateManager::findHeaderTemplate 0x00201A33 holds a by-value string across the call with no EH state change, so the call cannot throw
-	int compare(const CharT *s) const;					// char 0x000069B1; layout parser31732D
+	int compare(const CharT *s) const throw();					// char 0x000069B1; layout parser31732D
 	int compareNoCase(const CharT *s) const throw();		// char 0x00037980 (ScriptConditions::evaluateGameModeActive 0x003E92B2); throw():
 														// OptionPreferences::getFirewallNeedToRefresh 0x002E4928 has no EH frame while a copy
 														// is live across it, and 0x00059646 calls it twice on a live copy with no state store

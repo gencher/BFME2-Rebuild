@@ -32,6 +32,7 @@ public:
 	void writeScripts(DataChunkOutput &chunkWriter);	// 0x0032996E
 	SidesInfo *findSideInfo(AsciiString name, Int *index = 0);
 	SidesInfo *findSkirmishSideInfo(AsciiString name, Int *index = 0);
+	Bool isPlayerDefaultTeam(TeamsInfo *t);
 	Bool validateAllyEnemyList(const AsciiString &teamName, AsciiString &allies);
 	void clear();
 	void discardOverriddenScriptsAndTeams();

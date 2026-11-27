@@ -61,20 +61,36 @@ extern const StaticNameKey TheKey_teamName;
 typedef _STL::pair<AsciiString, AsciiString> TeamNameKey;
 typedef _STL::map<TeamNameKey, Int> TeamIndex;
 
-// One team slot (16 bytes): links of the slot lists (+0/+2), the slot it overrides and the one
-// overriding it (+4/+6), its index entry (+8) and the team's Dict (+0xC). Slot 0 is the free
-// list head. The map spells the class BfmeThingUBB; its default constructor is out of line.
+// TeamsInfo: one team's Dict (Zero Hour's wrapper). SidesList::isPlayerDefaultTeam reads the
+// Dict at +0 of its TeamsInfo argument; the team slot below embeds one at +0xC, and the slot's
+// destructor only destroys that Dict.
 class TeamsInfo
 {
 public:
-	TeamsInfo();
+	TeamsInfo() : m_dict(0) {}
+	void init(const Dict *d);
+	void clear() { m_dict.clear(); }
 	Dict *getDict() { return &m_dict; }
+
+private:
+	Dict m_dict;
+};
+
+// One team slot (16 bytes): links of the slot lists (+0/+2), the slot it overrides and the one
+// overriding it (+4/+6), its index entry (+8) and the team (+0xC). Slot 0 is the active list
+// sentinel. The original name is unknown; the ledger's vector instantiations spell the class
+// BfmeThingUBB, and its default constructor is out of line.
+class BfmeThingUBB
+{
+public:
+	BfmeThingUBB();
+	Dict *getDict() { return m_team.getDict(); }
 	short m_next;					// +0x00
 	short m_prev;					// +0x02
 	short m_overridesID;			// +0x04
 	short m_overriddenByID;			// +0x06
 	TeamIndex::iterator m_indexIt;	// +0x08
-	Dict m_dict;					// +0x0C
+	TeamsInfo m_team;				// +0x0C
 };
 
 class TeamsInfoRec
@@ -89,13 +105,13 @@ public:
 	void removeFromIndex(Int index);					// Unlinks the slot from its index entry's override chain
 	void removeTeam(Int index);							// removeFromIndex, clear the Dict, move the slot to the free list
 	void removeOverriddenTeams();						// 0x0032C2C4: removeTeam on every active slot that another overrides
-	void addTeam(const Dict *d);						// 0x0032DA4E
+	Int addTeam(const Dict *d);							// Fills a free slot (growing the vector if none) and files it
 	void addToIndex(Int index);							// Files the slot under its (owner, name) key
 	void renameTeam(Int index, const AsciiString &owner, const AsciiString &name);
 	void moveTeamsToNewOwner(const AsciiString &oldOwner, const AsciiString &newOwner);
 
 	TeamIndex m_index;					// +0x00
-	_STL::vector<TeamsInfo> m_teams;	// +0x0C
+	_STL::vector<BfmeThingUBB> m_teams;	// +0x0C
 	short m_numActive;					// +0x18
 	short m_freeHead;					// +0x1A
 };
