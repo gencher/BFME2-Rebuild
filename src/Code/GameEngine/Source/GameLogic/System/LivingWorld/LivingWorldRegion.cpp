@@ -402,6 +402,20 @@ void LivingWorldRegion::rva003F2739(ScienceType science)
 }
 
 // FUNCTION: BFME2 0x003F274C size=204 name=?CreateBuildPlots@LivingWorldRegion@@QAEXXZ evidence=N:ledger
+void LivingWorldRegion::CreateBuildPlots()
+{
+	if (m_plots.size() != 0)
+		rva003F2106();
+	m_plots.reserve(m_plotPositions.size());
+	for (unsigned int i = 0; i < m_plotPositions.size(); ++i)
+	{
+		int id = TheLivingWorldLogic->rva002B3166();
+		LivingWorldBuildPlot *plot = new LivingWorldBuildPlot(id, this, m_plotPositions[i]);
+		m_plots.push_back(plot);
+	}
+	m_unk0x17C = NULL;
+	m_unk0x1A3 = false;
+}
 
 // FUNCTION: BFME2 0x003F2947 size=33 name=?rva003F2947@Rva003F2352@@QAEPAV1@PAV1@@Z evidence=?:placeholder
 

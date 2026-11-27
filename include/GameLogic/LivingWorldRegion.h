@@ -50,6 +50,7 @@ public:
 	int rva003F05CE();					// Plots with a visible building
 	void rva003F20B0();
 	void rva003F2106();					// Destroys every plot
+	void CreateBuildPlots();
 	bool CanBuildBuilding(LivingWorldBuildPlot *plot, int *reason);
 	bool CanDestroyBuilding(LivingWorldBuildPlot *plot, int *reason);
 	void rva003F2739(ScienceType science);		// Appends to +0x164
@@ -58,7 +59,9 @@ public:
 	void rva003F0FA3(void *request);			// Picks the list by the request's name
 
 private:
-	unsigned char m_unk0x04[0x11C - 0x04];			// +0x04 base listener and definition, not recovered
+	unsigned char m_unk0x04[0xFC - 0x04];			// +0x04 base listener and definition, not recovered
+	_STL::vector<Coord2D> m_plotPositions;			// +0xFC: CreateBuildPlots makes one plot per position
+	unsigned char m_unk0x108[0x11C - 0x108];		// +0x108 not recovered
 	bool m_unk0x11C;					// +0x11C: a set flag makes rva003F02E4 true
 	unsigned char m_unk0x11D[0x120 - 0x11D];
 	AsciiString m_fortressPortrait;				// +0x120: the image name GetFortressPortrait looks up
@@ -76,7 +79,7 @@ private:
 	_STL::vector<ScienceType> m_unk0x158;			// +0x158: xfer transfers it after +0x164
 	_STL::vector<ScienceType> m_unk0x164;			// +0x164
 	_STL::vector<LivingWorldBuildPlot *> m_plots;		// +0x170
-	unsigned char m_unk0x17C[0x180 - 0x17C];		// +0x17C not recovered
+	LivingWorldBuildPlot *m_unk0x17C;			// +0x17C: the plot BuildBuilding last built on; cleared with the plots
 	PlacementRange m_placementsA;				// +0x180
 	PlacementRange m_placementsB;				// +0x18C
 	unsigned char m_unk0x198[0x1A0 - 0x198];		// +0x198 not recovered
