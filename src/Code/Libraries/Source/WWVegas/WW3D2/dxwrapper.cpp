@@ -63,6 +63,9 @@ void bfmeSetProjectionDepthBias(float bias);	// 0x0011F1C0 (the depth-bias sette
 static D3DPRESENT_PARAMETERS _PresentParameters = { 0 };
 static HWND _Hwnd = 0;		// the render window (0x00DEDA00; the ledger's __Hwnd)
 
+bool _DX8SingleThreaded = false;
+int DX8Wrapper_PreserveFPU = 0;
+
 // The render device name tables (0x00DEDF90 short names, 0x00DEE5C0 names; the ledger's __RenderDeviceNameTable and friends).
 static DynamicVectorClass<StringClass> _RenderDeviceShortNameTable;
 static DynamicVectorClass<StringClass> _RenderDeviceNameTable;
@@ -2203,6 +2206,70 @@ void DXWrapper::Flip_To_Primary(void)
 // FUNCTION: BFME2 0x001245A0 size=283 name=?Do_Onetime_Device_Dependent_Inits@DXWrapper@@SAXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x001246C0 size=460 name=?Create_Device@DXWrapper@@KA_NXZ evidence=N:ledger tier=A
+bool DXWrapper::Create_Device(void)
+{
+	D3DCAPS9 caps;
+	if (FAILED(D3DInterface->GetDeviceCaps(CurRenderDevice, D3DDEVTYPE_HAL, &caps))) {
+		return false;
+	}
+
+	::ZeroMemory(&CurrentAdapterIdentifier, sizeof(D3DADAPTER_IDENTIFIER9));
+
+	if (FAILED(D3DInterface->GetAdapterIdentifier(CurRenderDevice, 0, &CurrentAdapterIdentifier))) {
+		return false;
+	}
+
+	Vertex_Processing_Behavior = (caps.VertexShaderVersion < D3DVS_VERSION(1, 1)) ?
+		D3DCREATE_SOFTWARE_VERTEXPROCESSING : D3DCREATE_HARDWARE_VERTEXPROCESSING;
+
+	if ((Vertex_Processing_Behavior & D3DCREATE_HARDWARE_VERTEXPROCESSING) && (caps.DevCaps & D3DDEVCAPS_PUREDEVICE)) {
+		Vertex_Processing_Behavior |= D3DCREATE_PUREDEVICE;
+	}
+
+	_DX8SingleThreaded = true;
+
+	if (DX8Wrapper_PreserveFPU)
+		Vertex_Processing_Behavior |= D3DCREATE_FPU_PRESERVE;
+
+	// Run on NVPerfHUD's reference adapter when it is present.
+	UINT adapter = CurRenderDevice;
+	D3DDEVTYPE device_type = D3DDEVTYPE_HAL;
+	for (UINT i = 0; i < D3DInterface->GetAdapterCount(); i++) {
+		D3DADAPTER_IDENTIFIER9 identifier;
+		HRESULT res = D3DInterface->GetAdapterIdentifier(i, 0, &identifier);
+		if (SUCCEEDED(res) && strcmp(identifier.Description, "NVIDIA NVPerfHUD") == 0) {
+			adapter = i;
+			device_type = D3DDEVTYPE_REF;
+			break;
+		}
+	}
+
+	HRESULT hr = D3DInterface->CreateDevice(adapter, device_type, _Hwnd, Vertex_Processing_Behavior,
+		&_PresentParameters, &D3DDevice);
+
+	if (FAILED(hr)) {
+		// The device may claim a 32-bit depth buffer with a 16-bit display and then refuse it.
+		if ((_PresentParameters.BackBufferFormat == D3DFMT_R5G6B5 ||
+			_PresentParameters.BackBufferFormat == D3DFMT_X1R5G5B5 ||
+			_PresentParameters.BackBufferFormat == D3DFMT_A1R5G5B5) &&
+			(_PresentParameters.AutoDepthStencilFormat == D3DFMT_D32 ||
+			_PresentParameters.AutoDepthStencilFormat == D3DFMT_D24S8 ||
+			_PresentParameters.AutoDepthStencilFormat == D3DFMT_D24X8)) {
+			_PresentParameters.AutoDepthStencilFormat = D3DFMT_D16;
+			hr = D3DInterface->CreateDevice(CurRenderDevice, D3DDEVTYPE_HAL, _Hwnd, Vertex_Processing_Behavior,
+				&_PresentParameters, &D3DDevice);
+			if (FAILED(hr)) {
+				return false;
+			}
+		}
+		else {
+			return false;
+		}
+	}
+
+	Do_Onetime_Device_Dependent_Inits();
+	return true;
+}
 
 // FUNCTION: BFME2 0x00124890 size=1860 name=?Enumerate_Devices@DXWrapper@@KAXXZ evidence=N:ledger tier=A
 
