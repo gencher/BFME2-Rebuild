@@ -2289,6 +2289,38 @@ void AIUpdateInterface::loadPostProcess()
 }
 
 // FUNCTION: BFME2 0x0026872B size=471 name=?findNearestLabeledContactPointOnTarget@AIUpdateInterface@@QAE_NPAVObject@@PAVCoord3D@@PBU3@_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+Bool AIUpdateInterface::findNearestLabeledContactPointOnTarget(Object *target, Coord3D *result, const Coord3D *workingPos, Bool skipCollideTest)
+{
+	if (g_bfmeDockingTraceActive)
+	{
+		Object *me = getObject();
+		if (theLogicRandomLogFile)
+			theLogicRandomLogFile->addLine("      AIUpdateInterface::findNearestLabeledContactPointOnTarget BEGIN: Object %s(%d), target %s(%d), workingPos %g,%g,%g, skipCollideTest=%s",
+				me->getTemplate()->getName().str(), me->getID(),
+				target ? target->getTemplate()->getName().str() : "NULL", target ? target->getID() : INVALID_ID,
+				workingPos->x, workingPos->y, workingPos->z, skipCollideTest ? "TRUE" : "FALSE");
+	}
+
+	const AIUpdateModuleData *data = getAIUpdateModuleData();
+	for (_STL::vector<AsciiString>::const_iterator it = data->m_specialContactPoints.begin(); it != data->m_specialContactPoints.end(); ++it)
+	{
+		if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+			theLogicRandomLogFile->addLine("        handling contactPointName %s", it->str());
+		if (target->getWorldspaceBestContactPoint(result, workingPos, it->str(), 0, 0, skipCollideTest))
+		{
+			if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+				theLogicRandomLogFile->addLine("        handling contactPointName %s succeeded - result=%g,%g,%g, RETURN TRUE",
+					it->str(), result->x, result->y, result->z);
+			return true;
+		}
+		if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+			theLogicRandomLogFile->addLine("        handling contactPointName %s failed", it->str());
+	}
+
+	if (g_bfmeDockingTraceActive && theLogicRandomLogFile)
+		theLogicRandomLogFile->addLine("        end of contactPoints. return FALSE");
+	return false;
+}
 
 // FUNCTION: BFME2 0x00268902 size=29 name=?Rva00268902@PoolMember@@QAEXXZ evidence=?:placeholder tier=A
 
