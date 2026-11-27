@@ -34,7 +34,7 @@ public:
 	static DebugIOInterface *Create();
 
 private:
-	bool m_allocatedConsole;													// +4
+	char m_allocatedConsole;													// +4
 	char m_input[256];															// +5
 	unsigned int m_inputUsed;													// +0x108
 	unsigned int m_inputRead;													// +0x10C
