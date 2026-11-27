@@ -76,6 +76,14 @@ public:
 		FILL
 	};
 
+	// Values of ExtraPassPolyRenderMode.
+	enum ExtraPassPolyRenderType
+	{
+		EXTRA_PASS_DISABLE,
+		EXTRA_PASS_LINE,
+		EXTRA_PASS_CLEAR_LINE
+	};
+
 	SceneClass(void);											// 0x00140C60
 	virtual ~SceneClass(void);
 

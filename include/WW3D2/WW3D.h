@@ -125,4 +125,7 @@ private:
 // Overbright shading switch (defined in ww3d.cpp, set from the command line).
 extern bool ShaderOverbrightEnabled;
 
+// Texture reduction level (getLODTextureReduction / setLODTextureReduction).
+extern int LODTextureReduction;
+
 #endif

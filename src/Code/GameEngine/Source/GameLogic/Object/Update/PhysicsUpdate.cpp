@@ -29,8 +29,6 @@ namespace _STL { template<> Coord3D *allocator<Coord3D>::allocate(size_type,cons
 // GameLogic/Object/Update/PhysicsUpdate.cpp: retail translation unit (skeleton).
 // cl: /GX /EHsc- /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB /D_CRTIMP=
 #include "GameLogic/Module/AIUpdate.h"
-extern "C" double __cdecl fabs(double);
-// Retail calls the CRT fabs here rather than expanding the intrinsic (PhysicsBehavior::consume 0x003909FA).
 #include "Common/Vector.h"
 #include "Common/XferException.h"
 #include "Common/GlobalData.h"

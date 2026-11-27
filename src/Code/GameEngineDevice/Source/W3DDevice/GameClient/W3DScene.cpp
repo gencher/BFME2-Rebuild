@@ -16,9 +16,8 @@
 #include "WW3D2/dxwrapper.h"
 #include "Common/GlobalData.h"
 #include "GameClient/WeatherSetting.h"
-
-extern bool bfmeCameraProjectionOverride;
-extern int LODTextureReduction;
+#include "WW3D2/CameraClass.h"
+#include "WW3D2/WW3D.h"
 
 // Three reference bodies in this address range also serve network, object
 // and subsystem calls. They remain here pending evidence of the compiler
@@ -145,18 +144,16 @@ void SphereClass::Re_Center(const Vector3 &center)
 // FUNCTION: BFME2 0x00071E40 size=713 name=?Render@RTS3DScene@@UAEXAAVRenderInfoClass@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 void RTS3DScene::Render(RenderInfoClass &rinfo)
 {
-	enum { EXTRA_PASS_DISABLE };
-
 	if (TheWeatherSetting)
 	{
-		Set_Fog_Enable(static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogEnable && !bfmeCameraProjectionOverride && LODTextureReduction >= 1);
-		if (static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogEnable)
+		Set_Fog_Enable(TheWeatherSetting->m_hardwareFogEnable && !bfmeCameraProjectionOverride && LODTextureReduction >= 1);
+		if (TheWeatherSetting->m_hardwareFogEnable)
 		{
-			Set_Fog_Color(Vector3(static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogColor.red,
-				static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogColor.green,
-				static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogColor.blue));
-			Set_Fog_Range(static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogStart,
-				static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogEnd);
+			Set_Fog_Color(Vector3(TheWeatherSetting->m_hardwareFogColor.red,
+				TheWeatherSetting->m_hardwareFogColor.green,
+				TheWeatherSetting->m_hardwareFogColor.blue));
+			Set_Fog_Range(TheWeatherSetting->m_hardwareFogStart,
+				TheWeatherSetting->m_hardwareFogEnd);
 		}
 	}
 

@@ -1,7 +1,9 @@
 // cl: /O1
+// dxsdk
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include <stdlib.h>
 #include "Common/GlobalData.h"
+#include "WW3D2/dxwrapper.h"
 // Command-line option handlers. Each takes the argument vector and its length and returns how many arguments it
 // consumed: 1 for a flag, 2 for an option that carries a value. They set members of the writable GlobalData
 // (TheWritableGlobalData, absent before the data is built, hence the null test) or the BFME2 debug globals. A
@@ -12,7 +14,6 @@ extern bool BFME2ScriptDebugLiteMode;
 extern bool BFME2UseDebugWindowLite;
 extern unsigned int BFME2CommandFlags;
 extern bool BfmeFormationPreviewUseDecals;
-extern int DX8Wrapper_PreserveFPU;
 // Generated from the ledger; map snapshot c591f7146f88c8a8248ebb8ae22f0c978c22aed463db64e05ef57ff0dfae99cc
 // object=G003B94CD name-evidence=invented
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.

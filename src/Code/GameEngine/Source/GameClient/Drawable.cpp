@@ -1242,13 +1242,12 @@ void Drawable::changedTeam()
 void Drawable::reactToTransformChange(const Matrix3D *oldMtx, const Coord3D *oldPos, Real oldAngle)
 {
 	m_unk0x244 = -1;
-	Bool &moved = m_unk0x3A8[1];
-	moved = true;
+	m_unk0x3A8[1] = true;
 
-	for (DrawModule **dm = drawModuleList(); *dm; ++dm)
-		(*dm)->reactToTransformChange(oldMtx, oldPos, oldAngle);
+	for (Module **dm = getModuleList(0); *dm; ++dm)
+		static_cast<DrawModule *>(*dm)->reactToTransformChange(oldMtx, oldPos, oldAngle);
 
-	for (Module **m = m_modules[2]; m && *m; ++m)
+	for (Module **m = getModuleList(2); m && *m; ++m)
 		static_cast<ClientBehaviorModule *>(*m)->reactToTransformChange(oldMtx, oldPos, oldAngle);
 }
 
