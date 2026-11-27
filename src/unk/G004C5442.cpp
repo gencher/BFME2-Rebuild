@@ -3,7 +3,7 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 #include "Common/INI.h"
 #include "Common/INI/FieldParse.h"
-#include "Draft/DeflectSpecialPowerModuleData.h"
+#include "GameLogic/Module/DeflectSpecialPowerModuleData.h"
 static const FieldParse s_deflectSpecialPowerModuleDataFieldParse[] =
 {
 	{ 0, 0, 0, 0 }
