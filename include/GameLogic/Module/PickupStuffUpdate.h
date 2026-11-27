@@ -21,6 +21,7 @@ class PickupStuffUpdate : public UpdateModule
 {
 public:
 	PickupStuffUpdate(Thing *thing, const ModuleData *moduleData);
+	virtual ~PickupStuffUpdate();
 	static Module *friend_newModuleInstance(Thing *thing, const ModuleData *moduleData);
 	virtual NameKeyType getModuleNameKey() const;
 	virtual UpdateSleepTime update();

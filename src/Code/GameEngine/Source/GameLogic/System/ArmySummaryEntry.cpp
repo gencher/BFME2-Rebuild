@@ -9,6 +9,9 @@
 // FUNCTION: BFME2 0x0040C34A size=7 name=?get@Rva0040C34AByteField@@QBEEXZ evidence=?:placeholder tier=B hypothesis:mm1-contiguity-shared-data
 // FUNCTION: BFME2 0x0040C351 size=77 name=??0ArmySummaryEntry@@QAE@XZ evidence=N:ledger tier=B hypothesis:mm1-neighbour-class
 // FUNCTION: BFME2 0x0040C39E size=29 name=??1ArmySummaryEntry@@UAE@XZ evidence=N:ledger tier=B hypothesis:K
+ArmySummaryEntry::~ArmySummaryEntry()
+{
+}
 
 // FUNCTION: BFME2 0x0040C3BB size=117 name=?rva0040C3BB@ArmySummaryEntry@@QAE_NPBV1@@Z evidence=?:placeholder tier=B hypothesis:K
 
