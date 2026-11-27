@@ -341,6 +341,22 @@ SidesInfo *SidesList::findSkirmishSideInfo(AsciiString name, Int *index)
 }
 
 // FUNCTION: BFME2 0x0032B1E1 size=196 name=?isPlayerDefaultTeam@SidesList@@QAE_NPAVTeamsInfo@@@Z evidence=N:ledger tier=A
+Bool SidesList::isPlayerDefaultTeam(TeamsInfo *t)
+{
+	// "teamfoo" is a player's default team when a player is named "foo".
+	AsciiString tname = t->getDict()->getAsciiString(TheKey_teamName.key());
+	if (tname.startsWith("team"))
+	{
+		const char *rest = tname.str() + 4;
+		for (Int j = 0; j < m_numSides; j++)
+		{
+			AsciiString pname = m_sides[j].getDict()->getAsciiString(TheKey_playerName.key());
+			if (pname.compare(rest) == 0)
+				return true;
+		}
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x0032B2A5 size=228 name=?validateAllyEnemyList@SidesList@@QAE_NABVAsciiString@@AAV2@@Z evidence=N:ledger tier=A
 Bool SidesList::validateAllyEnemyList(const AsciiString &tname, AsciiString &allies)
