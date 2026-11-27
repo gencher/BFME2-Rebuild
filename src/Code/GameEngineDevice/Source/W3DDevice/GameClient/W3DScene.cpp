@@ -16,9 +16,8 @@
 #include "WW3D2/dxwrapper.h"
 #include "Common/GlobalData.h"
 #include "GameClient/WeatherSetting.h"
-
-extern bool bfmeCameraProjectionOverride;
-extern int LODTextureReduction;
+#include "WW3D2/CameraClass.h"
+#include "WW3D2/WW3D.h"
 
 // Three reference bodies in this address range also serve network, object
 // and subsystem calls. They remain here pending evidence of the compiler

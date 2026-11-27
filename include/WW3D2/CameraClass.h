@@ -136,4 +136,7 @@ protected:
 
 typedef char CameraClassSize[(sizeof(CameraClass) == 0x3FC) ? 1 : -1];
 
+// Projection override switch read by CameraClass::Apply and the scene render.
+extern bool bfmeCameraProjectionOverride;
+
 #endif

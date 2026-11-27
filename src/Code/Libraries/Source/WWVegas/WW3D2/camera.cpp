@@ -413,8 +413,6 @@ bool CameraClass::Cull_Box(const AABoxClass &box) const
 	return false;
 }
 
-extern bool bfmeCameraProjectionOverride;
-
 // FUNCTION: BFME2 0x00135A70 size=866 name=?Apply@CameraClass@@QAEXXZ evidence=N:ledger tier=B hypothesis:Z
 void CameraClass::Apply(void)
 {
