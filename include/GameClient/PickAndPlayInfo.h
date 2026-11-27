@@ -10,6 +10,7 @@
 #include "Common/Coord3D.h"
 
 class Drawable;
+class SpecialPowerTemplate;
 
 struct PickAndPlayInfo
 {
@@ -19,7 +20,7 @@ struct PickAndPlayInfo
 	Drawable *m_drawTarget;		// 0x04
 	void *m_unk0x08;			// 0x08
 	const int *m_weaponSlot;	// 0x0C pointer to the weapon slot the response is for (Zero Hour's name; CommandTranslator::issueFireWeaponCommand 0x00429471 stores &slot)
-	UnsignedInt m_unk0x10;		// 0x10
+	const SpecialPowerTemplate *m_specialPowerTemplate;	// 0x10 the power the response is for (CommandTranslator::issueSpecialPowerCommand and SpecialAbilityUpdate store the button's template)
 	Coord3D m_position;			// 0x14
 	UnsignedInt m_unk0x20;		// 0x20
 };
