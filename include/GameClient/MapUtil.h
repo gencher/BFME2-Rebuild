@@ -15,6 +15,7 @@ void positionStartSpots(AsciiString mapName, GameWindow **buttonMapStartPosition
 void positionStartSpots(GameInfo *myGame, GameWindow **buttonMapStartPositions, GameWindow *mapWindow, GameWindow *extra);
 
 Bool Rva00300E42Check(GameInfo *game);										// map-transfer eligibility check
+bool isValidMap(AsciiString mapName, bool isMultiplayer);
 
 // Orders the map list by player count, then by display name.
 struct MapSortByPlayers

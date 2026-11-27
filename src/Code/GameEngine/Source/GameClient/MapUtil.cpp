@@ -502,3 +502,19 @@ void MapCache::updateCache()
 
 
 // FUNCTION: BFME2 0x003057AB size=130 name=?isValidMap@@YA_NVAsciiString@@_N@Z evidence=N:ledger tier=B hypothesis:mm1-neighbour-shared-data
+bool isValidMap(AsciiString mapName, bool isMultiplayer)
+{
+	if (!TheMapCache || mapName.isEmpty())
+		return false;
+	TheMapCache->updateCache();
+
+	mapName.toLower();
+	MapCache::iterator it = TheMapCache->find(mapName);
+	if (it != TheMapCache->end())
+	{
+		if (isMultiplayer == it->second.m_isMultiplayer)
+			return true;
+	}
+
+	return false;
+}
