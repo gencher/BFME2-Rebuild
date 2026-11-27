@@ -267,12 +267,12 @@ public:
 	virtual void vslot23() {}											// 23: the shared `ret` 0x000B3FD0
 	virtual void vslot24(Object *obj, Int, Int);						// 24, 0x00462E3A
 	virtual void vslot25() {}											// 25: the shared `ret` 0x000B3FD0
-	virtual void vslot26(const ContainedItemsList *list, std::map<Int, Int> *map);	// 26, 0x00465972
+	virtual void vslot26(const ContainedItemsList *list, std::map<ObjectID, Int> *map);	// 26, 0x00465972
 
 public:
 	Int m_unk0x38;										// 0x38 zeroed, not xferred
-	std::map<Int, Int> m_map0x3C;						// 0x3C
-	std::map<Int, Int> m_map0x48;						// 0x48
+	std::map<ObjectID, AsciiString> m_map0x3C;			// 0x3C xfer writes each key with XferObjectID and each value with xferAsciiString
+	std::map<ObjectID, Int> m_map0x48;					// 0x48 the destructor runs the map<ObjectID,int> tree destructor on it
 	ContainedItemsList m_containList;					// 0x54
 	UnsignedInt m_containListSize;						// 0x58
 	ObjectEnterExitMap m_objectEnterExitInfo;			// 0x5C object id -> enter/exit wish (onObjectWantsToEnterOrExit 0x00464FC7, pruneDeadWanters 0x00463A81)
