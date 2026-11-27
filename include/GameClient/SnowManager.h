@@ -8,6 +8,7 @@
 #define BFME2_SNOWMANAGER_H
 
 #include "Common/SubsystemInterface.h"
+#include "Common/Coord2D.h"
 
 class SnowManager : public SubsystemInterface
 {
@@ -26,8 +27,7 @@ public:
 	Bool m_unk0x40;															// +0x40 (1)
 	Bool m_unk0x41;															// +0x41
 	Int m_unk0x44;															// +0x44
-	Real m_unk0x48;															// +0x48
-	Real m_unk0x4C;															// +0x4C
+	Coord2D m_xySpeed;														// copied from WeatherSetting::m_snowXYSpeed
 	Bool m_unk0x50;															// +0x50
 	Int m_unk0x54;															// +0x54
 	Int m_unk0x58;															// +0x58
