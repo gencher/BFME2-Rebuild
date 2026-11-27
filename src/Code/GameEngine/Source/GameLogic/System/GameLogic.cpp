@@ -260,6 +260,55 @@ void checkForDuplicateColors(GameInfo *game)
 // FUNCTION: BFME2 0x0023E323 size=171 name=?rva0023E323@Rva0023E323@@QAEHMH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023E3CE size=602 name=?loadMapINI@GameLogic@@QAEXVAsciiString@@@Z evidence=N:ledger tier=A
+void GameLogic::loadMapINI(AsciiString mapName)
+{
+	if (!TheMapCache)
+	{
+		// Need the map cache to get the map and user map directories.
+		return;
+	}
+
+	char filename[_MAX_PATH];
+	char fullFledgeFilename[_MAX_PATH];
+
+	memset(filename, 0, _MAX_PATH);
+	strcpy(filename, mapName.str());
+
+	// a map extracted from a save game: load the map.ini of the pristine map instead
+	if (TheGameState->isInSaveDirectory(UnicodeString(AsciiString(filename))))
+		strcpy(filename, TheGameState->getSaveGameInfo()->m_unk0x8.str());
+
+	// sanity
+	int length = strlen(filename);
+	if (length < 4)
+		return;
+
+	// back up over the ".map" extension and to the first directory separator
+	char *extension = filename + length - 4;
+	while ((extension > filename) && (*extension != '\\') && (*extension != '/'))
+		--extension;
+	*extension = 0;
+
+	sprintf(fullFledgeFilename, "%s\\map.ini", filename);
+	if (TheFileSystem->doesFileExist(fullFledgeFilename))
+	{
+		INI ini;
+		ini.loadFile(AsciiString(fullFledgeFilename), INI_LOAD_CREATE_OVERRIDES, NULL);
+	}
+
+	sprintf(fullFledgeFilename, "%s\\solo.ini", filename);
+	if (TheFileSystem->doesFileExist(fullFledgeFilename))
+	{
+		INI ini;
+		ini.loadFile(AsciiString(fullFledgeFilename), INI_LOAD_CREATE_OVERRIDES, NULL);
+	}
+
+	// now look for a string file
+	sprintf(fullFledgeFilename, "%s\\map.str", filename);
+	if (TheFileSystem->doesFileExist(fullFledgeFilename))
+		TheGameText->initMapStringFile(AsciiString(fullFledgeFilename));
+}
+
 
 // FUNCTION: BFME2 0x0023E628 size=396 name=?rva0023E628@GameLogic@@QAEXVAsciiString@@@Z evidence=?:placeholder tier=A
 
