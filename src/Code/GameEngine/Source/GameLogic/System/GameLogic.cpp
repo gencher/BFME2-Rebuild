@@ -256,6 +256,32 @@ void checkForDuplicateColors(GameInfo *game)
 }
 
 // FUNCTION: BFME2 0x0023E0C7 size=579 name=?rva0023E0C7@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
+void GameLogic::rva0023E0C7()
+{
+	// Always add in an observer Player
+	Dict d(0);
+	d.setAsciiString(TheKey_playerName, "ReplayObserver");
+	d.setBool(TheKey_playerIsHuman, TRUE);
+	d.setUnicodeString(TheKey_playerDisplayName, UnicodeString(L"Observer"));
+	const PlayerTemplate *pt = ThePlayerTemplateStore->findPlayerTemplate(TheNameKeyGenerator->nameToKey("FactionObserver"));
+	if (pt)
+		d.setAsciiString(TheKey_playerFaction, TheNameKeyGenerator->keyToName(pt->getNameKey()));
+	d.setAsciiString(TheKey_playerAllies, AsciiString::TheEmptyString);
+	d.setAsciiString(TheKey_playerEnemies, AsciiString::TheEmptyString);
+	d.setInt(TheKey_playerColor, TheMultiplayerSettings->getColor(0)->getColor());
+	d.setInt(TheKey_playerNightColor, TheMultiplayerSettings->getColor(0)->getNightColor());
+	d.setInt(TheKey_multiplayerStartIndex, 0);
+	d.setBool(TheKey_multiplayerIsLocal, FALSE);
+
+	TheSidesList->addSide(&d);
+	d.clear();
+	d.setAsciiString(TheKey_teamName, "teamReplayObserver");
+	d.setAsciiString(TheKey_teamOwner, "ReplayObserver");
+	d.setBool(TheKey_teamIsSingleton, true);
+	TheSidesList->addTeam(&d);
+	TheSidesList->validateSides();
+}
+
 
 // FUNCTION: BFME2 0x0023E323 size=171 name=?rva0023E323@Rva0023E323@@QAEHMH@Z evidence=?:placeholder tier=A
 
