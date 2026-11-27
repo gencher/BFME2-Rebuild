@@ -69,6 +69,7 @@ class TeamsInfo
 public:
 	TeamsInfo() : m_dict(0) {}
 	void init(const Dict *d);
+	void clear() { m_dict.clear(); }
 	Dict *getDict() { return &m_dict; }
 
 private:
@@ -76,8 +77,8 @@ private:
 };
 
 // One team slot (16 bytes): links of the slot lists (+0/+2), the slot it overrides and the one
-// overriding it (+4/+6), its index entry (+8) and the team (+0xC). Slot 0 is the free list
-// head. The original name is unknown; the ledger's vector instantiations spell the class
+// overriding it (+4/+6), its index entry (+8) and the team (+0xC). Slot 0 is the active list
+// sentinel. The original name is unknown; the ledger's vector instantiations spell the class
 // BfmeThingUBB, and its default constructor is out of line.
 class BfmeThingUBB
 {
@@ -104,6 +105,7 @@ public:
 	void removeFromIndex(Int index);					// Unlinks the slot from its index entry's override chain
 	void removeTeam(Int index);							// removeFromIndex, clear the Dict, move the slot to the free list
 	void removeOverriddenTeams();						// 0x0032C2C4: removeTeam on every active slot that another overrides
+	Int addTeam(const Dict *d);							// Fills a free slot (growing the vector if none) and files it
 	void addToIndex(Int index);							// Files the slot under its (owner, name) key
 	void renameTeam(Int index, const AsciiString &owner, const AsciiString &name);
 	void moveTeamsToNewOwner(const AsciiString &oldOwner, const AsciiString &newOwner);

@@ -151,6 +151,12 @@ void BuildListInfo::xfer(Xfer *xfer)
 }
 
 // FUNCTION: BFME2 0x00329CF0 size=30 name=?Rva00329CF0@Dict@@QAEXPBV1@@Z evidence=?:placeholder tier=B hypothesis:cohesion
+void TeamsInfo::init(const Dict *d)
+{
+	m_dict.clear();
+	if (d)
+		m_dict = *d;
+}
 
 // FUNCTION: BFME2 0x00329D28 size=6 name=?previousAddressBits@Rva00329D28WordPrefix@@QBEIXZ evidence=?:placeholder tier=B hypothesis:cohesion
 
