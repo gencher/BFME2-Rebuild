@@ -164,6 +164,14 @@ AudioEventRTS::AudioEventRTS(const OpaqueRefElement4 &sound, int viewType)
 }
 
 // FUNCTION: BFME2 0x002D982A size=105 name=??0BfmeAudioEventPrefix136@@QAE@ABUOpaqueRefElement4@@ABUBfmeEventPositionView@@H@Z evidence=N:ledger
+AudioEventRTS::AudioEventRTS(const OpaqueRefElement4 &sound, const Coord3D *pos, int viewType)
+{
+	rva002D96D3(sound);
+	m_position = *pos;
+	m_ownerType = 0;
+	m_viewType = viewType;
+	m_unk48 = true;
+}
 
 // FUNCTION: BFME2 0x002D9893 size=336 name=?rva002D9893@Rva002D9893@@QAEXABV1@@Z evidence=?:placeholder
 
