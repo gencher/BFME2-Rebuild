@@ -69,10 +69,9 @@ public:
 	{
 		for (UnsignedInt i = 0; i < 19; ++i)
 		{
-			UnsignedInt word = m_bits[i];
-			if (mustBeClear.m_bits[i] & word)
+			if (m_bits[i] & mustBeClear.m_bits[i])
 				return false;
-			if ((mustBeSet.m_bits[i] & word) != mustBeSet.m_bits[i])
+			if ((m_bits[i] & mustBeSet.m_bits[i]) != mustBeSet.m_bits[i])
 				return false;
 		}
 		return true;
