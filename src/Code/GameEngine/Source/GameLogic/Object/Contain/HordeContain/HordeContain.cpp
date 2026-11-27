@@ -39,6 +39,20 @@
 // Edges: left=unknown-rows right=rests-on:veto; proof_first=false
 // Hypothesis rules: hypothesis:padding
 // FUNCTION: BFME2 0x00468AEC size=56 name=?rva00468AEC@@YAXPAVObject@@PAX@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
+void rva00468AEC(Object *unit, void *userData)
+{
+	if (unit == NULL)
+		return;
+	const ThingTemplate *unitTemplate = unit->getTemplate();
+	if (unitTemplate == NULL)
+		return;
+	HordeExperienceGrant *grant = (HordeExperienceGrant *)userData;
+	if (unitTemplate->m_templateID != grant->m_templateID)
+		return;
+	ExperienceTracker *tracker = unit->getExperienceTracker();
+	if (tracker)
+		tracker->rva0039B3D1(grant->m_amount, false);
+}
 // FUNCTION: BFME2 0x00468B24 size=55 name=?rva00468B24@HordeContain@@QAEXM@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 void HordeContain::rva00468B24(Real value)
 {

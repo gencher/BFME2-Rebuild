@@ -43,6 +43,16 @@ struct HordeTemplateScan
 // 0x004698EE: the iterateContained visitor that fills a HordeTemplateScan.
 void hordeTemplateScanVisitor(Object *unit, void *userData);
 
+// The block rva004707DB hands iterateContained with the visitor rva00468AEC: the experience to grant and the
+// template id of the units that receive it.
+struct HordeExperienceGrant
+{
+	Real m_amount;
+	UnsignedShort m_templateID;
+};
+// 0x00468AEC: the iterateContained visitor that grants a HordeExperienceGrant.
+void rva00468AEC(Object *unit, void *userData);
+
 // One banner carrier entry (the vector at +0x270): +0 the carrier's template, +4 the index getBannerCarrierIndexToUse
 // (0x0046A521) hands back. Only these two members are recovered.
 struct HordeBannerCarrier
