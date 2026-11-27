@@ -33,6 +33,7 @@
 #include "GameLogic/Module/RunOffMapBehavior.h"
 #include "GameLogic/Module/RunOffMapBehaviorModuleData.h"
 #include "Common/XferException.h"
+#include "Common/Player.h"
 extern NameKeyGenerator *TheNameKeyGenerator;
 
 ContainmentList g_emptyContainmentList;
@@ -828,6 +829,43 @@ const Coord3D *OpenContain::containSlot88() const
 }
 
 // FUNCTION: BFME2 0x00464830 size=238 name=?addToContain@OpenContain@@UAEXPAVObject@@@Z evidence=N:ledger tier=A
+void OpenContain::addToContain(Object *rider)
+{
+	// sanity
+	if (rider == 0)
+		return;
+
+	Drawable *riderDraw = rider->getDrawable();
+	Bool wasSelected = FALSE;
+	if (riderDraw && riderDraw->m_selected)
+		wasSelected = TRUE;
+
+	// this object cannot be contained by this module if it is already contained in something
+	if (rider->getContainedBy() != 0)
+		return;
+
+	// Which list to physically add to needs to be overridable
+	addToContainList(rider);
+
+	m_playerEnteredMask = rider->getControllingPlayer()->getPlayerMask();
+
+	ContainModuleInterface *contain = getObject()->getContain();
+	if (contain)
+		contain->onContaining(rider, wasSelected);
+
+	redeployOccupants();
+
+	rider->onContainedBy(getObject());
+
+	doLoadSound();
+
+	// remember when the rider came in, for the modifier it is given on exit
+	if (!getOpenContainModuleData()->m_modifierToGiveOnExit.empty())
+		m_map0xF0.insert(std::make_pair(rider->getID(), TheGameLogic->getFrame()));
+
+	if (getObjectStatusOfContained(0).test(OBJECT_STATUS_ENCLOSED))
+		vslot24(rider, 0, 0);
+}
 
 // FUNCTION: BFME2 0x00464923 size=97 name=?rva00464923@Rva00464923@@QAEAAVWeaponTemplateSetHead@@ABI@Z evidence=?:placeholder tier=A
 
