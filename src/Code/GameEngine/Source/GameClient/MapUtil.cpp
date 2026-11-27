@@ -11,6 +11,7 @@
 #include "Common/GlobalData.h"
 MapCache *TheMapCache;	// VA 0x00DFF12C
 #include "Common/FileSystem.h"
+#include "Common/DataChunk.h"
 
 bool __stdcall Rva00600695Get(const char *path);
 
@@ -64,8 +65,27 @@ bool FileSystem::createDirectory(const AsciiString &path)
 // FUNCTION: BFME2 0x003007A8 size=211 name=?copyFromBigToDir@@YAXABVAsciiString@@0@Z evidence=N:ledger
 
 // FUNCTION: BFME2 0x00300912 size=134 name=?write@Rva00300912Holder@@QAEXPAVDataChunkOutput@@@Z evidence=?:placeholder
+void PlayerPosition::write(DataChunkOutput *out)
+{
+	out->openDataChunk("MPPositionInfo", 1);
+	out->writeByte(m_allowHuman ? 1 : 0);
+	out->writeByte(m_allowComputer ? 1 : 0);
+	out->writeByte(m_loadAIScripts ? 1 : 0);
+	out->writeInt(m_forceTeam);
+	out->writeInt(m_factions.size());
+	for (_STL::set<AsciiString>::const_iterator it = m_factions.begin(); it != m_factions.end(); ++it)
+		out->writeAsciiString(*it);
+	out->closeDataChunk();
+}
 
 // FUNCTION: BFME2 0x00300998 size=53 name=?writeList@Rva00300998Holder@@QAEXPAVDataChunkOutput@@@Z evidence=?:placeholder
+void MapPlayers::write(DataChunkOutput *out)
+{
+	out->openDataChunk("MPPositionList", 0);
+	for (Int i = 0; i < MAX_SLOTS; ++i)
+		m_slot[i].write(out);
+	out->closeDataChunk();
+}
 
 // FUNCTION: BFME2 0x003009CD size=285 name=?getDescription@MapMetaData@@QAE?AVUnicodeString@@XZ evidence=N:ledger
 UnicodeString MapMetaData::getDescription()
@@ -199,12 +219,43 @@ UnicodeString MapMetaData::bfme_getDescriptionFirstLine()
 // FUNCTION: BFME2 0x00301B24 size=48 name=?Rva00452FE0Same@@YAHABURva00452FE0Key@@0@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x00301E3B size=64 name=?bfmeEqualSX@@YAHABUBfmeKeySX@@0@Z evidence=N:ledger
+Bool operator==(const PlayerPosition &left, const PlayerPosition &right)
+{
+	return left.m_allowHuman == right.m_allowHuman
+		&& left.m_allowComputer == right.m_allowComputer
+		&& left.m_loadAIScripts == right.m_loadAIScripts
+		&& left.m_forceTeam == right.m_forceTeam
+		&& left.m_factions == right.m_factions;
+}
 
 // FUNCTION: BFME2 0x00301E7B size=21 name=?Rva00301E7BNotEqual@@YAHABUBfmeKeySX@@0@Z evidence=?:placeholder
+Bool operator!=(const PlayerPosition &left, const PlayerPosition &right)
+{
+	return !(left == right);
+}
 
 // FUNCTION: BFME2 0x00301E90 size=50 name=?Rva00301E90@@YA_NPBUBfmeKeySX@@0@Z evidence=?:placeholder
+Bool operator==(const MapPlayers &left, const MapPlayers &right)
+{
+	for (Int i = 0; i < 8; ++i)
+	{
+		if (left.m_slot[i] != right.m_slot[i])
+			return false;
+	}
+	return true;
+}
 
 // FUNCTION: BFME2 0x003023B8 size=114 name=?rva003023B8@PlayerPosition@@QAEXABVAsciiString@@@Z evidence=?:placeholder
+void PlayerPosition::rva003023B8(const AsciiString &name)
+{
+	AsciiString faction = name;
+	if (!name.startsWith("Faction"))
+	{
+		faction.set("Faction");
+		faction.concat(name);
+	}
+	m_factions.insert(faction);
+}
 
 // FUNCTION: BFME2 0x003024BC size=76 name=?findMap@MapCache@@QAEPBVMapMetaData@@VAsciiString@@@Z evidence=N:ledger
 const MapMetaData *MapCache::findMap(AsciiString mapName)
@@ -217,6 +268,28 @@ const MapMetaData *MapCache::findMap(AsciiString mapName)
 }
 
 // FUNCTION: BFME2 0x00302823 size=206 name=?refresh@Rva00454200Element@@QAE_NAAVDataChunkInput@@PAUDataChunkInfo@@@Z evidence=?:placeholder
+Bool PlayerPosition::parse(DataChunkInput &file, DataChunkInfo *info)
+{
+	m_allowHuman = file.readByte() != 0;
+	m_allowComputer = file.readByte() != 0;
+	if (info->m_version >= 1)
+	{
+		m_loadAIScripts = file.readByte() != 0;
+		m_forceTeam = file.readInt();
+	}
+	else
+	{
+		m_forceTeam = -1;
+		m_loadAIScripts = true;
+	}
+
+	_STL::set<AsciiString> factions;
+	Int count = file.readInt();
+	for (Int i = 0; i < count; ++i)
+		factions.insert(file.readAsciiString());
+	m_factions.swap(factions);
+	return true;
+}
 
 // FUNCTION: BFME2 0x003028F1 size=22 name=?rva003028F1@Rva003028F1@@UAE_NAAVDataChunkInput@@PAUDataChunkInfo@@@Z evidence=?:placeholder
 
