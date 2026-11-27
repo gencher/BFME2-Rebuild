@@ -1,15 +1,16 @@
 // Generated from the ledger; map snapshot c591f7146f88c8a8248ebb8ae22f0c978c22aed463db64e05ef57ff0dfae99cc
 // object=G000CA089 name-evidence=invented
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
+#include <stddef.h>
 #include "Common/INI.h"
 #include "Common/INI/FieldParse.h"
-#include "Draft/W3DQuadrupedDrawModuleData.h"
+#include "GameLogic/Module/W3DQuadrupedDrawModuleData.h"
 static const FieldParse s_w3DQuadrupedDrawModuleDataFieldParse[] =
 {
-	{ "LeftFrontFootBone", INI::parseAsciiString, 0, 0x188 },
-	{ "RightFrontFootBone", INI::parseAsciiString, 0, 0x18C },
-	{ "LeftRearFootBone", INI::parseAsciiString, 0, 0x190 },
-	{ "RightRearFootBone", INI::parseAsciiString, 0, 0x194 },
+	{ "LeftFrontFootBone", INI::parseAsciiString, 0, offsetof(W3DQuadrupedDrawModuleData, m_footBones[0]) },
+	{ "RightFrontFootBone", INI::parseAsciiString, 0, offsetof(W3DQuadrupedDrawModuleData, m_footBones[1]) },
+	{ "LeftRearFootBone", INI::parseAsciiString, 0, offsetof(W3DQuadrupedDrawModuleData, m_footBones[2]) },
+	{ "RightRearFootBone", INI::parseAsciiString, 0, offsetof(W3DQuadrupedDrawModuleData, m_footBones[3]) },
 	{ 0, 0, 0, 0 }
 };
 
