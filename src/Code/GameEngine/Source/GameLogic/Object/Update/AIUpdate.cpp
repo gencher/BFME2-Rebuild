@@ -1982,6 +1982,33 @@ void AIUpdateInterface::setPathFromWaypoint(const Waypoint *way, const Coord2D *
 }
 
 // FUNCTION: BFME2 0x002657CE size=385 name=?rva002657CE@AIUpdateInterface@@QAEXXZ evidence=?:placeholder tier=B hypothesis:Z
+void AIUpdateInterface::rva002657CE()
+{
+	Locomotor *loco = m_curLocomotor;
+	Object *obj = getObject();
+	if (m_path)
+	{
+		delete m_path;
+		m_path = NULL;
+	}
+	m_path = new Path;
+	m_path->appendNode(obj->getPosition(), LAYER_GROUND, 0x7FFFFFFF);
+	m_path->rva00364551(obj, loco->m_template->m_surfaces, FALSE, NULL);
+	for (Int i = 0; i < m_stateMachine->getGoalPathSize(); ++i)
+	{
+		Coord3D pos = *m_stateMachine->getGoalPathPosition(i);
+		PathfindLayerEnum layer = TheTerrainLogic->getLayerForDestination(obj, &pos);
+		m_path->appendNode(&pos, layer, 0x7FFFFFFF);
+	}
+	if (TheWritableGlobalData->m_debugAI == 1)
+		TheAI->pathfinder()->SetDebugPath(m_path);
+	Coord3D dir;
+	obj->getUnitDirectionVector2D(dir);
+	m_path->rva00365E98(obj, &dir, loco->m_template->m_surfaces, FALSE);
+	m_unk0x160 = TheGameLogic->getFrame();
+	setLocomotorGoalPositionOnPath();
+	m_unk0x16C = 0;
+}
 
 // FUNCTION: BFME2 0x0026594F size=348 name=?moveThroughPortalWithMicropath@AIUpdateInterface@@QAEXPBVCoord3D@@0HW4PathfindLayerEnum@@00@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=B hypothesis:Z
 void AIUpdateInterface::moveThroughPortalWithMicropath(const Coord3D *start, const Coord3D *portalPos, Int portalID, PathfindLayerEnum portalLayer, const Coord3D *exitPos, const Coord3D *goalPos)

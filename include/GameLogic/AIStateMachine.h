@@ -217,6 +217,7 @@ public:
 	void setGoalSquad(const Squad *squad);					// 0x00352B9D (creates the goal squad on first use and assigns it, 0x00351761)
 	void setGoalTeam(const Team *team);						// 0x0035042D (creates the goal squad on first use; AIUpdateInterface::privateAttackTeam 0x0026BFD9 calls it)
 	void setGoalAIGroup(const AIGroup *group);				// 0x00350462 (setGoalTeam's twin: the goal squad from an AI group)
+	Int getGoalPathSize() const { return m_goalPath.size(); }
 	const Coord3D *getGoalPathPosition(Int i) const;	// 0x00346FA5 (Zero Hour's name; map placeholder ?rva00346FA5@Rva00346FA5@@QBEPAXH@Z): &m_goalPath[i], NULL out of range
 	void setGoalPath(const _STL::vector<Coord3D> *path);		// 0x00351759: m_goalPath = *path (out of line; AIUpdateInterface::bfmePrivateCommand24 0x0026BB5A calls it)
 	void setGoalWaypoint(const Waypoint *waypoint);			// 0x003E3BFB: stores +0x48 (out of line in retail; AIUpdateInterface::bfmeGoCSG 0x00264A4E and bfmeGoCSH 0x00264ADE call it)

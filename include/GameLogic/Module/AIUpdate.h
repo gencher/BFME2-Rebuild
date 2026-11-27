@@ -230,6 +230,7 @@ public:
 	Bool rva00262DD3(const Object *other) const;	// 0x00262DD3 (GateOpenAndCloseBehavior push-away 0x00498DF3)
 	void rva002632E1();						// 0x002632E1
 	int getCurrentStateID() const;			// 0x00262FC3
+	void rva002657CE();						// rebuilds m_path from the state machine's goal path
 	void rva0026331C();						// 0x0026331C
 	Int rva00265143();						// the goal path's point count in two particular machine states, else 0
 	void setLocomotorUpgrade(Bool set);	// 0x00262804 (Zero Hour's name; placeholder row): stores m_upgradedLocomotors and re-chooses the normal set (slot 142) when the normal or upgraded set is current

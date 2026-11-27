@@ -24,6 +24,7 @@ class PathNode;
 enum PathfindLayerEnum;
 
 class Xfer;
+class Object;
 
 class Path
 {
@@ -38,6 +39,8 @@ public:
 	void SetLastNodePortal(Int id);
 	Real computeFlightDistToGoal(const Coord3D *pos, Coord3D &goal);
 	void optimizeGroundPath(Int flag);
+	void rva00364551(Object *obj, Int surfaces, Bool flag, const Real *dist);
+	void rva00365E98(Object *obj, const Coord3D *dir, Int surfaces, Bool flag);
 	void DoXfer(Xfer *xfer);
 	void markOptimized() { m_isOptimized = TRUE; }
 	PathNode *getLastNode() const { return m_pathTail; }					// inline (Zero Hour's): AIMoveAwayPanicState::update 0x00347B3D reads +0x08
