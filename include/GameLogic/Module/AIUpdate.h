@@ -231,6 +231,7 @@ public:
 	void rva002632E1();						// 0x002632E1
 	int getCurrentStateID() const;			// 0x00262FC3
 	void rva0026331C();						// 0x0026331C
+	Int rva00265143();						// the goal path's point count in two particular machine states, else 0
 	void setLocomotorUpgrade(Bool set);	// 0x00262804 (Zero Hour's name; placeholder row): stores m_upgradedLocomotors and re-chooses the normal set (slot 142) when the normal or upgraded set is current
 	Bool isMoving() const;					// 0x00264688
 	void restartWaypointPath();				// 0x0026293E

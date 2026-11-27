@@ -1891,6 +1891,13 @@ UnsignedInt AIUpdateInterface::getMoodMatrixActionAdjustment(MoodMatrixAction ac
 // Edges: left=rests-on:veto right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:name:invented
 // FUNCTION: BFME2 0x00265143 size=48 name=?rva00265143@AIUpdateInterface@@QAEHXZ evidence=?:placeholder tier=B hypothesis:name:invented
+// The number of queued goal-path points in two particular machine states, else zero.
+Int AIUpdateInterface::rva00265143()
+{
+	if (getCurrentStateID() == 6 || getCurrentStateID() == 0x43)
+		return m_stateMachine->m_goalPath.size();
+	return 0;
+}
 
 // FUNCTION: BFME2 0x00265667 size=26 name=?rva00265667@AIUpdateInterface@@QAEXPBVCoord3D@@H@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=B hypothesis:Z
 void AIUpdateInterface::rva00265667(const Coord3D *pos, Int cmdSource)
