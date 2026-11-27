@@ -58,6 +58,21 @@ GameLogic *TheGameLogic = NULL;
 // FUNCTION: BFME2 0x0023D661 size=45 name=?rva0023D661@Rva0023D661@@QAEXH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023D68E size=71 name=?rva0023D68E@GameLogic@@QAEX_N@Z evidence=?:placeholder tier=A
+void GameLogic::rva0023D68E(Bool on)
+{
+	for (Object *obj = m_objList; obj; obj = obj->getNextObject())
+	{
+		if (!on && obj->isKindOf(KINDOF_BASE_SITE))
+			continue;
+		Drawable *draw = obj->getDrawable();
+		if (draw)
+		{
+			draw->rva00270FAC(on);
+			obj->rva0028D680();
+		}
+	}
+}
+
 
 // FUNCTION: BFME2 0x0023D6D5 size=27 name=?rva0023D6D5@Rva0023D6D5@@QAEX_N@Z evidence=?:placeholder tier=A
 
