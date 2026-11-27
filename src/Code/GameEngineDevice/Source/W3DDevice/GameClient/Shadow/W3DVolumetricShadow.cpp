@@ -5,6 +5,7 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:K, hypothesis:init-votes
+#include "GameClient/W3DShadowGeometryMesh.h"
 // FUNCTION: BFME2 0x000F1BC5 size=72 name=?rva000F1BC5@Rva000F1BC5@@QAEXPBD@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-shared-data
 // FUNCTION: BFME2 0x000F1D24 size=292 name=?buildPolygonNormal@W3DShadowGeometryMesh@@IBEPAVVector3@@JPAV2@@Z evidence=N:ledger tier=B hypothesis:K
 
@@ -37,6 +38,17 @@
 // FUNCTION: BFME2 0x000F2BB9 size=323 name=?addShadow@W3DVolumetricShadowManager@@QAEPAVW3DVolumetricShadow@@PAVRenderObjClass@@PAUShadowTypeInfo@Shadow@@PAVDrawable@@@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x000F2CFC size=41 name=?GetPolyNeighbor@W3DShadowGeometryMesh@@IAEPAUPolyNeighbor@@H@Z evidence=N:ledger tier=A
+PolyNeighbor *W3DShadowGeometryMesh::GetPolyNeighbor(Int polyIndex)
+{
+	if (!m_polyNeighbors)
+		buildPolygonNeighbors();
+
+	// sanity
+	if (polyIndex < 0 || polyIndex >= m_numPolyNeighbors)
+		return NULL;
+
+	return &m_polyNeighbors[polyIndex];
+}
 
 // FUNCTION: BFME2 0x000F2D25 size=422 name=?buildSilhouette@W3DVolumetricShadow@@IAEXHPAVVector3@@@Z evidence=N:ledger tier=A
 
