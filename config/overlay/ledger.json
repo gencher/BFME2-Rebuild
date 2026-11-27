@@ -117,6 +117,44 @@
       },
       "before": "MISNAMED with the body written (bytes identical)",
       "after": "MATCH"
+    },
+    {
+      "id": "globaldata-attemptreload-virtual",
+      "rva": "0x0023624A",
+      "op": "add_name",
+      "name": "?attemptReload@GlobalData@@UAE_NPA_N@Z",
+      "change": "add accepted name: the row is GlobalData's override of SubsystemInterface::attemptReload(Bool *) (vtable slot 4); the ledger spells it as a placeholder vslot04 taking int",
+      "pin": {
+        "size": 59,
+        "role": "owned",
+        "name": "?vslot04@GlobalData@@UAE_NH@Z"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7GlobalData@@6B@ at 0x007ED1C4 slot 4 -> 0x0023624A (SubsystemInterface slot 4 = attemptReload, as in the other RIF stores); body: if (loadIniFilesFromLegend() /*slot 2*/) { if (TheInGameUI) TheInGameUI->multiplayerMessage(L\"RIF: GameData reloaded (changes are effective immediately)\"); return true; } return false; ret 4 = one pointer argument. Compiled bytes equal retail; judge MISNAMED only.",
+        "verified": "verify_tu --overlay=config/overlay/ledger.json --overlay-effect GlobalData.cpp"
+      },
+      "before": "0x0023624A MISNAMED; 0x002376CC WRONG_REFERENCE (code target identity at 0x23624A)",
+      "after": "0x0023624A MATCH; 0x002376CC MATCH"
+    },
+    {
+      "id": "globaldata-getfieldparse-virtual",
+      "rva": "0x002376C6",
+      "op": "add_name",
+      "name": "?getFieldParse@GlobalData@@UBEPBUFieldParse@@XZ",
+      "change": "add accepted name: the row is GlobalData's override of SubsystemInterface::getFieldParse() const (vtable slot 6), returning the GameData parse table; the ledger spells it as a placeholder vslot06 returning int",
+      "pin": {
+        "size": 6,
+        "role": "owned",
+        "name": "?vslot06@GlobalData@@UAEHXZ"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7GlobalData@@6B@ at 0x007ED1C4 slot 6 -> 0x002376C6: mov eax,0x00BE8520 (the GameData FieldParse table parseGameDataDefinition passes to INI::initFromINI); ret. Compiled bytes equal retail; judge MISNAMED only.",
+        "verified": "verify_tu --overlay=config/overlay/ledger.json --overlay-effect GlobalData.cpp"
+      },
+      "before": "0x002376C6 MISNAMED; 0x002376CC WRONG_REFERENCE",
+      "after": "0x002376C6 MATCH; 0x002376CC MATCH"
     }
   ]
 }
