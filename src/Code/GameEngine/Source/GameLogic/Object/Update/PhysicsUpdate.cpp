@@ -42,6 +42,7 @@ extern "C" double __cdecl fabs(double);
 #include "Common/RandomValue.h"
 #include "GameLogic/TerrainLogic.h"
 #include "WWMath/Vector3.h"
+#include "WWMath/wwmath.h"
 #include "GameLogic/GameLogic.h"
 
 // The element vector's destructor releases +0x20 through the game allocator
@@ -164,8 +165,7 @@ bool PhysicsBehavior::calcFlightPath(bool recalc,float maxHeight)
   firstHeight*=maxHeight;secondHeight*=scale*maxHeight;
   if(physicsFlightData->m_curveFlattenMinDist>0.0f){
    Vector3 delta;delta.X=cp[3].x-cp[0].x;delta.Y=cp[3].y-cp[0].y;delta.Z=cp[3].z-cp[0].z;
-   volatile float &distanceSquared=maxHeight; distanceSquared=delta.Length2();
-   volatile float distance=(float)sqrt((double)distanceSquared);
+   float distance=delta.Length();
    float factor=distance/physicsFlightData->m_curveFlattenMinDist;if(factor>1.0f)factor=1.0f;
    cp[1].z=firstPct*(cp[3].z-cp[0].z)+cp[0].z;
    float z2=(cp[3].z-cp[0].z)*secondPct+cp[0].z;
