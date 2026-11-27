@@ -68,6 +68,7 @@ public:
 	virtual void init() {}
 	virtual void update() {}
 	virtual void reset();			// 0x00235736, primary table slot9
+	virtual Bool attemptReload(Bool *needsRestart);
 	virtual const FieldParse *getFieldParse() const; // 0x002376C6, slot6
 
 	GlobalData *newOverride();		// 0x00237A6B
