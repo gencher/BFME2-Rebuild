@@ -13,6 +13,30 @@
 // Extent is a hypothesis; only Object VERIFIED establishes recovery.
 // Edges: left=unknown-rows right=unknown-rows
 #include "GameLogic/Module/GiantBirdAIUpdateModuleData.h"
+#include "Common/INI.h"
+
+// The locomotor set names the two locomotor-type fields scan, through the terminating null.
+static const char *TheLocomotorSetNames[] =
+{
+	"SET_NORMAL",
+	"SET_NORMAL_UPGRADED",
+	"SET_FREEFALL",
+	"SET_WANDER",
+	"SET_PANIC",
+	"SET_TAXIING",
+	"SET_SUPERSONIC",
+	"SET_MOUNTED",
+	"SET_ENRAGED",
+	"SET_SCARED",
+	"SET_CONTAINED",
+	"SET_COMBO",
+	"SET_COMBO2",
+	"SET_COMBO3",
+	"SET_WALL_SCALING",
+	"SET_CHANGING_FIRINGARC",
+	"SET_BURNINGDEATH",
+	0
+};
 
 void XferCommandSourceType(Xfer *xfer, Int *value);	// 0x00305C02 (map: ?XferCommandSourceType@@YAXPAVXfer@@PAH@Z)
 // The list<Int> transfer xfer calls (map: Rva0036ABAFXfer).
@@ -264,6 +288,24 @@ GiantBirdAIUpdateModuleData::GiantBirdAIUpdateModuleData() :
 }
 
 // FUNCTION: BFME2 0x00368182 size=27 name=?buildFieldParse@GiantBirdAIUpdateModuleData@@SAXAAVMultiIniFieldParse@@@Z evidence=N:ledger
+void GiantBirdAIUpdateModuleData::buildFieldParse(MultiIniFieldParse &parse)
+{
+	AIUpdateModuleData::buildFieldParse(parse);
+
+	static const FieldParse dataFieldParse[] =
+	{
+		{ "AttackLocomotorType", INI::parseIndexList, TheLocomotorSetNames, offsetof(GiantBirdAIUpdateModuleData, m_attackLocomotorType) },
+		{ "ReturnForAmmoLocomotorType", INI::parseIndexList, TheLocomotorSetNames, offsetof(GiantBirdAIUpdateModuleData, m_returnForAmmoLocomotorType) },
+		{ "GrabTossTimeTrigger", INI::parseReal, 0, offsetof(GiantBirdAIUpdateModuleData, m_grabTossTimeTrigger) },
+		{ "GrabTossHeightTrigger", INI::parseReal, 0, offsetof(GiantBirdAIUpdateModuleData, m_grabTossHeightTrigger) },
+		{ "FollowThroughDistance", INI::parseReal, 0, offsetof(GiantBirdAIUpdateModuleData, m_followThroughDistance) },
+		{ "FollowThroughCheckStep", INI::parseReal, 0, offsetof(GiantBirdAIUpdateModuleData, m_followThroughCheckStep) },
+		{ "FollowThroughGradient", INI::parseReal, 0, offsetof(GiantBirdAIUpdateModuleData, m_followThroughGradient) },
+		{ "TossFX", INI::parseFXList, 0, offsetof(GiantBirdAIUpdateModuleData, m_tossFX) },
+		{ 0, 0, 0, 0 }
+	};
+	parse.add(dataFieldParse, 0);
+}
 
 // FUNCTION: BFME2 0x0036819D size=63 name=?makeStateMachine@GiantBirdAIUpdate@@MAEPAVAIStateMachine@@XZ evidence=N:ledger
 AIStateMachine *GiantBirdAIUpdate::makeStateMachine()
