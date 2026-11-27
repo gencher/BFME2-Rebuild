@@ -63,9 +63,9 @@ bool LivingWorldRegion::rva003F02E4()
 		return false;
 	if (m_unk0x11C)
 		return true;
-	for (_STL::vector<RegionPlotRecord *>::iterator it = m_plots.begin(); it != m_plots.end(); ++it)
+	for (_STL::vector<LivingWorldBuildPlot *>::iterator it = m_plots.begin(); it != m_plots.end(); ++it)
 	{
-		RegionPlotRecord *plot = *it;
+		LivingWorldBuildPlot *plot = *it;
 		if (plot->m_building != NULL && !plot->m_unk0x34 && plot->m_building->get())
 			return true;
 	}
@@ -106,7 +106,7 @@ int LivingWorldRegion::rva003F05CE()
 	int count = 0;
 	for (unsigned int i = 0; i < m_plots.size(); ++i)
 	{
-		RegionPlotRecord *plot = m_plots[i];
+		LivingWorldBuildPlot *plot = m_plots[i];
 		if (plot->m_building != NULL && !plot->m_unk0x34)
 			++count;
 	}
@@ -121,7 +121,7 @@ LivingWorldBuilding *LivingWorldRegion::GetBuildingByIndex(int index) const
 	int found = 0;
 	for (unsigned int i = 0; i < m_plots.size(); ++i)
 	{
-		RegionPlotRecord *plot = m_plots[i];
+		LivingWorldBuildPlot *plot = m_plots[i];
 		if (plot->m_building != NULL && !plot->m_unk0x34)
 		{
 			if (found == index)
@@ -283,6 +283,12 @@ void LivingWorldRegion::rva003F20B0()
 // FUNCTION: BFME2 0x003F20E5 size=33 name=?rva003F20E5@Rva003F209C@@QAEXHH@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x003F2106 size=74 name=?rva003F2106@Rva003F2106@@QAEXXZ evidence=?:placeholder
+void LivingWorldRegion::rva003F2106()
+{
+	for (unsigned int i = 0; i < m_plots.size(); ++i)
+		::delete m_plots[i];
+	m_plots.clear();
+}
 
 // FUNCTION: BFME2 0x003F2150 size=480 name=?rva003F2150@LivingWorldRegion@@QAEXPAVRva003F7BB4@@@Z evidence=?:placeholder
 

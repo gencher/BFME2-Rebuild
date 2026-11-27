@@ -1,6 +1,6 @@
 // LivingWorldRegion.h: one region of the War of the Ring map. The layout is partly recovered; the rest is unnamed padding.
-// A Snapshot-derived class of SIZE 0x1B4. The plot vector at +0x170 holds pointers to plot records (the count of those whose
-// int at +0x20 is zero is rva003F1053); the region's two placement lists sit at +0x180 and +0x18C. The three strings at
+// A Snapshot-derived class of SIZE 0x1B4. The plot vector at +0x170 holds the region's LivingWorldBuildPlot objects;
+// the region's two placement lists sit at +0x180 and +0x18C. The three strings at
 // +0x120..+0x128 name the region's fortress: its portrait image and the text keys of its display name and description.
 // Not recovered: the 0x10-byte listener base at +0x04 and the 0x118-byte definition at +0x14.
 #pragma once
@@ -11,21 +11,12 @@
 #include "Common/Snapshot.h"
 #include "Common/Science.h"
 #include "Common/Vector.h"
+#include "Draft/LivingWorldBuildPlot.h"
 
 class Xfer;
 class LivingWorldBuilding;
 class Image;
 class UnicodeString;
-
-// One plot record as the region holds it. The class is LivingWorldBuildPlot in the constructor;
-// only the building at +0x20 and the flag at +0x34 are recovered.
-struct RegionPlotRecord
-{
-	unsigned char m_unk0x00[0x20];
-	LivingWorldBuilding *m_building;			// +0x20: GetBuildingByIndex returns it
-	unsigned char m_unk0x24[0x34 - 0x24];
-	bool m_unk0x34;					// +0x34: a set flag hides the plot's building
-};
 
 // A 12-byte placement list (begin, end, end of storage). Its element is not recovered.
 struct PlacementRange
@@ -58,6 +49,7 @@ public:
 	int rva003F036E();
 	int rva003F05CE();					// Plots with a visible building
 	void rva003F20B0();
+	void rva003F2106();					// Destroys every plot
 	void rva003F2739(ScienceType science);		// Appends to +0x164
 	int rva003F1053();					// Plots without a building
 	void rva003F0F48(PlacementRange *list, void *request);	// (body not written)
@@ -81,7 +73,7 @@ private:
 	int m_unk0x154;					// +0x154
 	_STL::vector<ScienceType> m_unk0x158;			// +0x158: xfer transfers it after +0x164
 	_STL::vector<ScienceType> m_unk0x164;			// +0x164
-	_STL::vector<RegionPlotRecord *> m_plots;		// +0x170
+	_STL::vector<LivingWorldBuildPlot *> m_plots;		// +0x170
 	unsigned char m_unk0x17C[0x180 - 0x17C];		// +0x17C not recovered
 	PlacementRange m_placementsA;				// +0x180
 	PlacementRange m_placementsB;				// +0x18C
