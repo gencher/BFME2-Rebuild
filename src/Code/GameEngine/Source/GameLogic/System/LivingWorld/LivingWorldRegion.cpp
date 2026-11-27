@@ -134,6 +134,30 @@ LivingWorldBuilding *LivingWorldRegion::GetBuildingByIndex(int index) const
 // FUNCTION: BFME2 0x003F076D size=97 name=?rva003F076D@Rva003F076D@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F07CE size=23 name=?rva003F07CE@LivingWorldRegion@@QAE_NXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F07E5 size=85 name=?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z evidence=S:strong (caller-this+position+layout) tier=B hypothesis:mm1-held-object-same-path
+bool LivingWorldRegion::CanBuildBuilding(LivingWorldBuildPlot *plot, int *reason)
+{
+	if (plot->m_region != this)
+	{
+		if (reason)
+			*reason = 5;
+		return false;
+	}
+	if (m_unk0x1A3)
+	{
+		if (reason)
+			*reason = 3;
+		return false;
+	}
+	if (plot->m_building != NULL)
+	{
+		if (reason)
+			*reason = 4;
+		return false;
+	}
+	if (reason)
+		*reason = 0;
+	return true;
+}
 // FUNCTION: BFME2 0x003F083A size=82 name=?rva003F083A@LivingWorldRegion@@QAEPAVCreateAHeroData@@PAX@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F088C size=75 name=?rva003F088C@LivingWorldRegion@@QBEPAULivingWorldBuildPlot@@H@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F08D7 size=23 name=?rva003F08D7@LivingWorldRegion@@QAEHH@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
@@ -190,6 +214,24 @@ int LivingWorldRegion::rva003F1053()
 
 
 // FUNCTION: BFME2 0x003F1093 size=61 name=?CanDestroyBuilding@Rva003F1093@@QAE_NPAVCreateAHeroData@@PAH@Z evidence=?:placeholder
+bool LivingWorldRegion::CanDestroyBuilding(LivingWorldBuildPlot *plot, int *reason)
+{
+	if (plot->m_region != this)
+	{
+		if (reason)
+			*reason = 2;
+		return false;
+	}
+	if (plot->m_building == NULL)
+	{
+		if (reason)
+			*reason = 1;
+		return false;
+	}
+	if (reason)
+		*reason = 0;
+	return true;
+}
 
 // FUNCTION: BFME2 0x003F10D0 size=44 name=?Rva003F10D0Pick@@YAXPAH0@Z evidence=?:placeholder
 

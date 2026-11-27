@@ -50,6 +50,8 @@ public:
 	int rva003F05CE();					// Plots with a visible building
 	void rva003F20B0();
 	void rva003F2106();					// Destroys every plot
+	bool CanBuildBuilding(LivingWorldBuildPlot *plot, int *reason);
+	bool CanDestroyBuilding(LivingWorldBuildPlot *plot, int *reason);
 	void rva003F2739(ScienceType science);		// Appends to +0x164
 	int rva003F1053();					// Plots without a building
 	void rva003F0F48(PlacementRange *list, void *request);	// (body not written)
@@ -80,7 +82,9 @@ private:
 	unsigned char m_unk0x198[0x1A0 - 0x198];		// +0x198 not recovered
 	bool m_unk0x1A0;					// +0x1A0: rva003F20B0 clears it, xfer transfers it
 	bool m_unk0x1A1;					// +0x1A1
-	unsigned char m_unk0x1A2[0x1B4 - 0x1A2];		// +0x1A2 not recovered
+	unsigned char m_unk0x1A2;				// +0x1A2 not recovered
+	bool m_unk0x1A3;					// +0x1A3: set while a building is under way; CanBuildBuilding refuses then
+	unsigned char m_unk0x1A4[0x1B4 - 0x1A4];		// +0x1A4 not recovered
 };
 
 #endif
