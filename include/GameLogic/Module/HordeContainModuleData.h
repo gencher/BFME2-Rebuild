@@ -2,6 +2,8 @@
 #pragma once
 
 #include <stddef.h>
+#include <list>
+#include <set>
 #include <vector>
 #include "GameLogic/Module/TransportContainModuleData.h"
 
@@ -30,7 +32,9 @@ public:
   unsigned char m_unk0x198[0xC]; // ComboHordes storage at +0x198
   _STL::vector<HordeContainSplitEntry *> SplitHordes; // offset=0x1A4: the SplitHordes lines (HordeContain interface slot 127, 0x004698BC, tests it for empty); ends at 0x1B0
   AsciiString AlternateFormation; // Name of the alternate formation passed to ThingFactory::findTemplate.
-  unsigned char m_unk0x1B4[0x1C];
+  _STL::list<Int> RanksThatStopAdvance; // offset=0x1B4 (parseHordeContainRanksThatStopAdvance)
+  _STL::set<Int> RanksToReleaseWhenAttacking; // offset=0x1B8 (parseHordeContainRankSets)
+  _STL::set<Int> RanksToJustFreeWhenAttacking; // offset=0x1C4 (parseHordeContainRankSets)
   unsigned char RandomOffset[0x8];
   bool ThisFormationIsTheMainFormation;
   unsigned char m_unk0x1D9[0x3];
@@ -73,6 +77,7 @@ typedef char HordeContainModuleData_rank_infos_offset[(offsetof(HordeContainModu
 typedef char HordeContainModuleData_split_hordes_offset[(offsetof(HordeContainModuleData, SplitHordes) == 0x1A4) ? 1 : -1];
 typedef char check_size_HordeContainModuleData[sizeof(HordeContainModuleData)==0x274?1:-1];
 typedef char check_HordeContainModuleData_AlternateFormation[offsetof(HordeContainModuleData,AlternateFormation)==0x1B0?1:-1];
+typedef char check_HordeContainModuleData_RanksToReleaseWhenAttacking[offsetof(HordeContainModuleData,RanksToReleaseWhenAttacking)==0x1B8?1:-1];
 typedef char check_HordeContainModuleData_RandomOffset[offsetof(HordeContainModuleData,RandomOffset)==0x1D0?1:-1];
 typedef char check_HordeContainModuleData_ThisFormationIsTheMainFormation[offsetof(HordeContainModuleData,ThisFormationIsTheMainFormation)==0x1D8?1:-1];
 typedef char check_HordeContainModuleData_BackUpMinDelayTime[offsetof(HordeContainModuleData,BackUpMinDelayTime)==0x1DC?1:-1];

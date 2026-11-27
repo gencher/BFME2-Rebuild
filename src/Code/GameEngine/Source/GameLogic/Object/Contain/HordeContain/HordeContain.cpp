@@ -1545,6 +1545,28 @@ Bool HordeContain::rva0046F8F4()
 // FUNCTION: BFME2 0x00472235 size=244 name=?rva00472235@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00472329 size=201 name=?rva00472329@HordeContain@@UAEXPBVCoord3D@@H@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+// Unless the horde is in melee, the riders whose rank is listed in RanksToReleaseWhenAttacking attack the position.
+void HordeContain::rva00472329(const Coord3D *pos, Int)
+{
+	if (usingMeleeAttack())
+		return;
+	ContainmentListView riders = getContainList();
+	const _STL::set<Int> &releaseRanks = ((const HordeContainModuleData *)getModuleData())->RanksToReleaseWhenAttacking;
+	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+	{
+		ObjectID id = (*it)->getID();
+		if (m_slotIndexByMemberID.find(id) != m_slotIndexByMemberID.end())
+		{
+			AIUpdateInterface *ai = (*it)->getAI();
+			if (ai)
+			{
+				Int rank = m_formationSlots[(*m_slotIndexByMemberID.find(id)).second].m_rank;
+				if (releaseRanks.find(rank) != releaseRanks.end())
+					ai->aiAttackPosition(pos, 0x7fffffff, CMD_FROM_AI);
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x004723F2 size=82 name=?rva004723F2@HordeContain@@QAE_NPAVObject@@ABVAsciiString@@@Z evidence=?:placeholder tier=A
 
