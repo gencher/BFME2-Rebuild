@@ -84,7 +84,7 @@ jobs:
     needs: plan
     if: needs.plan.result == 'success' && needs.plan.outputs.has_shards == 'yes'
     name: Boat shard ${{ matrix.shard }}
-    runs-on: ${{ vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1' }}
+    runs-on: ${{ vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1' }}
     timeout-minutes: 20
     env:
       BFME_PR_RUNNER: "${{ vars.BFME_PR_RUNNER || '' }}"

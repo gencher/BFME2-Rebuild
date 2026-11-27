@@ -104,6 +104,25 @@ namespace ActionsCRT
 // Edges: left=unknown-rows right=no-edge-evidence; proof_first=false
 // Hypothesis rules: hypothesis:cohesion, hypothesis:init-votes
 // FUNCTION: BFME2 0x003BA83F size=91 name=?updateTeamAndPlayerStuff@@YAHPAVObject@@PAX@Z evidence=X:map request tier=B hypothesis:mm1-neighbour-callers
+int updateTeamAndPlayerStuff(Object *obj, void *userData)
+{
+	if (obj)
+	{
+		TheRadar->rva002D7FAE(obj);
+		obj->updateUpgradeModules();
+		Drawable *draw = obj->getDrawable();
+		if (draw)
+		{
+			if (TheWritableGlobalData->m_timeOfDay == TIME_OF_DAY_NIGHT)
+				draw->setIndicatorColor(obj->getNightIndicatorColor());
+			else
+				draw->setIndicatorColor(obj->getIndicatorColor());
+			draw->preloadAssets();
+		}
+	}
+	return 1;
+}
+
 // FUNCTION: BFME2 0x003BA8AC size=24 name=?reset@ScriptActions@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 void ScriptActions::reset()
 {
@@ -2653,6 +2672,53 @@ void ScriptActions::doTeamAvailableForRecruitment(const AsciiString &teamName, B
 }
 
 // FUNCTION: BFME2 0x003C01E2 size=294 name=?doMergeTeamIntoTeam@ScriptActions@@IAEXABVAsciiString@@0@Z evidence=N:ledger tier=A
+void ScriptActions::doMergeTeamIntoTeam(const AsciiString &teamSrcName, const AsciiString &teamDestName)
+{
+	Team *teamSrc = TheScriptEngine->getTeamNamed(teamSrcName, false);
+	Team *teamDest = TheScriptEngine->getTeamNamed(teamDestName, true);
+	if (!teamSrc || !teamDest || teamSrc == teamDest)
+		return;
+
+	if (teamSrc->getControllingPlayer() != teamDest->getControllingPlayer())
+		teamSrc->setControllingPlayer(teamDest->getControllingPlayer());
+
+	Int tries = 3;
+	do
+	{
+		DLINK_ITERATOR<Object> iter = teamSrc->iterate_TeamMemberList();
+		Object *nextObj = iter.cur();
+
+		while (!iter.done())
+		{
+			Object *obj = nextObj;
+			if (!obj)
+				break;
+
+			nextObj = iter.cur();
+			iter.advance();
+			if (!obj->getContainedBy() || !obj->getContainedBy()->getTemplate()->isKindOf(KINDOF_HORDE))
+			{
+				obj->setTeam(teamDest);
+				updateTeamAndPlayerStuff(obj, NULL);
+			}
+		}
+
+		if (nextObj)
+		{
+			nextObj->setTeam(teamDest);
+			updateTeamAndPlayerStuff(nextObj, NULL);
+		}
+
+		if (teamSrc->rva0039E8EB() == NULL)
+		{
+			teamSrc->deleteTeam(false);
+			break;
+		}
+		--tries;
+	} while (tries > 0);
+
+	teamDest->setActive();
+}
 
 // FUNCTION: BFME2 0x003C0308 size=285 name=?Rva003C0308Do@ScriptActions@@QAEXABVAsciiString@@_N1H0H@Z evidence=?:placeholder tier=A
 

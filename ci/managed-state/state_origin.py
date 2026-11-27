@@ -3,6 +3,8 @@ import os
 from pathlib import Path
 import sys
 from subprocess import CalledProcessError
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -10,7 +12,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "managed-check"))
 from common import HEX40, REPO, REPO_ID, encoded, read
 from github_status import GitHub
-from state_delta import COMPACT_SCOPE, GRAPH_PATHS, REPORT_DIRS, graph_change, predecessors
+from state_delta import COMPACT_SCOPE, GRAPH_PATHS, REPORT_DIRS, graph_change, predecessors, source_changes
 from state_snapshot import git
 from state_fetch import WORKFLOW, select_artifact, select_run, verified_run
 
@@ -31,10 +33,38 @@ def is_seed(run, revisions):
             and run.get("display_title") == SEED_TITLE + sha)
 
 
-def running_seed(api, revisions):
+def active_seeds(api, revisions):
     filters = urllib.parse.urlencode({"branch": "main", "event": "workflow_dispatch", "per_page": 20})
     runs = api.call("actions/workflows/state.yml/runs?" + filters)["workflow_runs"]
-    return any(is_seed(run, revisions) and run.get("status") in MEASURING for run in runs)
+    return [run for run in runs if is_seed(run, revisions) and run.get("status") in MEASURING]
+
+
+def running_seed(api, revisions):
+    return bool(active_seeds(api, revisions))
+
+
+def cancel_run(api, run_id, *, wait_seconds=4):
+    endpoint = f"https://api.github.com/repos/{REPO}/actions/runs/{run_id}/cancel"
+    request = urllib.request.Request(endpoint, data=b"", method="POST",
+                                     headers={"Authorization": "Bearer " + api.token,
+                                              "Accept": "application/vnd.github+json"})
+    try:
+        with api.api.open(request, timeout=25) as response:
+            if response.status not in (202, 204):
+                return False
+    except urllib.error.HTTPError as err:
+        if err.code in (404, 409):
+            return False
+        raise
+    deadline = time.monotonic() + wait_seconds
+    while time.monotonic() < deadline:
+        try:
+            if api.call(f"actions/runs/{run_id}").get("status") == "completed":
+                return True
+        except Exception:
+            break
+        time.sleep(0.5)
+    return True
 
 
 def main_ref(api):
@@ -84,10 +114,33 @@ def eligible(api, sha, seed, phase, *, root=None):
             print(f"Main {sha[:12]} already has a successful exact state. No duplicate refresh.")
             return False
         ancestors = predecessors(root, sha)
-        if running_seed(api, {sha, *ancestors}):
-            print("A protected seed is already measuring a compatible main-line revision. Current refresh deferred.")
-            return False
+        seeds = active_seeds(api, {sha, *ancestors})
+        obsolete = []
+        for srun in seeds:
+            seed_sha = srun.get("head_sha", "")
+            if seed_sha == sha or (root is not None and source_changes(root, seed_sha, sha) is not None):
+                print("A protected seed is already measuring a compatible main-line revision. Current refresh deferred.")
+                return False
+            obsolete.append(srun)
+        for srun in obsolete:
+            rid = srun.get("id")
+            seed_sha = srun.get("head_sha", "")
+            if rid is not None:
+                cancel_run(api, rid)
+                print(f"Cancelled obsolete protected seed {rid} ({seed_sha[:12]}) that cannot be carried to {sha[:12]}.")
     return True
+
+
+def _dispatch_refresh(api):
+    endpoint = f"https://api.github.com/repos/{REPO}/actions/workflows/state.yml/dispatches"
+    request = urllib.request.Request(endpoint, data=encoded({"ref": "main", "inputs": {"seed": "false"}}),
+                                     headers={"Authorization": "Bearer " + api.token,
+                                              "Accept": "application/vnd.github+json",
+                                              "Content-Type": "application/json"})
+    with api.api.open(request, timeout=25) as response:
+        if response.status != 204:
+            raise Held("Expected GitHub to accept one current-main refresh. Found a different response.")
+    print("Requested one current-main refresh after the exact protected seed completed.")
 
 
 def catch_up(api, event):
@@ -99,15 +152,14 @@ def catch_up(api, event):
     if main_ref(api) == sha:
         print("The successful seed still describes current main.")
         return
-    endpoint = f"https://api.github.com/repos/{REPO}/actions/workflows/state.yml/dispatches"
-    request = urllib.request.Request(endpoint, data=encoded({"ref": "main", "inputs": {"seed": "false"}}),
-                                     headers={"Authorization": "Bearer " + api.token,
-                                              "Accept": "application/vnd.github+json",
-                                              "Content-Type": "application/json"})
-    with api.api.open(request, timeout=25) as response:
-        if response.status != 204:
-            raise Held("Expected GitHub to accept one current-main refresh. Found a different response.")
-    print("Requested one current-main refresh after the exact protected seed completed.")
+    _dispatch_refresh(api)
+
+
+def after_seed(api, sha):
+    if main_ref(api) == sha:
+        print("The successful seed still describes current main.")
+        return
+    _dispatch_refresh(api)
 
 
 def run(phase):
@@ -128,6 +180,11 @@ def run(phase):
         if event != "workflow_run":
             raise Held("Expected a completed protected seed event. Found a different trigger.")
         catch_up(api, read(env["GITHUB_EVENT_PATH"], 128 * 1024))
+        return
+    if phase == "after-seed":
+        if event != "workflow_dispatch" or env.get("BFME_STATE_SEED") != "true":
+            raise Held("Expected a completed protected seed dispatch. Found a different trigger.")
+        after_seed(api, sha)
         return
     if phase not in {"admit", "check"} or event not in {"push", "repository_dispatch", "workflow_dispatch"}:
         raise Held("Expected a protected main state entry point. Found another phase or trigger.")

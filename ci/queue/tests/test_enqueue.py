@@ -145,6 +145,11 @@ class FakeApi:
                 return {"total_count": self.active_in_progress}
             if "status=queued" in path:
                 return {"total_count": self.active_queued}
+        if "workflows/merge-queue-boat.yml/runs" in path:
+            if "status=in_progress" in path:
+                return {"total_count": getattr(self, "mq_in_progress", 0)}
+            if "status=queued" in path:
+                return {"total_count": getattr(self, "mq_queued", 0)}
         if "workflows/rules.yml/runs" in path:
             if "status=in_progress" in path:
                 return {"total_count": self.rules_in_progress}

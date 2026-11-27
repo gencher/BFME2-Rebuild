@@ -26,8 +26,11 @@ OVERCAP_EXIT_MIGRATION = ("ec1ec3a1489c459a4513cfef8937101998a740667c0662d15e4df
 AUTO_SEED_MIGRATION = ("cf1c93deac7c4d2665d753f9847ad0a6380fca1e3dab49188f9168403902e10a", "348fd37762dd358d3af7f9070d42843be2f2bc6b0d38f42537b7b3e00e3eee95")
 # Main is measured on the pull request compiler runner (vars.BFME_PR_RUNNER), so both use one image pin.
 STATE_RUNNER_MIGRATION = ("348fd37762dd358d3af7f9070d42843be2f2bc6b0d38f42537b7b3e00e3eee95", "63b75ea948a6d5ff29a3dedeab12551f4ef7793f50b43ede48480f5f04b4b256")
+# Configurable max-parallel and in-run seed catch-up refresh.
+SEED_LIFECYCLE_MIGRATION = ("63b75ea948a6d5ff29a3dedeab12551f4ef7793f50b43ede48480f5f04b4b256", "2edede02a18485377a6092c309231a880013906d22238f49a6ad276a70ab8bc7")
+SEED_YAML_FIX_MIGRATION = ("2edede02a18485377a6092c309231a880013906d22238f49a6ad276a70ab8bc7", "f271e82623b1fca7d91d073b3015638c2026e5d9ad8302460bdc26d82f753a33")
 STATE_FLOW_MIGRATIONS = {RESUME_MIGRATION, HYDRATION_MIGRATION, OVERCAP_EXIT_MIGRATION, AUTO_SEED_MIGRATION,
-                         STATE_RUNNER_MIGRATION}
+                         STATE_RUNNER_MIGRATION, SEED_LIFECYCLE_MIGRATION, SEED_YAML_FIX_MIGRATION}
 # The one-shot PR orchestration change leaves every comparison input intact.
 COMPACT_GRAPH = {
     "ci/managed-check/landing_read.py": (
@@ -1329,8 +1332,8 @@ def publication_path(root, parent, main, file):
             or ("/" not in file and file.endswith(".md")))
 
 
-def source_changes(root, parent, main):
-    """Return the dirty source paths, or None if the transition needs a full rebuild."""
+def _direct_transition(root, parent, main):
+    """Return (changed, old_tus, new_tus, bundle_pair) for one direct diff, or None."""
     data = git(root, "diff-tree", "-r", "--raw", "-z", "--no-commit-id", "--no-renames",
                "--no-ext-diff", parent, main, "--")
     if len(data) > MAX_DIFF_BYTES:
@@ -1360,7 +1363,68 @@ def source_changes(root, parent, main):
                 or info[:2] != [b":100644", b"100644"] or info[4] != b"M"):
             return None
         changed.add(file.casefold())
-    return changed
+    old_only = move["old_tus"] if move else frozenset()
+    new_only = move["new_tus"] if move else frozenset()
+    transition = graph_change(root, parent, main)
+    bundle_pair = transition.get(BUNDLE) if transition else None
+    return changed, old_only, new_only, bundle_pair
+
+
+def compose_transition(root, parent, main):
+    """Return (changed, old_tus, new_tus, bundle_pair), composing consecutive first-parent steps if needed."""
+    direct = _direct_transition(root, parent, main)
+    if direct is not None:
+        return direct
+    try:
+        chain = git(root, "rev-list", "--first-parent", "--reverse", "--max-count",
+                    str(ANCESTOR_LIMIT + 1), f"{parent}..{main}").decode("ascii").splitlines()
+    except (OSError, ValueError, CalledProcessError):
+        return None
+    if len(chain) < 2 or len(chain) > ANCESTOR_LIMIT:
+        return None
+    try:
+        first_parent = git(root, "rev-parse", chain[0] + "^1").decode("ascii").strip()
+    except (OSError, ValueError, CalledProcessError):
+        return None
+    if first_parent != parent:
+        return None
+    changed = set()
+    old_tus = set()
+    new_tus = set()
+    bundle_pair = None
+    prev = parent
+    for cur in chain:
+        step = _direct_transition(root, prev, cur)
+        if step is None:
+            return None
+        step_changed, step_old, step_new, step_bundle = step
+        changed |= step_changed
+        for tu in step_old:
+            if tu in new_tus:
+                new_tus.remove(tu)
+            else:
+                old_tus.add(tu)
+        for tu in step_new:
+            if tu in old_tus:
+                old_tus.remove(tu)
+                changed.add(tu.casefold())
+            else:
+                new_tus.add(tu)
+        if step_bundle is not None:
+            if bundle_pair is None:
+                bundle_pair = step_bundle
+            elif bundle_pair[1] == step_bundle[0]:
+                bundle_pair = (bundle_pair[0], step_bundle[1])
+            else:
+                return None
+        prev = cur
+    return changed, frozenset(old_tus), frozenset(new_tus), bundle_pair
+
+
+def source_changes(root, parent, main):
+    """Return the dirty source paths, or None if the transition needs a full rebuild."""
+    res = compose_transition(root, parent, main)
+    return res[0] if res is not None else None
 
 
 def unaffected(evidence, changed):
@@ -1384,13 +1448,12 @@ def inherited(root, main, snapshot, *, warn=print):
         parent = old.get("sha", "")
         if not isinstance(parent, str) or not OID.fullmatch(parent) or parent not in predecessors(root, main):
             return {}
-        if (changed := source_changes(root, parent, main)) is None:
+        composed = compose_transition(root, parent, main)
+        if composed is None:
             return {}
+        changed, old_only, new_only, bundle_pair = composed
         tree = git(root, "rev-parse", parent + "^{tree}").decode().strip()
         units = authoritative_units(root, main)
-        move = tu_move_change(root, parent, main)
-        old_only = move["old_tus"] if move else frozenset()
-        new_only = move["new_tus"] if move else frozenset()
         old_set, unit_set = set(old["evidence"]), set(units)
         if (not (old_only <= old_set) or not (new_only <= unit_set)
                 or (old_only & unit_set) or (new_only & old_set)
@@ -1403,8 +1466,6 @@ def inherited(root, main, snapshot, *, warn=print):
         if not all(safe_tu(item["tu"]) for item in requests):
             return {}
         identity = header(parent, tree)
-        transition = graph_change(root, parent, main)
-        bundle_pair = transition.get(BUNDLE) if transition else None
         if bundle_pair and identity["policy"] == bundle_pair[1]:
             identity["policy"] = bundle_pair[0]
         return unaffected(cached_pairs(old, identity, requests), changed)

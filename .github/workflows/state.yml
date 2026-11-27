@@ -132,7 +132,7 @@ jobs:
     timeout-minutes: 40
     strategy:
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 3
       matrix:
         batch: '${{ fromJSON(needs.plan.outputs.batches) }}'
     permissions:
@@ -397,3 +397,31 @@ jobs:
       measured_attempt: '${{ format(''{0}'', github.run_attempt) }}'
       measured_conclusion: >-
         ${{ (needs.assemble.result == 'success' || needs.recover.result == 'success') && 'success' || 'failure' }}
+
+  catch-up:
+    needs: [plan, assemble, publish]
+    if: >-
+      always() && !cancelled() && github.repository_id == '1464323350' &&
+      github.ref == 'refs/heads/main' &&
+      github.event_name == 'workflow_dispatch' && inputs.seed &&
+      needs.assemble.result == 'success' &&
+      (needs.publish.result == 'success' || needs.publish.result == 'skipped')
+    runs-on: '${{ vars.BFME_STATE_CONTROL_RUNNER || ''ubuntu-24.04'' }}'
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: '${{ github.sha }}'
+          persist-credentials: false
+          fetch-depth: 1
+      - name: Request one current-main refresh after protected seed completes
+        env:
+          BFME_READ_TOKEN: '${{ github.token }}'
+        run: |
+          set -Eeuo pipefail
+          trap 'rc=$?; printf "Expected seed catch-up refresh to succeed. Found exit %s at line %s.\n" "$rc" "$LINENO" >&2' ERR
+          (cd ci/managed-state && sha256sum -c --quiet bundle.sha256)
+          python3 -B ci/managed-state/state_origin.py after-seed
