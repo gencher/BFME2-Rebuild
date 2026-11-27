@@ -305,13 +305,11 @@ UserParser::~UserParser()
 // FUNCTION: BFME2 0x0030740F size=200 name=?openDataChunk@DataChunkInput@@QAE?AVAsciiString@@PAG@Z evidence=N:ledger
 AsciiString DataChunkInput::openDataChunk(DataChunkVersionType *version)
 {
-	UnsignedInt *idStore = 0;
 	InputChunk *chunk = new InputChunk;
-	chunk->m_dataSize = 0;
 	chunk->m_id = 0;
 	chunk->m_version = 0;
-	idStore = &chunk->m_id;
-	m_file->read(idStore, 4);
+	chunk->m_dataSize = 0;
+	m_file->read(&chunk->m_id, 4);
 	decrementDataLeft(4);
 	m_file->read(&chunk->m_version, 2);
 	decrementDataLeft(2);
@@ -324,7 +322,7 @@ AsciiString DataChunkInput::openDataChunk(DataChunkVersionType *version)
 	m_chunkStack = chunk;
 	if (m_file->eof())
 		return AsciiString("");
-	return m_contents.getName(*idStore);
+	return m_contents.getName(chunk->m_id);
 }
 
 // FUNCTION: BFME2 0x003074D7 size=51 name=?getChunkLabel@DataChunkInput@@QAE?AVAsciiString@@XZ evidence=N:ledger
