@@ -1,5 +1,6 @@
 // cl: /O1 /arch:SSE -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB /D_CRTIMP=
 // stlport46
+// platformsdk
 #include <vector>
 #include "Common/GameType.h"
 #include "Common/GameEngine.h"

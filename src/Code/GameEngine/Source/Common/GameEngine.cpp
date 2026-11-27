@@ -1,4 +1,5 @@
 // stlport46
+// platformsdk
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include <map>
 #include "Common/GameEngine.h"
@@ -59,6 +60,12 @@ bool GameEngine::isMultiplayerSession()
 // FUNCTION: BFME2 0x00225F81 size=374 name=?startHeadlessClients@GameEngine@@QAEXH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x002260F7 size=42 name=?stopHeadlessClients@GameEngine@@AAEXXZ evidence=N:ledger tier=A
+void GameEngine::stopHeadlessClients()
+{
+	for (Int i = 0; i < m_headlessClientCount; ++i)
+		TerminateProcess(m_headlessClients[i], 0);
+	m_headlessClientCount = 0;
+}
 
 // FUNCTION: BFME2 0x00226140 size=6 name=?Rva00226140Get@@YAHXZ evidence=?:placeholder tier=A
 

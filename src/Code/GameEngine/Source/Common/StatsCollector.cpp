@@ -1,4 +1,5 @@
 // cl: /O1
+// platformsdk
 #include "Common/StatsCollector.h"
 #include "Common/MessageStream.h"
 #include "Common/PlayerList.h"

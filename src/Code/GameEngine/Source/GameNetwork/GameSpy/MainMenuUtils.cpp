@@ -1,4 +1,5 @@
 // cl: /O1
+// platformsdk
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include <stdlib.h>
 #include "Common/GameEngine.h"
