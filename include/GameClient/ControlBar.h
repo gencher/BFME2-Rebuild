@@ -179,6 +179,7 @@ public:
     void onDrawableSelected(Drawable *);
     void onDrawableDeselected(Drawable *);
     void updateRadarAttackGlow();	// 0x0031AEFF
+    void preloadCommandSetImages(const AsciiString &name);	// 0x0031D61E (role name): preloadImages on every button of the named command set
     int toggleControlBarVisibility();	// 0x0031AFDE (role name): flips field29C between 0 and 1 for ShowControlBar and ToggleControlBar, then drops the selection
     unsigned char loadCommandIniFiles(INI *ini, int loadType);	// 0x0031B4D6 (role name): the three INI files in Data\INI
     void updateSlotExitImage(const Image *image);	// 0x0031BE58 (Zero Hour's name: sets the exit-slot image on Command_StructureExit and Command_TransportExit)

@@ -721,6 +721,18 @@ CommandSet *ControlBar::findNonConstCommandSet(const AsciiString &name)
 }
 
 // FUNCTION: BFME2 0x0031D61E size=49 name=?rva0031D61E@ControlBar@@QAEXPBVAsciiString@@@Z evidence=?:placeholder tier=A
+void ControlBar::preloadCommandSetImages(const AsciiString &name)
+{
+	const CommandSet *commandSet = findCommandSet(name);
+	if (commandSet == NULL)
+		return;
+	for (Int i = 0; i < 32; ++i)
+	{
+		const CommandButton *button = commandSet->getCommandButton(i);
+		if (button)
+			button->preloadImages();
+	}
+}
 
 // FUNCTION: BFME2 0x0031D64F size=526 name=?rva0031D64F@ControlBar@@QAEXXZ evidence=?:placeholder tier=A
 
