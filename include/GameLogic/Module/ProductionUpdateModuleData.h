@@ -5,7 +5,6 @@
 // INI::parseReal writes a Real and parseDurationUnsignedInt writes a frame count.
 // Members use the INI token names. Byte gaps have no corresponding field entry.
 // Unresolved (byte storage up to the next member, named after the token):
-//   m_quantityModifier +0x1C: Rva0049FDF9Parse 0x0049FDF9
 //   m_speedBonusAudioLoop +0x48: INI::parseAudioEventRTS 0x00339900
 #pragma once
 #ifndef BFME2_PRODUCTION_UPDATE_MODULE_DATA_H
@@ -16,6 +15,9 @@
 #include "Common/BitFlags.h"
 #include "GameLogic/Module/ModuleData.h"
 #include "Common/AsciiString.h"
+#include "Common/StlList.h"
+#include "Common/Vector.h"
+#include "GameLogic/ObjectFilter.h"
 
 class INI;
 class MultiIniFieldParse;
@@ -29,11 +31,38 @@ public:
 	static void parseFromINI(INI *ini, void *instance, void *store, const void *userData);
 };
 
+// One QuantityModifier INI line: a template name and how many units one purchase of it makes (Zero Hour's
+// struct; parseAppendQuantityModifier pushes an 8-byte record, the name at +0x0 and the count at +0x4).
+struct QuantityModifier
+{
+	AsciiString m_templateName;
+	Int m_quantity;
+};
+
+// One ProductionModifier INI block (field table "RequiredUpgrade", "ModifierFilter", "CostMultiplier",
+// "TimeMultiplier", "HeroPurchase", "HeroRevive" at +0x0..+0x11; the parser allocates 0x14 bytes).
+class ProductionModifierEntry
+{
+public:
+	ProductionModifierEntry();
+	~ProductionModifierEntry();
+
+	AsciiString m_requiredUpgrade;                         // +0x0 RequiredUpgrade
+	ObjectFilter m_modifierFilter;                         // +0x4 ModifierFilter
+	Real m_costMultiplier;                                 // +0x8 CostMultiplier
+	Real m_timeMultiplier;                                 // +0xC TimeMultiplier
+	Bool m_heroPurchase;                                   // +0x10 HeroPurchase
+	Bool m_heroRevive;                                     // +0x11 HeroRevive
+};
+// SIZE 0x14
+typedef char ProductionModifierEntry_size[(sizeof(ProductionModifierEntry) == 0x14) ? 1 : -1];
+
 class ProductionUpdateModuleData : public ModuleData
 {
 public:
 	ProductionUpdateModuleData();
 	static void buildFieldParse(MultiIniFieldParse &parse);
+	static void parseAppendQuantityModifier(INI *ini, ProductionUpdateModuleData *data);	// the QuantityModifier field parser (only the first two parser arguments are read)
 	static ModuleData *friend_newModuleData(INI *ini);
 
 	Int m_numDoorAnimations;                               // +0x8 NumDoorAnimations
@@ -41,13 +70,13 @@ public:
 	UnsignedInt m_doorWaitOpenTime;                        // +0x10 DoorWaitOpenTime; duration, frames
 	UnsignedInt m_doorCloseTime;                           // +0x14 DoorCloseTime; duration, frames
 	UnsignedInt m_constructionCompleteDuration;            // +0x18 ConstructionCompleteDuration; duration, frames
-	UnsignedByte m_quantityModifier[0xC];                  // +0x1C QuantityModifier; unresolved: Rva0049FDF9Parse
+	_STL::vector<QuantityModifier> m_quantityModifiers;    // +0x1C QuantityModifier
 	UnsignedInt m_maxQueueEntries;                         // +0x28 MaxQueueEntries
 	BitFlags<11> m_disabledTypesToProcess;	// +0x2C. UpdateModuleInterface slot 1 returns this mask by value.
 	Bool m_giveNoXP;                                       // +0x30 GiveNoXP
 	UnsignedInt m_unitInvulnerableTime;                    // +0x34 UnitInvulnerableTime; duration, frames
 	UnsignedInt m_specialPrepModelconditionTime;           // +0x38 SpecialPrepModelconditionTime; duration, frames
-	UnsignedByte m_unk0x3C[0x4];
+	_STL::list<ProductionModifierEntry *> m_productionModifiers;	// +0x3C ProductionModifier; the destructor deletes each entry
 	Bool m_veteranUnitsFromVeteranFactory;                 // +0x40 VeteranUnitsFromVeteranFactory
 	Bool m_setBonusModelConditionOnSpeedBonus;             // +0x41 SetBonusModelConditionOnSpeedBonus
 	AsciiString m_bonusForType;                            // +0x44 BonusForType
@@ -61,12 +90,13 @@ typedef char ProductionUpdateModuleData_off_m_doorOpeningTime[(offsetof(Producti
 typedef char ProductionUpdateModuleData_off_m_doorWaitOpenTime[(offsetof(ProductionUpdateModuleData, m_doorWaitOpenTime) == 0x10) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_doorCloseTime[(offsetof(ProductionUpdateModuleData, m_doorCloseTime) == 0x14) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_constructionCompleteDuration[(offsetof(ProductionUpdateModuleData, m_constructionCompleteDuration) == 0x18) ? 1 : -1];
-typedef char ProductionUpdateModuleData_off_m_quantityModifier[(offsetof(ProductionUpdateModuleData, m_quantityModifier) == 0x1C) ? 1 : -1];
+typedef char ProductionUpdateModuleData_off_m_quantityModifiers[(offsetof(ProductionUpdateModuleData, m_quantityModifiers) == 0x1C) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_maxQueueEntries[(offsetof(ProductionUpdateModuleData, m_maxQueueEntries) == 0x28) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_disabledTypesToProcess[(offsetof(ProductionUpdateModuleData, m_disabledTypesToProcess) == 0x2C) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_giveNoXP[(offsetof(ProductionUpdateModuleData, m_giveNoXP) == 0x30) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_unitInvulnerableTime[(offsetof(ProductionUpdateModuleData, m_unitInvulnerableTime) == 0x34) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_specialPrepModelconditionTime[(offsetof(ProductionUpdateModuleData, m_specialPrepModelconditionTime) == 0x38) ? 1 : -1];
+typedef char ProductionUpdateModuleData_off_m_productionModifiers[(offsetof(ProductionUpdateModuleData, m_productionModifiers) == 0x3C) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_veteranUnitsFromVeteranFactory[(offsetof(ProductionUpdateModuleData, m_veteranUnitsFromVeteranFactory) == 0x40) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_setBonusModelConditionOnSpeedBonus[(offsetof(ProductionUpdateModuleData, m_setBonusModelConditionOnSpeedBonus) == 0x41) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_bonusForType[(offsetof(ProductionUpdateModuleData, m_bonusForType) == 0x44) ? 1 : -1];

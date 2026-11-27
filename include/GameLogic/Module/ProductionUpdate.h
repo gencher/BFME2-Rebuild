@@ -31,6 +31,9 @@
 #include <stddef.h>
 #include "Common/GameType.h"
 #include "Common/BitFlags.h"
+#include "Common/ModelConditionFlags.h"
+#include "Common/GameAudio.h"
+#include "Common/StlList.h"
 #include "Common/AsciiString.h"
 #include "GameLogic/Module/UpdateModule.h"
 #include "GameLogic/Module/DieModuleInterface.h"
@@ -83,14 +86,14 @@ public:
 	Int m_unk0x04;														// 0x04
 	const ThingTemplate *m_unk0x08;										// 0x08
 	const UpgradeTemplate *m_unk0x0C;									// 0x0C
-	Int m_unk0x10;														// 0x10 = 1
+	ProductionID m_productionID;										// 0x10 = 1
 	Real m_unk0x14;														// 0x14
 	Real m_unk0x18;														// 0x18
 	Int m_unk0x1C;														// 0x1C
 	Int m_unk0x20;														// 0x20
 	Int m_unk0x24;														// 0x24
 	Int m_unk0x28;														// 0x28
-	Int m_unk0x2C;														// 0x2C
+	ExitDoorType m_exitDoor;											// 0x2C the door a unit entry reserved (EXIT_DOOR_NONE: none)
 	Int m_unk0x30;														// 0x30
 	Bool m_unk0x34;														// 0x34
 	Int m_unk0x38;														// 0x38
@@ -119,7 +122,7 @@ public:
 	virtual Bool queueCreateUnit(const ThingTemplate *unitType, Int, ProductionID productionID, Int, Bool,
 		const AsciiString &, const AsciiString &) = 0;														// 8
 	virtual Bool rva0049CC36(ProductionID) const = 0;															// 9 0x0049CC36
-	virtual void pslot10(Int) = 0;																			// 10 0x0049DC50
+	virtual void cancelUnitCreate(ProductionID productionID) = 0;											// 10
 	virtual void rva0049CC61(const ThingTemplate *) = 0;														// 11 0x0049CC61
 	virtual void pslot12(Int) = 0;																			// 12 0x0049CCF0
 	virtual void rva0049F8A9(const ThingTemplate *, Bool) = 0;												// 13 0x0049F8A9
@@ -135,11 +138,11 @@ public:
 	virtual void setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt) = 0;										// 23 0x0049D617 (the map spells it Rva0049D617::rva0049D617(int, unsigned char); Zero Hour's name)
 	virtual void pslot24(UnsignedByte) = 0;																	// 24 0x003BA5D0 (folded byte setter)
 	virtual UnsignedByte pslot25() const = 0;																// 25 0x002C8E83 (folded byte getter)
-	virtual Real pslot26(const ThingTemplate *) = 0;														// 26 0x0049D1CA
-	virtual Real pslot27(const ThingTemplate *) = 0;														// 27 0x0049D244
-	virtual Real pslot28(UnsignedByte) = 0;																	// 28 0x0049D2BE
-	virtual Real pslot29(UnsignedByte) = 0;																	// 29 0x0049D33D
-	virtual Bool pslot30() const = 0;																		// 30 0x0049CF9E
+	virtual Real rva0049D1CA(const ThingTemplate *) = 0;														// 26
+	virtual Real rva0049D244(const ThingTemplate *) = 0;														// 27
+	virtual Real rva0049D2BE(UnsignedByte) = 0;																	// 28
+	virtual Real rva0049D33D(UnsignedByte) = 0;																	// 29
+	virtual Bool get() const = 0;																		// 30
 };
 
 // The constructor installs the death interface at +0x24.
@@ -152,14 +155,19 @@ public:
 		UnsignedInt m_doorWaitOpenFrame;								// 0x4
 		UnsignedInt m_doorClosedFrame;									// 0x8
 		Bool m_holdOpen;												// 0xC
+
+		DoorInfo() : m_doorOpenedFrame(0), m_doorWaitOpenFrame(0), m_doorClosedFrame(0), m_holdOpen(false) {}
 	};
 
 	ProductionUpdate(Thing *thing, const ModuleData *moduleData);		// 0x0049E03A
+	virtual ~ProductionUpdate();
 	static Module *friend_newModuleInstance(Thing *thing, const ModuleData *moduleData);
 
 	// Death interface slot 0 adjusts from +0x24 to the production interface at +0x20.
 	virtual void onDie(const DamageInfo *damageInfo);
 
+	// BehaviorModuleInterface slot 7 returns the death interface at +0x24.
+	virtual DieModuleInterface *getDie() { return this; }
 	// BehaviorModuleInterface slot 28 returns the production interface at +0x20.
 	virtual ProductionUpdateInterface *getProductionUpdateInterface() { return this; }
 	virtual NameKeyType getModuleNameKey() const;						// 0x0049E15E
@@ -169,17 +177,22 @@ public:
 	virtual void pslot17();	// ProductionUpdateInterface slot 17, retail word 0x0057E556
 	virtual void pslot24(UnsignedByte);	// ProductionUpdateInterface slot 24, retail word 0x003BA5D0
 	virtual UnsignedByte pslot25() const;	// ProductionUpdateInterface slot 25, retail word 0x002C8E83
-	virtual Real pslot26(const ThingTemplate *);	// ProductionUpdateInterface slot 26, retail word 0x0049D1CA
-	virtual Real pslot27(const ThingTemplate *);	// ProductionUpdateInterface slot 27, retail word 0x0049D244
-	virtual Real pslot28(UnsignedByte);	// ProductionUpdateInterface slot 28, retail word 0x0049D2BE
-	virtual Real pslot29(UnsignedByte);	// ProductionUpdateInterface slot 29, retail word 0x0049D33D
-	virtual Bool pslot30() const;	// ProductionUpdateInterface slot 30, retail word 0x0049CF9E
+	virtual Real rva0049D1CA(const ThingTemplate *unitType);	// ProductionUpdateInterface slot 26
+	virtual Real rva0049D244(const ThingTemplate *unitType);	// ProductionUpdateInterface slot 27
+	virtual Real rva0049D2BE(UnsignedByte revive);	// ProductionUpdateInterface slot 28
+	virtual Real rva0049D33D(UnsignedByte revive);	// ProductionUpdateInterface slot 29
+	virtual Bool get() const;	// ProductionUpdateInterface slot 30
 	virtual UpdateSleepTime update();	// 0x0049E3B5
 
 	// UpdateModuleInterface slot 1 reads the data mask (0x0049E1A3).
 	virtual DisabledMaskType getDisabledTypesToProcess() const
 	{
 		return static_cast<const ProductionUpdateModuleData *>(getModuleData())->m_disabledTypesToProcess;
+	}
+
+	const ProductionUpdateModuleData *getProductionUpdateModuleData() const
+	{
+		return static_cast<const ProductionUpdateModuleData *>(getModuleData());
 	}
 
 	static ProductionUpdateInterface *getProductionUpdateInterfaceFromObject(Object *obj);	// 0x0049CEFC
@@ -201,12 +214,14 @@ public:
 	virtual void rva0049CC15(ProductionID id, Int value);				// (slot 14)
 	virtual UnsignedInt rva0049CEAE(const ThingTemplate *unitType) const;	// (slot 18)
 	virtual UnsignedInt rva0049CEE1(Int id) const;					// (slot 19)
-	virtual void pslot10(Int);											// 0x0049DC50
+	virtual void cancelUnitCreate(ProductionID productionID);			// refunds and drops the entry unless it finished and spawned
 	virtual void setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt);	// 0x0049D617 (slot 23)
 	virtual UnsignedInt rva0049D0DE(const ProductionIDSet *mask) const;	// (slot 20)
 	virtual void rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow);	// (slot 13): records a type name for later, or cancels the type's unfinished units
 	virtual void rva0049DEC8();											// (slot 16)
-	void rva0049D57F(ProductionEntry *entry);							// (map: placeholder): unlinks the entry from the queue (cancelUpgrade 0x0049D9A2 calls it before deleting the entry)
+	void rva0049E368();													// re-runs slot 13 with cancelNow for every recorded type name, then forgets them
+	void addToProductionQueue(ProductionEntry *production);				// appends to the queue and sets ACTIVELY_CONSTRUCTING
+	void removeFromProductionQueue(ProductionEntry *production);		// frees its exit door, unlinks it and clears ACTIVELY_CONSTRUCTING once the queue is empty
 
 protected:
 	virtual const char *GetSnapshotName() const;						// 0x0049E13C
@@ -219,16 +234,16 @@ public:
 	UnsignedInt m_productionCount;										// 0x34 xfer UnsignedInt; entries in the queue (canQueueUpgrade compares it with MaxQueueEntries)
 	UnsignedInt m_unk0x38;												// 0x38 xfer UnsignedInt
 	DoorInfo m_doors[4];												// 0x3C
-	BitFlags<591> m_clearFlags;											// 0x7C
-	BitFlags<591> m_setFlags;											// 0xC8
+	ModelConditionFlags m_clearFlags;									// 0x7C
+	ModelConditionFlags m_setFlags;										// 0xC8
 	Bool m_flagsDirty;													// 0x114 xfer Bool; setHoldDoorOpen 0x0049D617 sets it after adding an opening flag
 	UnsignedInt m_unk0x118;												// 0x118 xfer UnsignedInt
 	Bool m_unk0x11C;													// 0x11C
 	Bool m_unk0x11D;													// 0x11D
 	ObjectID m_spawnedObjectID;											// 0x120 slot 16 (0x0049DEC8) looks it up in the game logic
-	UnsignedByte m_list0x124[0x4];										// 0x124 STLport list (element type not established)
+	_STL::list<Int> m_list0x124;										// 0x124 STLport list; the element type is not established (the constructor and destructor are the int list's folded bodies)
 	UnsignedInt m_unk0x128;												// 0x128 xfer UnsignedInt
-	Int m_unk0x12C;														// 0x12C = 1
+	AudioHandle m_unk0x12C;												// 0x12C = 1; the destructor removes it from TheAudio, xfer version 3 xfers it through the audio manager
 	_STL::vector<AsciiString> m_pendingTypeNames;						// 0x130 slot 13 push_back (0x0049F8A9), dtor 0x0049E1BF destroys it, 0x0049E368 walks and erases it
 	Bool m_unk0x13C;													// 0x13C xfer Bool
 protected:

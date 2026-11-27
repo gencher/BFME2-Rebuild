@@ -130,6 +130,7 @@ public:
 	Int rva0039C0F4(const AsciiString &templateName);	// 0x0039C0F4 the destroyed counts, over the twenty maps, of the template with this name
 	// void add(const ModuleData *tracker);	// 0x0039C7A5 (not written yet) pushes a ScoredKillTracker handle onto the +0x304 vector (map: ?add@Rva0039C7A5Holder@@QAEXPBVModuleData@@@Z)
 	void addMoneyEarned(int);	// 0x003B0CA9
+	void rva0039BAD2(const ThingTemplate *thingTemplate, Int amount);	// adds amount to one of three spending totals chosen by the template's KindOf, and to +0x1E0
 
 	Int getTotalMoneyEarned() const { return m_totalMoneyEarned; }
 	Int getTotalMoneySpent() const { return m_totalMoneySpent; }

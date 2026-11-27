@@ -21,7 +21,10 @@
 #include "GameLogic/Module/ProductionUpdateModuleData.h"
 #include "GameLogic/Module/ExitInterface.h"
 #include "Common/INI.h"
+#include "Common/ThingFactory.h"
 #include "Common/INI/FieldParse.h"
+
+extern KindOfMaskType KINDOFMASK_NONE;
 
 // The model-condition bits of each exit door's opening, closing and waiting-open states (retail .rdata
 // 0x00C51304, 0x00C51314, 0x00C51324 in this object, four words each: DOOR_1..4; Zero Hour's file statics of
@@ -29,6 +32,9 @@
 static const UnsignedInt theOpeningFlags[4] = { 0x15, 0x19, 0x1D, 0x21 };
 static const UnsignedInt theClosingFlags[4] = { 0x16, 0x1A, 0x1E, 0x22 };
 static const UnsignedInt theWaitingOpenFlags[4] = { 0x17, 0x1B, 0x1F, 0x23 };
+// The model condition a factory holds while its production queue is not empty: entry 73 of the
+// ModelConditionFlag name table, ACTIVELY_CONSTRUCTING.
+static const UnsignedInt theActivelyConstructingFlag = 73;
 // FUNCTION: BFME2 0x0049CB82 size=4 name=?get@Rva0049CB82LeaField@@QBEPAXXZ evidence=?:placeholder tier=B hypothesis:K
 
 // FUNCTION: BFME2 0x0049CB86 size=4 name=?get@Rva0049CB86LeaField@@QBEPAXXZ evidence=?:placeholder tier=B hypothesis:K
@@ -46,7 +52,7 @@ void ProductionUpdate::rva0049CC15(ProductionID id, Int value)
 {
 	for (ProductionEntry *p = m_productionQueue; p; p = p->m_next)
 	{
-		if (p->m_unk0x10 == id)
+		if (p->m_productionID == id)
 		{
 			p->m_unk0x3C = value;
 			return;
@@ -59,7 +65,7 @@ Bool ProductionUpdate::rva0049CC36(ProductionID id) const
 {
 	for (const ProductionEntry *p = m_productionQueue; p; p = p->m_next)
 	{
-		if (p->getProductionObject() && p->m_unk0x10 == id)
+		if (p->getProductionObject() && p->m_productionID == id)
 			return true;
 	}
 	return false;
@@ -72,7 +78,7 @@ void ProductionUpdate::rva0049CC61(const ThingTemplate *unitType)
 	{
 		if (p->getProductionObject() && unitType->isEquivalentTo(p->m_unk0x08))
 		{
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			return;
 		}
 	}
@@ -89,7 +95,7 @@ void ProductionUpdate::rva0049CC9D(const ThingTemplate *unitType, Bool allowMany
 			break;
 		if (p->getProductionObject() && unitType->isEquivalentTo(p->m_unk0x08))
 		{
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			--remaining;
 			p = m_productionQueueTail;
 		}
@@ -143,6 +149,10 @@ UnsignedInt ProductionUpdate::countUnitTypeInQueue(const ThingTemplate *unitType
 }
 
 // FUNCTION: BFME2 0x0049CE63 size=11 name=?rva0049CE63@Rva0049CE63@@UAEXH@Z evidence=?:placeholder tier=B hypothesis:cohesion
+void ProductionUpdate::onDie(const DamageInfo * /*damageInfo*/)
+{
+	rva0049DEC8();
+}
 
 // FUNCTION: BFME2 0x0049CE6E size=64 name=?cancelAndRefundAllProduction@ProductionUpdate@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 void ProductionUpdate::cancelAndRefundAllProduction()
@@ -157,7 +167,7 @@ void ProductionUpdate::cancelAndRefundAllProduction()
 		{
 		case 1:
 		case 3:
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			continue;
 		case 2:
 			cancelUpgrade(p->m_unk0x0C);
@@ -209,12 +219,16 @@ ProductionUpdateInterface *ProductionUpdate::getProductionUpdateInterfaceFromObj
 // FUNCTION: BFME2 0x0049CF25 size=121 name=?rva0049CF25@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0049CF9E size=11 name=?get@Rva0049CF9ESub@@QBE_NXZ evidence=?:placeholder tier=B hypothesis:cohesion
+Bool ProductionUpdate::get() const
+{
+	return getProductionUpdateModuleData()->m_secondaryQueue ? true : false;
+}
 
 // FUNCTION: BFME2 0x0049CFA9 size=36 name=?canQueueUpgrade@ProductionUpdate@@UBE?AW4CanMakeType@@PBVUpgradeTemplate@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 // A full queue refuses before a defected (disabled) factory does; the upgrade itself is not consulted.
 CanMakeType ProductionUpdate::canQueueUpgrade(const UpgradeTemplate *upgrade) const
 {
-	const ProductionUpdateModuleData *data = (const ProductionUpdateModuleData *)getModuleData();
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
 	if (m_productionCount >= data->m_maxQueueEntries)
 		return CANMAKE_QUEUE_FULL;
 	return getObject()->testStatus(OBJECT_STATUS_TEMPORARILY_DEFECTED) ? CANMAKE_FACTORY_IS_DISABLED : CANMAKE_OK;
@@ -226,7 +240,7 @@ CanMakeType ProductionUpdate::rva0049CFCD() const
 {
 	if (m_unk0x13C)
 		return CANMAKE_FACTORY_IS_DISABLED;
-	const ProductionUpdateModuleData *data = (const ProductionUpdateModuleData *)getModuleData();
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
 	return m_productionCount < data->m_maxQueueEntries ? CANMAKE_OK : CANMAKE_QUEUE_FULL;
 }
 
@@ -250,20 +264,141 @@ UnsignedInt ProductionUpdate::rva0049D0DE(const ProductionIDSet *mask) const
 // FUNCTION: BFME2 0x0049D114 size=25 name=?rva0049D114@Drawable@@QAE?AVRva002390CB@@XZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049D12D size=53 name=??1ProductionModifierEntry@@QAE@XZ evidence=N:ledger tier=A
+ProductionModifierEntry::~ProductionModifierEntry()
+{
+}
 
 // FUNCTION: BFME2 0x0049D1CA size=122 name=?rva0049D1CA@Rva0049D1CA@@QAEMPBVThingTemplate@@@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D1CA(const ThingTemplate *unitType)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if (entry->m_modifierFilter.testTemplate(unitType, NULL, NULL))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_costMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D244 size=122 name=?rva0049D244@Rva0049D244@@QAEMPBVThingTemplate@@@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D244(const ThingTemplate *unitType)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if (entry->m_modifierFilter.testTemplate(unitType, NULL, NULL))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_timeMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D2BE size=127 name=?rva0049D2BE@Rva0049D2BE@@QAEME@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D2BE(UnsignedByte revive)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if ((entry->m_heroRevive && revive) || (entry->m_heroPurchase && !revive))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_costMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D33D size=127 name=?rva0049D33D@Rva0049D33D@@QAEME@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D33D(UnsignedByte revive)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if ((entry->m_heroRevive && revive) || (entry->m_heroPurchase && !revive))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_timeMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D3BC size=362 name=?rva0049D3BC@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049D526 size=89 name=?rva0049D526@Rva0049D526@@QAEXPAX@Z evidence=?:placeholder tier=A
+void ProductionUpdate::addToProductionQueue(ProductionEntry *production)
+{
+	if (m_productionQueue == NULL)
+		m_productionQueue = production;
+
+	if (m_productionQueueTail)
+	{
+		m_productionQueueTail->m_next = production;
+		production->m_prev = m_productionQueueTail;
+	}
+
+	m_productionQueueTail = production;
+	++m_productionCount;
+
+	ModelConditionFlags condition = getObject()->getModelConditionFlags();
+	if (condition.testShifted(theActivelyConstructingFlag) == FALSE)
+	{
+		m_setFlags.set(theActivelyConstructingFlag);
+		m_flagsDirty = TRUE;
+	}
+}
 
 // FUNCTION: BFME2 0x0049D57F size=152 name=?rva0049D57F@Rva0049D526@@QAEXPAX@Z evidence=?:placeholder tier=A
+void ProductionUpdate::removeFromProductionQueue(ProductionEntry *production)
+{
+	if (production->m_unk0x04 == 1 && production->m_exitDoor != EXIT_DOOR_NONE)
+	{
+		ExitInterface *exitInterface = getObject()->getObjectExitInterface();
+		if (exitInterface)
+			exitInterface->unreserveDoorForExit(production->m_exitDoor);
+	}
+
+	if (production->m_prev)
+		production->m_prev->m_next = production->m_next;
+	else
+		m_productionQueue = production->m_next;
+
+	if (production->m_next)
+		production->m_next->m_prev = production->m_prev;
+	else
+		m_productionQueueTail = production->m_prev;
+
+	--m_productionCount;
+
+	ModelConditionFlags condition = getObject()->getModelConditionFlags();
+	if (m_productionCount == 0 && condition.testShifted(theActivelyConstructingFlag) == TRUE)
+	{
+		m_clearFlags.set(theActivelyConstructingFlag);
+		m_setFlags.clear(theActivelyConstructingFlag);
+		m_flagsDirty = TRUE;
+	}
+}
 
 // FUNCTION: BFME2 0x0049D617 size=104 name=?rva0049D617@Rva0049D617@@QAEXHE@Z evidence=?:placeholder tier=A
 void ProductionUpdate::setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt)
@@ -285,6 +420,14 @@ void ProductionUpdate::setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt)
 // FUNCTION: BFME2 0x0049D67F size=308 name=?rva0049D67F@Rva0049D67F@@QAE_NPBDPA_N1@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049D7B3 size=124 name=??0ProductionModifierEntry@@QAE@XZ evidence=N:ledger tier=A
+ProductionModifierEntry::ProductionModifierEntry()
+{
+	m_modifierFilter.initFromStorages(KINDOFMASK_NONE, KINDOFMASK_NONE);
+	m_costMultiplier = 1.0f;
+	m_timeMultiplier = 1.0f;
+	m_heroPurchase = false;
+	m_heroRevive = false;
+}
 
 // FUNCTION: BFME2 0x0049D867 size=315 name=?queueUpgrade@ProductionUpdate@@UAE_NPBVUpgradeTemplate@@@Z evidence=N:ledger tier=A
 
@@ -308,7 +451,7 @@ void ProductionUpdate::cancelUpgrade(const UpgradeTemplate *upgrade)
 		return;
 
 	player->getMoney()->deposit(production->m_unk0x28, player->getScoreKeeper(), true);
-	rva0049D57F(production);
+	removeFromProductionQueue(production);
 	::delete production;
 	if (upgrade->getUpgradeType() == UPGRADE_TYPE_PLAYER)
 		player->removeUpgrade(upgrade, 0);
@@ -317,6 +460,27 @@ void ProductionUpdate::cancelUpgrade(const UpgradeTemplate *upgrade)
 // FUNCTION: BFME2 0x0049DA34 size=540 name=?queueCreateUnit@ProductionUpdate@@UAE_NPBVThingTemplate@@HW4ProductionID@@H_NABVAsciiString@@2@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0049DC50 size=187 name=?rva0049DC50@Rva0049DC50@@QAEXH@Z evidence=?:placeholder tier=A
+void ProductionUpdate::cancelUnitCreate(ProductionID productionID)
+{
+	for (ProductionEntry *production = m_productionQueue; production; production = production->m_next)
+	{
+		Bool finished = production->m_unk0x14 >= 100.0f && m_spawnedObjectID != INVALID_ID;
+		if (production->m_productionID == productionID && (m_unk0x11D || !finished))
+		{
+			Player *player = getObject()->getControllingPlayer();
+			if (!finished)
+			{
+				player->getMoney()->deposit(production->m_unk0x28, player->getScoreKeeper(), true);
+				player->getScoreKeeper()->rva0039BAD2(production->m_unk0x08, -production->m_unk0x28);
+			}
+			if (production->m_unk0x04 == 3)
+				player->m_unitRevivalTracker.productionSystemCancelUnitCreate(production->m_productionID);
+			removeFromProductionQueue(production);
+			::delete production;
+			return;
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x0049DD0B size=45 name=?Rva0049DD0BConstruct@@YAXPAXPBX@Z evidence=?:placeholder tier=A
 
@@ -350,6 +514,30 @@ void ProductionUpdate::rva0049DEC8()
 // FUNCTION: BFME2 0x0049DF81 size=185 name=?rva0049DF81@ProductionUpdate@@QAEXPAURva0049DF81Input@@PAVObject@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049E03A size=258 name=??0ProductionUpdate@@QAE@PAVThing@@PBVModuleData@@@Z evidence=N:ledger tier=A
+ProductionUpdate::ProductionUpdate(Thing *thing, const ModuleData *moduleData) :
+	UpdateModule(thing, moduleData),
+	m_productionQueue(NULL),
+	m_productionQueueTail(NULL),
+	m_uniqueID(1),
+	m_productionCount(0),
+	m_unk0x38(0),
+	m_flagsDirty(false),
+	m_unk0x118(0),
+	m_unk0x11C(false),
+	m_unk0x11D(false),
+	m_spawnedObjectID(INVALID_ID),
+	m_unk0x128(0),
+	m_unk0x12C(1),
+	m_unk0x13C(false)
+{
+	for (Int i = 0; i < 4; ++i)
+	{
+		m_doors[i].m_doorOpenedFrame = 0;
+		m_doors[i].m_doorWaitOpenFrame = 0;
+		m_doors[i].m_doorClosedFrame = 0;
+		m_doors[i].m_holdOpen = false;
+	}
+}
 
 // FUNCTION: BFME2 0x0049E13C size=6 name=?Rva0049E13CGet@@YAHXZ evidence=?:placeholder tier=A
 const char *ProductionUpdate::GetSnapshotName() const
@@ -379,16 +567,58 @@ NameKeyType ProductionUpdate::getModuleNameKey() const
 // FUNCTION: BFME2 0x0049E1BF size=181 name=??1ProductionUpdate@@UAE@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0049E368 size=77 name=?rva0049E368@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=A
+void ProductionUpdate::rva0049E368()
+{
+	for (_STL::vector<AsciiString>::iterator it = m_pendingTypeNames.begin(); it != m_pendingTypeNames.end(); ++it)
+	{
+		const ThingTemplate *unitType = TheThingFactory->findTemplate(*it);
+		rva0049F8A9(unitType, true);
+	}
+	m_pendingTypeNames.clear();
+}
 
 // FUNCTION: BFME2 0x0049E3B5 size=4969 name=?update@ProductionUpdate@@UAE?AW4UpdateSleepTime@@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0049F8A9 size=113 name=?rva0049F8A9@ProductionUpdate@@UAEXPBVThingTemplate@@_N@Z evidence=?:placeholder tier=B hypothesis:cohesion
+void ProductionUpdate::rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow)
+{
+	if (!cancelNow)
+	{
+		m_pendingTypeNames.push_back(typeName->getName());
+		return;
+	}
+	ProductionEntry *p = m_productionQueue;
+	while (p)
+	{
+		Int type = p->m_unk0x04;
+		if (p->m_unk0x14 < 100.0f && (type == 1 || type == 3) && typeName->isEquivalentTo(p->m_unk0x08))
+		{
+			ProductionEntry *next = p->m_next;
+			cancelUnitCreate(p->m_productionID);
+			p = next;
+		}
+		else
+		{
+			p = p->m_next;
+		}
+	}
+}
 // FUNCTION: BFME2 0x0049F91A size=1192 name=?xfer@ProductionUpdate@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0049FDF9 size=113 name=?Rva0049FDF9Parse@@YAXPAVINI@@PAVProductionUpdateModuleData@@@Z evidence=?:placeholder tier=B hypothesis:K
+void ProductionUpdateModuleData::parseAppendQuantityModifier(INI *ini, ProductionUpdateModuleData *data)
+{
+	const char *name = ini->getNextToken();
+	const char *countStr = ini->getNextTokenOrNull();
+	Int count = countStr ? ini->scanInt(countStr) : 1;
+
+	QuantityModifier qm;
+	qm.m_quantity = count;
+	qm.m_templateName.set(name);
+	data->m_quantityModifiers.push_back(qm);
+}
 
 class ProductionUpdateModuleData;
-void Rva0049FDF9Parse(INI *ini, ProductionUpdateModuleData *owner);
 void Rva0049DE6DParse(INI *ini, void *instance, void *store, const void *userData);
 static const FieldParse s_productionUpdateModuleDataFieldParse[] =
 {
@@ -398,7 +628,7 @@ static const FieldParse s_productionUpdateModuleDataFieldParse[] =
 	{ "DoorWaitOpenTime", INI::parseDurationUnsignedInt, 0, 0x10 },
 	{ "DoorCloseTime", INI::parseDurationUnsignedInt, 0, 0x14 },
 	{ "ConstructionCompleteDuration", INI::parseDurationUnsignedInt, 0, 0x18 },
-	{ "QuantityModifier", (INIFieldParseProc)Rva0049FDF9Parse, 0, 0x1C },
+	{ "QuantityModifier", (INIFieldParseProc)ProductionUpdateModuleData::parseAppendQuantityModifier, 0, 0x1C },
 	{ "ProductionModifier", Rva0049DE6DParse, 0, 0x0 },
 	{ "DisabledTypesToProcess", Rva0049DD83::parseFromINI, 0, 0x2C },
 	{ "GiveNoXP", INI::parseBool, 0, 0x30 },
