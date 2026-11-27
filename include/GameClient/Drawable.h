@@ -430,6 +430,7 @@ public:
 	// third kind (0x00270234 walks all three in one counted loop, so they are one
 	// array; findClientUpdateModule 0x0027449C walks +0x150, 0x002744C7 +0x154).
 	Module **m_modules[3];				// +0x14C
+	Module **getModuleList(Int i) const { return m_modules[i]; }
 	DrawModule **drawModuleList() const { return (DrawModule **)m_modules[0]; }
 	unsigned char m_unk0x158[0xC];		// +0x158 a vector (_Vector_base ctor)
 	Int m_unk0x164;						// +0x164
