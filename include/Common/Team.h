@@ -376,6 +376,7 @@ public:
 	void addUnitInfo(const TCreateUnitsInfo &info);	// 0x003A0D62 (finds the unit line by name and the int at +0x14, adds the counts and the minimum, or appends below MAX_UNIT_TYPES)
 	void removeUnitInfo(const TCreateUnitsInfo &info);	// 0x003A0E08 (role name: the inverse of addUnitInfo on a hit; Zero Hour has none)
 	void addToLists();				// 0x003A2BD4
+	void setControllingPlayer(Player *newController);
 	void rva003A2C0D(Player *owner, const AsciiString &name, Bool isSingleton, Dict *dict);	// 0x003A2C0D re-initialises the prototype for a new owner
 	void increaseAIPriorityForSuccess();		// 0x0039D72D
 	void decreaseAIPriorityForFailure();		// 0x0039D73A

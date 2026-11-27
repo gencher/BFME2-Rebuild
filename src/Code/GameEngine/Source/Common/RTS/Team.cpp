@@ -116,6 +116,17 @@ Int TeamTemplateInfo::countMinimumUnits() const
 // FUNCTION: BFME2 0x0039D5C1 size=323 name=?xfer@TeamTemplateInfo@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0039D704 size=41 name=?bfmeGoCFF@BfmeThingCFF@@QAEXPAVBfmeOwnerCFF@@@Z evidence=N:ledger tier=A
+void TeamPrototype::setControllingPlayer(Player *newController)
+{
+	if (!newController)
+		return;
+
+	if (m_owningPlayer)
+		m_owningPlayer->removeTeamFromList(this);
+
+	m_owningPlayer = newController;
+	m_owningPlayer->addTeamToList(this);
+}
 
 // FUNCTION: BFME2 0x0039D72D size=13 name=?increaseAIPriorityForSuccess@TeamPrototype@@QAEXXZ evidence=N:ledger tier=A
 void TeamPrototype::increaseAIPriorityForSuccess()
