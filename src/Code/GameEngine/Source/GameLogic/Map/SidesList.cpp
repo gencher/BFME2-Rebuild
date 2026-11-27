@@ -408,7 +408,7 @@ void TeamsInfoRec::swap(TeamsInfoRec *other)
 // FUNCTION: BFME2 0x0032C1F7 size=118 name=?removeFromIndex@TeamsInfoRec@@QAEXH@Z evidence=N:ledger tier=A
 void TeamsInfoRec::removeFromIndex(Int index)
 {
-	TeamsInfo *team = &m_teams[index];
+	BfmeThingUBB *team = &m_teams[index];
 	short overriddenBy = team->m_overriddenByID;
 	if (!overriddenBy)
 	{
@@ -434,8 +434,8 @@ void TeamsInfoRec::removeFromIndex(Int index)
 void TeamsInfoRec::removeTeam(Int index)
 {
 	removeFromIndex(index);
-	TeamsInfo *team = &m_teams[index];
-	team->m_dict.clear();
+	BfmeThingUBB *team = &m_teams[index];
+	team->getDict()->clear();
 	m_teams[team->m_next].m_prev = team->m_prev;
 	m_teams[team->m_prev].m_next = team->m_next;
 	short oldFreeHead = m_freeHead;
@@ -493,7 +493,7 @@ void SidesList::discardOverriddenScriptsAndTeams()
 // FUNCTION: BFME2 0x0032C9C6 size=58 name=?clear@TeamsInfoRec@@QAEXXZ evidence=N:ledger tier=A
 void TeamsInfoRec::clear()
 {
-	_STL::vector<TeamsInfo>(1).swap(m_teams);
+	_STL::vector<BfmeThingUBB>(1).swap(m_teams);
 	m_index.clear();
 	m_numActive = 0;
 	m_freeHead = 0;
@@ -540,8 +540,8 @@ void SidesList::emptyTeams()
 // FUNCTION: BFME2 0x0032D103 size=288 name=?addToIndex@TeamsInfoRec@@QAEXH@Z evidence=N:ledger tier=A
 void TeamsInfoRec::addToIndex(Int index)
 {
-	TeamsInfo &team = m_teams[index];
-	Dict &dict = team.m_dict;
+	BfmeThingUBB &team = m_teams[index];
+	Dict &dict = *team.getDict();
 	TeamNameKey key(dict.getAsciiString(TheKey_teamOwner.key()), dict.getAsciiString(TheKey_teamName.key()));
 	team.m_indexIt = m_index.find(key);
 	if (team.m_indexIt == m_index.end())
@@ -552,7 +552,7 @@ void TeamsInfoRec::addToIndex(Int index)
 	{
 		// a team already filed under this key: this slot overrides it
 		Int overridden = team.m_indexIt->second;
-		TeamsInfo &previous = m_teams[overridden];
+		BfmeThingUBB &previous = m_teams[overridden];
 		previous.m_overriddenByID = index;
 		team.m_overridesID = overridden;
 		team.m_indexIt->second = index;
@@ -563,7 +563,7 @@ void TeamsInfoRec::addToIndex(Int index)
 void TeamsInfoRec::renameTeam(Int index, const AsciiString &owner, const AsciiString &name)
 {
 	removeFromIndex(index);
-	Dict &dict = m_teams[index].m_dict;
+	Dict &dict = *m_teams[index].getDict();
 	dict.setAsciiString(TheKey_teamOwner.key(), owner);
 	dict.setAsciiString(TheKey_teamName.key(), name);
 	addToIndex(index);
@@ -670,8 +670,8 @@ void TeamsInfoRec::moveTeamsToNewOwner(const AsciiString &oldOwner, const AsciiS
 		// refile the slot and every slot it overrides under the new owner
 		while (index != 0)
 		{
-			TeamsInfo &team = m_teams[index];
-			team.m_dict.setAsciiString(TheKey_teamOwner.key(), newOwner);
+			BfmeThingUBB &team = m_teams[index];
+			team.getDict()->setAsciiString(TheKey_teamOwner.key(), newOwner);
 			team.m_indexIt = newIt;
 			index = m_teams[index].m_overridesID;
 		}
