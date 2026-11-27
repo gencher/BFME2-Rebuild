@@ -29,6 +29,7 @@ public:
     int createDockMessage(Drawable *draw, int commandType);
     // Retail 0x00429E11 (non-virtual): the context-command evaluation GameClient forwards to.
     GameMessage::Type evaluateContextCommand(Drawable *draw, const Coord3D *pos, CommandEvaluateType cmdType);
+    void selectMatchingOnDoubleClick(const GameMessage *msg);	// role name: a single-point click on a drawable selects its kind through the control bar
 private:
     int issueGuardCommand(const CommandButton *command, int commandType, Drawable *target, const Coord3D *pos);	// 0x00428EEB (role name)
     int createAttackMessage(Drawable *draw, Drawable *other, int commandType);	// 0x004293EE
@@ -36,6 +37,7 @@ private:
     int issueMoveToLocationCommand(const Coord3D *pos, Drawable *drawableInWay, int commandType);	// 0x004292F6
     int issueAttackCommand(Drawable *target, const Coord3D *pos, int commandType, int command);	// 0x004297F0
     int issueCombatDropCommand(const CommandButton *command, int commandType, Drawable *target, const Coord3D *pos);
+    int evaluateForceAttack(Drawable *draw, const Coord3D *pos, CommandEvaluateType type);
     Int m_objective; // +04, Zero Hour CommandXlat.h spelling
     Bool m_teamExists; // +08
     ICoord2D m_mouseRightDragAnchor; // +0C

@@ -120,6 +120,25 @@
       "after": "0x00329AEA MATCH"
     },
     {
+      "id": "commandtranslator-evaluateforceattack-nested-enum",
+      "rva": "0x00429CBB",
+      "op": "add_name",
+      "name": "?evaluateForceAttack@CommandTranslator@@AAEHPAVDrawable@@PBVCoord3D@@W4CommandEvaluateType@1@@Z",
+      "change": "add accepted name: the third parameter is CommandTranslator::CommandEvaluateType (nested, as in Zero Hour's CommandXlat.h); the ledger spells it as a global enum CommandEvaluateType, which no other row uses",
+      "pin": {
+        "size": 342,
+        "role": "owned",
+        "name": "?evaluateForceAttack@CommandTranslator@@AAEHPAVDrawable@@PBVCoord3D@@W4CommandEvaluateType@@@Z"
+      },
+      "evidence": {
+        "kind": "judge-reason",
+        "detail": "the same ledger names evaluateContextCommand 0x00429E11 and its __ehhandler 0x00787547 with W4CommandEvaluateType@CommandTranslator (back-reference @1@), so the enum is nested; the judge pairs the compiled body with retail 0x00429CBB: bytes equal, only the name differs (MISNAMED)",
+        "verified": "verify_tu --overlay-effect CommandXlat.cpp"
+      },
+      "before": "MISNAMED",
+      "after": "MATCH"
+    },
+    {
       "id": "detachableriderupdate-update-virtual",
       "rva": "0x004AEC9B",
       "op": "add_name",

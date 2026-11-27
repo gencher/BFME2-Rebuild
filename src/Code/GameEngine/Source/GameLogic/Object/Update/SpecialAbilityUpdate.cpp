@@ -1014,7 +1014,7 @@ void SpecialAbilityUpdate::startPacking(bool success)
 		DrawableList list;
 		list.push_back(draw);
 		PickAndPlayInfo info;
-		info.m_unk0x10 = (UnsignedInt)data->m_specialPowerTemplate;
+		info.m_specialPowerTemplate = data->m_specialPowerTemplate;
 		if (data->m_specialPowerTemplate->getFO()->m_type == (SpecialPowerType)0x1a || data->m_specialPowerTemplate->getFO()->m_type == (SpecialPowerType)0x1d)
 			pickAndPlayUnitVoiceResponse(&list, (GameMessage::Type)0x7dd, &info);
 		else
