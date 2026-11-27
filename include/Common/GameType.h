@@ -253,6 +253,7 @@ enum ModelConditionFlagType
 	MODELCONDITION_GARRISONED = 10,
     MODELCONDITION_RUBBLE_RISE_START=59,
     MODELCONDITION_RUBBLE_RISE_DONE=60,
+	MODELCONDITION_ACTIVELY_CONSTRUCTING = 73,	// the name table's entry 73; a factory holds it while its production queue is not empty
 	MODELCONDITION_40 = 0x40,	// set on a horde with a sacrifice kill (BloodthirstyUpdate)
 	MODELCONDITION_RIDERLESS = 297,	// DetachableRiderUpdate sets it when the rider is gone
 	MODELCONDITION_DISGUISED = 300,	// set while SpecialDisguiseUpdate disguises the unit

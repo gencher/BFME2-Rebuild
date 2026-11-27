@@ -90,7 +90,7 @@ public:
 	Int m_unk0x20;														// 0x20
 	Int m_unk0x24;														// 0x24
 	Int m_unk0x28;														// 0x28
-	Int m_unk0x2C;														// 0x2C
+	ExitDoorType m_exitDoor;											// 0x2C the door a unit entry reserved (EXIT_DOOR_NONE: none)
 	Int m_unk0x30;														// 0x30
 	Bool m_unk0x34;														// 0x34
 	Int m_unk0x38;														// 0x38
@@ -212,7 +212,8 @@ public:
 	virtual void rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow);	// (slot 13): records a type name for later, or cancels the type's unfinished units
 	virtual void rva0049DEC8();											// (slot 16)
 	void rva0049E368();													// re-runs slot 13 with cancelNow for every recorded type name, then forgets them
-	void rva0049D57F(ProductionEntry *entry);							// (map: placeholder): unlinks the entry from the queue (cancelUpgrade 0x0049D9A2 calls it before deleting the entry)
+	void addToProductionQueue(ProductionEntry *production);				// appends to the queue and sets ACTIVELY_CONSTRUCTING
+	void removeFromProductionQueue(ProductionEntry *production);		// frees its exit door, unlinks it and clears ACTIVELY_CONSTRUCTING once the queue is empty
 
 protected:
 	virtual const char *GetSnapshotName() const;						// 0x0049E13C

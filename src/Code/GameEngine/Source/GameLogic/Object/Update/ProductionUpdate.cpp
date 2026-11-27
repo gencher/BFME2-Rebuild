@@ -340,8 +340,58 @@ Real ProductionUpdate::rva0049D33D(UnsignedByte revive)
 // FUNCTION: BFME2 0x0049D3BC size=362 name=?rva0049D3BC@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049D526 size=89 name=?rva0049D526@Rva0049D526@@QAEXPAX@Z evidence=?:placeholder tier=A
+void ProductionUpdate::addToProductionQueue(ProductionEntry *production)
+{
+	if (m_productionQueue == NULL)
+		m_productionQueue = production;
+
+	if (m_productionQueueTail)
+	{
+		m_productionQueueTail->m_next = production;
+		production->m_prev = m_productionQueueTail;
+	}
+
+	m_productionQueueTail = production;
+	++m_productionCount;
+
+	ModelConditionFlags condition = getObject()->getModelConditionFlags();
+	if (condition.testShifted(MODELCONDITION_ACTIVELY_CONSTRUCTING) == FALSE)
+	{
+		m_setFlags.set(MODELCONDITION_ACTIVELY_CONSTRUCTING);
+		m_flagsDirty = TRUE;
+	}
+}
 
 // FUNCTION: BFME2 0x0049D57F size=152 name=?rva0049D57F@Rva0049D526@@QAEXPAX@Z evidence=?:placeholder tier=A
+void ProductionUpdate::removeFromProductionQueue(ProductionEntry *production)
+{
+	if (production->m_unk0x04 == 1 && production->m_exitDoor != EXIT_DOOR_NONE)
+	{
+		ExitInterface *exitInterface = getObject()->getObjectExitInterface();
+		if (exitInterface)
+			exitInterface->unreserveDoorForExit(production->m_exitDoor);
+	}
+
+	if (production->m_prev)
+		production->m_prev->m_next = production->m_next;
+	else
+		m_productionQueue = production->m_next;
+
+	if (production->m_next)
+		production->m_next->m_prev = production->m_prev;
+	else
+		m_productionQueueTail = production->m_prev;
+
+	--m_productionCount;
+
+	ModelConditionFlags condition = getObject()->getModelConditionFlags();
+	if (m_productionCount == 0 && condition.testShifted(MODELCONDITION_ACTIVELY_CONSTRUCTING) == TRUE)
+	{
+		m_clearFlags.set(MODELCONDITION_ACTIVELY_CONSTRUCTING);
+		m_setFlags.clear(MODELCONDITION_ACTIVELY_CONSTRUCTING);
+		m_flagsDirty = TRUE;
+	}
+}
 
 // FUNCTION: BFME2 0x0049D617 size=104 name=?rva0049D617@Rva0049D617@@QAEXHE@Z evidence=?:placeholder tier=A
 void ProductionUpdate::setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt)
@@ -394,7 +444,7 @@ void ProductionUpdate::cancelUpgrade(const UpgradeTemplate *upgrade)
 		return;
 
 	player->getMoney()->deposit(production->m_unk0x28, player->getScoreKeeper(), true);
-	rva0049D57F(production);
+	removeFromProductionQueue(production);
 	::delete production;
 	if (upgrade->getUpgradeType() == UPGRADE_TYPE_PLAYER)
 		player->removeUpgrade(upgrade, 0);
