@@ -296,6 +296,15 @@ AsciiString PlayerTemplate::getName() const
 // FUNCTION: BFME2 0x0023FABE size=154 name=?rva0023FABE@GameLogic@@QAEXPAVObject@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023FB58 size=104 name=?rva0023FB58@GameLogic@@QAEABVAsciiString@@H@Z evidence=?:placeholder tier=A
+const AsciiString &GameLogic::rva0023FB58(Int slot)
+{
+	if (slot >= 0 && slot < m_unk0x58.size())
+		return m_unk0x58[slot];
+
+	static AsciiString invalidSlot("Invalid Slot");
+	return invalidSlot;
+}
+
 
 // FUNCTION: BFME2 0x0023FBDB size=53 name=?rva0023FBDB@Rva0023FBDB@@QAEXPAURva0023FBDBNode@@@Z evidence=?:placeholder tier=A
 
