@@ -1613,6 +1613,37 @@ void HordeContain::rva004730B0(Object *target)
 // FUNCTION: BFME2 0x00473212 size=1415 name=?rva00473212@HordeContain@@UAEPAVObject@@PAV2@PBV2@_N@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x004738B6 size=254 name=?rva004738B6@HordeContain@@UAEXPAVObject@@@Z evidence=?:placeholder tier=A
+// Sends the members into the container: those already close enough enter at once, a limited number more enter
+// once the horde has waited long enough, and the rest are told to move to it.
+void HordeContain::rva004738B6(Object *container)
+{
+	UnsignedInt forced = TheWritableGlobalData->m_maxNumMembersToForceToImmediatelyEnter;
+	_STL::set<Int>::const_iterator it = m_memberIDs.begin();
+	while (it != m_memberIDs.end())
+	{
+		Object *member = TheGameLogic->findObjectByID((ObjectID)*it);
+		++it;
+		if (member == NULL)
+			continue;
+		if (rva00468F0F(member, container) == true && container->getContain() != NULL)
+		{
+			container->getContain()->addToContain(member);
+		}
+		else if (hordeSlot65() != 0 && forced > 0
+			&& TheGameLogic->getFrame() - hordeSlot65() > TheWritableGlobalData->m_waitToForceMemberToEnterDelay
+			&& container->getContain() != NULL)
+		{
+			container->getContain()->addToContain(member);
+			--forced;
+		}
+		else
+		{
+			AIUpdateInterface *ai = member->getAI();
+			if (ai != NULL && ai->isIdle())
+				ai->rva0026C347(container, CMD_FROM_AI);
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x004739B4 size=299 name=?rva004739B4@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 

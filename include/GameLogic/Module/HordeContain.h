@@ -178,7 +178,7 @@ public:
 	virtual Bool rva0046AAB8();	// 62 0x0046AAB8
 	virtual void rva004738B6(Object *obj);	// 63 0x004738B6
 	virtual void hordeSlot64(Int value);	// 64 0x0046F7EB
-	virtual Object *hordeSlot65();	// 65 0x0046F7F8
+	virtual Int hordeSlot65();	// 65 0x0046F7F8
 	virtual ContainmentListView hordeSlot66();	// 66 0x0046F7FF
 	virtual void rva0046D1F7(HordeConstObjectList &list);	// 67 0x0046D1F7
 	virtual Object *rva0046D27A();	// 68 0x0046D27A
