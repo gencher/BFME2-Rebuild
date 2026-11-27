@@ -71,6 +71,7 @@ public:
 	virtual const FieldParse *getFieldParse() const; // 0x002376C6, slot6
 
 	GlobalData *newOverride();		// 0x00237A6B
+	static void parseGameDataDefinition(INI *ini);
 	AsciiString rva002360DE() const;	// 0x002360DE, copies m_unk0x1240
 	UnicodeString rva002360FC() const;	// 0x002360FC, copies m_unk0x1244
 	AsciiString getPicturePath() const;	// 0x0023611A
@@ -78,6 +79,7 @@ public:
 	Bool setTimeOfDay(TimeOfDay tod);	// 0x002352BC
 
 	static GlobalData *s_theOriginal;	// VA 0x00DFE75C
+	static const FieldParse s_GlobalDataFieldParseTable[];	// the GameData parse table (457 entries)
 
 	AsciiString m_mapName;                                 // +0xC MapName
 	AsciiString m_moveHintName;                            // +0x10 MoveHintName
@@ -136,7 +138,7 @@ public:
 	AsciiString m_livingWorldCampaignOverrride;            // +0x8C LivingWorldCampaignOverrride
 	Int m_featherWater;                                    // +0x90 FeatherWater
 	Real m_downwindAngle;                                  // +0x94 DownwindAngle
-	Bool m_drawSkyBox;                                     // +0x98 DrawSkyBox
+	Real m_drawSkyBox;                                     // +0x98 DrawSkyBox; a Real (the constructor and the reload path treat it as one) though the table parses it with parseBool
 	Real m_defaultCameraMinHeight;                         // +0x9C DefaultCameraMinHeight
 	Real m_defaultCameraMaxHeight;                         // +0xA0 DefaultCameraMaxHeight
 	Real m_defaultCameraPitchAngle;                        // +0xA4 DefaultCameraPitchAngle
@@ -556,8 +558,8 @@ public:
 	UnsignedInt m_maxNumMembersToForceToImmediatelyEnter;  // +0x1230 MaxNumMembersToForceToImmediatelyEnter
 	UnsignedInt m_waitToForceMemberToEnterDelay;           // +0x1234 WaitToForceMemberToEnterDelay
 	unsigned char m_unk0x1238[0x8];
-	AsciiString m_unk0x1240;					// +0x1240 returned by 0x002360DE
-	UnicodeString m_unk0x1244;				// +0x1244 returned by 0x002360FC
+	AsciiString m_userDataDir;					// +0x1240 returned by 0x002360DE
+	UnicodeString m_userDataDirW;				// +0x1244 returned by 0x002360FC
 	AsciiString m_picturePath;					// +0x1248 the folder getPicturePath creates and caches
 	AsciiString m_userDataLeafName;				// +0x124C UserDataLeafName
 	GlobalData *m_next;					// +0x1250 the override chain reset 0x00235736 walks

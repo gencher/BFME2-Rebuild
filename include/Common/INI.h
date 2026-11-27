@@ -14,7 +14,7 @@
 #include "Common/Science.h"
 #include "Common/INIFileTable.h"
 
-enum INILoadType { INI_LOAD_INVALID = 0, INI_LOAD_OVERWRITE = 1, INI_LOAD_CREATE_OVERRIDES = 2, INI_LOAD_RELOAD = 5 /* parser 0x001DAF81 compares the load type with 5 on an existing button; role-inferred name */ };
+enum INILoadType { INI_LOAD_INVALID = 0, INI_LOAD_OVERWRITE = 1, INI_LOAD_CREATE_OVERRIDES = 2, INI_LOAD_MULTIFILE = 3, INI_LOAD_RELOAD = 5 /* parser 0x001DAF81 compares the load type with 5 on an existing button; role-inferred name */ };
 class INI;
 class File;
 class Xfer;

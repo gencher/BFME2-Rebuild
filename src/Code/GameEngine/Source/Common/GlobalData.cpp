@@ -21,6 +21,7 @@ class CollisionManager;
 AsciiString buildGameRegistryPath(const char *path);
 Bool GetStringFromRegistry(AsciiString path, AsciiString key, AsciiString &value);
 const char *GetRegistryUserDataLeafName();
+UnicodeString getUserDataLeafName();
 
 // The world-state singletons this object defines (retail VA 0x00DFE748..0x00DFE75C, address order).
 PartitionManager *ThePartitionManager = NULL;
@@ -600,14 +601,64 @@ GlobalData *GlobalData::newOverride()
 }
 
 // FUNCTION: BFME2 0x00237AB1 size=588 name=?parseGameDataDefinition@GlobalData@@SAXPAVINI@@@Z evidence=N:ledger
+void GlobalData::parseGameDataDefinition(INI *ini)
+{
+	if (TheWritableGlobalData && ini->getLoadType() == INI_LOAD_RELOAD)
+	{
+		// A reload keeps the map name and the sky box setting.
+		AsciiString mapName = TheWritableGlobalData->m_mapName;
+		Bool drawSkyBox = TheWritableGlobalData->m_drawSkyBox != 0.0f;
+		ini->initFromINI(TheWritableGlobalData, s_GlobalDataFieldParseTable);
+		TheWritableGlobalData->m_mapName = mapName;
+		TheWritableGlobalData->m_drawSkyBox = drawSkyBox;
+		TheWritableGlobalData->applyOptionPreferences();
+		return;
+	}
+
+	if (TheWritableGlobalData && ini->getLoadType() != INI_LOAD_MULTIFILE)
+	{
+		if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+			TheWritableGlobalData->newOverride();
+	}
+	else if (!TheWritableGlobalData)
+	{
+		TheWritableGlobalData = new GlobalData;
+	}
+
+	ini->initFromINI(TheWritableGlobalData, s_GlobalDataFieldParseTable);
+
+	TheWritableGlobalData->m_userDataDir.clear();
+	TheWritableGlobalData->m_userDataDirW.clear();
+	TheWritableGlobalData->m_picturePath.clear();
+
+	UnicodeString leafName = getUserDataLeafName();
+	if (leafName.isEmpty())
+		leafName.translate(TheWritableGlobalData->m_userDataLeafName);
+	else
+		TheWritableGlobalData->m_userDataLeafName.translate(leafName);
+
+	WideChar path[MAX_PATH];
+	if (SHGetSpecialFolderPathW(NULL, path, CSIDL_APPDATA, TRUE))
+	{
+		if (path[wcslen(path) - 1] != L'\\')
+			wcscat(path, L"\\");
+		wcscat(path, leafName.str());
+		wcscat(path, L"\\");
+		CreateDirectoryW(path, NULL);
+		TheWritableGlobalData->m_userDataDirW = path;
+		TheWritableGlobalData->m_userDataDir.translate(path);
+	}
+
+	TheWritableGlobalData->applyOptionPreferences();
+}
 
 
 AsciiString GlobalData::rva002360DE() const
 {
-	return m_unk0x1240;
+	return m_userDataDir;
 }
 
 UnicodeString GlobalData::rva002360FC() const
 {
-	return m_unk0x1244;
+	return m_userDataDirW;
 }
