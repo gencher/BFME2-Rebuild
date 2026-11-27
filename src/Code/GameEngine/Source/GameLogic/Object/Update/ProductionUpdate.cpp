@@ -21,6 +21,7 @@
 #include "GameLogic/Module/ProductionUpdateModuleData.h"
 #include "GameLogic/Module/ExitInterface.h"
 #include "Common/INI.h"
+#include "Common/ThingFactory.h"
 #include "Common/INI/FieldParse.h"
 
 extern KindOfMaskType KINDOFMASK_NONE;
@@ -464,10 +465,42 @@ NameKeyType ProductionUpdate::getModuleNameKey() const
 // FUNCTION: BFME2 0x0049E1BF size=181 name=??1ProductionUpdate@@UAE@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0049E368 size=77 name=?rva0049E368@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=A
+void ProductionUpdate::rva0049E368()
+{
+	for (_STL::vector<AsciiString>::iterator it = m_pendingTypeNames.begin(); it != m_pendingTypeNames.end(); ++it)
+	{
+		const ThingTemplate *unitType = TheThingFactory->findTemplate(*it);
+		rva0049F8A9(unitType, true);
+	}
+	m_pendingTypeNames.clear();
+}
 
 // FUNCTION: BFME2 0x0049E3B5 size=4969 name=?update@ProductionUpdate@@UAE?AW4UpdateSleepTime@@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0049F8A9 size=113 name=?rva0049F8A9@ProductionUpdate@@UAEXPBVThingTemplate@@_N@Z evidence=?:placeholder tier=B hypothesis:cohesion
+void ProductionUpdate::rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow)
+{
+	if (!cancelNow)
+	{
+		m_pendingTypeNames.push_back(typeName->getName());
+		return;
+	}
+	ProductionEntry *p = m_productionQueue;
+	while (p)
+	{
+		Int type = p->m_unk0x04;
+		if (p->m_unk0x14 < 100.0f && (type == 1 || type == 3) && typeName->isEquivalentTo(p->m_unk0x08))
+		{
+			ProductionEntry *next = p->m_next;
+			pslot10(p->m_unk0x10);
+			p = next;
+		}
+		else
+		{
+			p = p->m_next;
+		}
+	}
+}
 // FUNCTION: BFME2 0x0049F91A size=1192 name=?xfer@ProductionUpdate@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0049FDF9 size=113 name=?Rva0049FDF9Parse@@YAXPAVINI@@PAVProductionUpdateModuleData@@@Z evidence=?:placeholder tier=B hypothesis:K

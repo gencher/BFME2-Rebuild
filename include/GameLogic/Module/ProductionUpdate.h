@@ -211,6 +211,7 @@ public:
 	virtual UnsignedInt rva0049D0DE(const ProductionIDSet *mask) const;	// (slot 20)
 	virtual void rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow);	// (slot 13): records a type name for later, or cancels the type's unfinished units
 	virtual void rva0049DEC8();											// (slot 16)
+	void rva0049E368();													// re-runs slot 13 with cancelNow for every recorded type name, then forgets them
 	void rva0049D57F(ProductionEntry *entry);							// (map: placeholder): unlinks the entry from the queue (cancelUpgrade 0x0049D9A2 calls it before deleting the entry)
 
 protected:
