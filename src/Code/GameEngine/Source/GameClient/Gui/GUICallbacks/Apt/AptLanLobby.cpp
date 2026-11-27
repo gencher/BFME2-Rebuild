@@ -1,6 +1,7 @@
 // cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB /D_STLP_BFME_COPY_TRIVIAL_EXTERN /D_STLP_NO_EXCEPTIONS /EHs /EHc- /D_CRTIMP=
 // stlport46
 // bfmealloc_alloconly
+// platformsdk
 #include <list>
 #ifdef _CRTIMP
 #undef _CRTIMP

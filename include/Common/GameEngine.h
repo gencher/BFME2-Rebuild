@@ -3,6 +3,7 @@
 // (SetErrorMode result, 0x00041D56) bounds the base object.
 #pragma once
 
+#include <windows.h>
 #include "Common/SubsystemInterface.h"
 
 class AptPlayer;
@@ -60,11 +61,14 @@ public:
 	virtual void _bfme_updateNetworkAndLogic(Int frame);	// 0x0022634F
 	virtual void _bfme_updateClientSubsystems();			// 0x00225C12
 
+	enum { MAX_HEADLESS_CLIENTS = 7 };
+
 private:
 	Int m_frameRateLimit;									// +0x0C, used for frame pacing in execute.
 	Bool m_quitting;										// +0x10, tested at 0x0022D45E.
 	Bool m_isActive;											// +0x11, Win32 focus flag (same accessors as Zero Hour).
-	UnsignedByte m_unk0x12[0x34 - 0x12];
+	Int m_headlessClientCount;								// +0x14
+	HANDLE m_headlessClients[MAX_HEADLESS_CLIENTS];			// +0x18, from CreateProcess.
 
 public:
 	Int m_clientFrameInLogicFrame;							// +0x34, numerator in updateClientFrameRatio.
