@@ -1,4 +1,4 @@
-// cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB /D_CRTIMP=
+// cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB
 // stlport46
 #include <list>
 #include <string.h>
@@ -137,7 +137,7 @@ void parseTriggerSpecialPower(INI *ini, void *instance, void *, const void *)
 	{
 		for (Int i = 0; i < 2; ++i)
 		{
-			if (stricmp(modeToken, s_triggerTargetNames[i]) == 0)
+			if (strcmp(modeToken, s_triggerTargetNames[i]) == 0)
 			{
 				entry.m_mode = i;
 				break;

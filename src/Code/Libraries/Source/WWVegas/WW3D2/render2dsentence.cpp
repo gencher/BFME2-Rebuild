@@ -1,4 +1,4 @@
-// cl: /O2 /G7 /arch:SSE /DNOMINMAX /D_STLP_USE_STATIC_LIB /D_CRTIMP=
+// cl: /O2 /G7 /arch:SSE /DNOMINMAX /D_STLP_USE_STATIC_LIB
 // stlport46
 // bfmealloc_alloconly
 // psdk

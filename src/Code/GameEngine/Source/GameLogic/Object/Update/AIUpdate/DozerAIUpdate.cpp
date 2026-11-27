@@ -1,4 +1,4 @@
-// cl: /O1 /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB /D_CRTIMP=
+// cl: /O1 /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB
 // stlport46
 // bfmealloc_alloconly
 // Portions derived from Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.

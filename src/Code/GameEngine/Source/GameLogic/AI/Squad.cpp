@@ -1,4 +1,4 @@
-// cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB /D_STLP_BFME_COPY_TRIVIAL_EXTERN /D_STLP_NO_EXCEPTIONS /EHs /EHc- /D_CRTIMP=
+// cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB /D_STLP_BFME_COPY_TRIVIAL_EXTERN /D_STLP_NO_EXCEPTIONS /EHs /EHc-
 // stlport46
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include <vector>

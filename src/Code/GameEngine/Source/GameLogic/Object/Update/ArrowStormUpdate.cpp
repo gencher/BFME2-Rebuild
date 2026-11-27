@@ -21,7 +21,7 @@ bool ArrowStormUpdate::continuePreparation()
 // FUNCTION: BFME2 0x00490AC5 size=470 name=?rva00490AC5@ArrowStormUpdate@@QAEXXZ evidence=?:placeholder
 // FUNCTION: BFME2 0x00490C9B size=111 name=?xfer@ArrowStormUpdate@@MAEXPAVXfer@@@Z evidence=N:ledger
 // FUNCTION: BFME2 0x00490D0A size=53 name=?startPreparation@ArrowStormUpdate@@UAEXXZ evidence=N:ledger
-// cl: /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB /D_CRTIMP=
+// cl: /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_MALLOC /D_STLP_USE_STATIC_LIB
 // stlport46
 #include "Common/ObjectIDList.h"
 #include "GameLogic/PartitionManager.h"

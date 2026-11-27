@@ -1,4 +1,4 @@
-// cl: /O1 /D_CRTIMP=
+// cl: /O1
 // stlport46
 // bfmealloc_alloconly
 // psdk

@@ -1,4 +1,4 @@
-// cl: /O1 /D_CRTIMP=
+// cl: /O1
 // stlport46
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "GameLogic/AIGuardRetaliate.h"

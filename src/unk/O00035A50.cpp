@@ -1,4 +1,4 @@
-// cl: /O2 /EHs /EHc- /G6 /MD /D_CRTIMP= /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_STATIC_LIB
+// cl: /O2 /EHs /EHc- /G6 /MD /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_STATIC_LIB
 // cl-arch: x87
 // stlport46
 // bfmealloc_alloconly
