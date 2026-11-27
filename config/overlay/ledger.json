@@ -178,6 +178,44 @@
       "after": "0x00329AEA MATCH"
     },
     {
+      "id": "livingworldregion-canbuildbuilding-plot",
+      "rva": "0x003F07E5",
+      "op": "add_name",
+      "name": "?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVLivingWorldBuildPlot@@PAH@Z",
+      "change": "add accepted name: the first parameter is the LivingWorldBuildPlot being queried; the ledger spells it CreateAHeroData *",
+      "pin": {
+        "size": 85,
+        "role": "owned",
+        "name": "?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z"
+      },
+      "evidence": {
+        "kind": "judge-reason",
+        "detail": "retail 0x003F07E5 compares the first argument's +0x1C with this (LivingWorldBuildPlot::m_region, stored by the plot constructor 0x004FC807 from its region argument) and tests its +0x20 building; BuildBuilding's helper 0x003F1B7C passes it the plot it then checks at +0x20. CreateAHeroData has no such layout. The judge pairs the compiled body with retail: bytes equal, only the parameter type differs (MISNAMED)",
+        "verified": "verify_tu laptop/s15 LivingWorldRegion.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect"
+      },
+      "before": "0x003F07E5 MISNAMED",
+      "after": "0x003F07E5 MATCH"
+    },
+    {
+      "id": "livingworldregion-candestroybuilding-plot",
+      "rva": "0x003F1093",
+      "op": "add_name",
+      "name": "?CanDestroyBuilding@LivingWorldRegion@@QAE_NPAVLivingWorldBuildPlot@@PAH@Z",
+      "change": "add accepted name: the first parameter is the LivingWorldBuildPlot being queried; the ledger spells it CreateAHeroData *",
+      "pin": {
+        "size": 61,
+        "role": "owned",
+        "name": "?CanDestroyBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z"
+      },
+      "evidence": {
+        "kind": "judge-reason",
+        "detail": "retail 0x003F1093 compares the first argument's +0x1C with this (LivingWorldBuildPlot::m_region) and requires a building at +0x20; its caller 0x003F1CA2 passes a plot whose +0x20 and +0x34 it reads and on which it calls the plot method 0x004FC470. The judge pairs the compiled body with retail: bytes equal, only the parameter type differs (MISNAMED)",
+        "verified": "verify_tu laptop/s15 LivingWorldRegion.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect"
+      },
+      "before": "0x003F1093 MISNAMED",
+      "after": "0x003F1093 MATCH"
+    },
+    {
       "id": "commandtranslator-evaluateforceattack-nested-enum",
       "rva": "0x00429CBB",
       "op": "add_name",
