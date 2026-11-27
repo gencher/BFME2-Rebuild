@@ -83,7 +83,9 @@ Bool FoundationAIUpdate::isRemovableForConstruction(Object *obj)
 		return true;
 	if (tmpl->isKindOf(KINDOF_CLEARED_BY_BUILD))
 		return true;
-	return obj->isEffectivelyDead();
+	if (obj->isEffectivelyDead())
+		return true;
+	return false;
 }
 
 // FUNCTION: BFME2 0x0045527A size=250 name=?rva0045527A@FoundationAIUpdate@@AAEXW4ObjectID@@@Z evidence=?:placeholder tier=A
