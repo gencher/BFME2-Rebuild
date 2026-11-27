@@ -13,6 +13,7 @@
 #include "GameLogic/BfmeTaintManager.h"
 #include "GameLogic/WeaponBonusSet.h"
 #include "GameClient/GameText.h"
+#include "GameClient/InGameUI.h"
 
 class CollisionManager;
 
@@ -584,12 +585,36 @@ AsciiString GlobalData::getPicturePath() const
 }
 
 // FUNCTION: BFME2 0x0023624A size=59 name=?vslot04@GlobalData@@UAE_NH@Z evidence=N:ledger
+Bool GlobalData::attemptReload(Bool *needsRestart)
+{
+	if (loadIniFilesFromLegend()) {
+		if (TheInGameUI)
+			TheInGameUI->multiplayerMessage(UnicodeString(L"RIF: GameData reloaded (changes are effective immediately)"));
+		return true;
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x0023631C size=5034 name=??0GlobalData@@QAE@XZ evidence=N:ledger
 
 // FUNCTION: BFME2 0x002376C6 size=6 name=?vslot06@GlobalData@@UAEHXZ evidence=N:ledger
+const FieldParse *GlobalData::getFieldParse() const
+{
+	return s_GlobalDataFieldParseTable;
+}
 
 // FUNCTION: BFME2 0x002376CC size=927 name=??1GlobalData@@UAE@XZ evidence=N:ledger
+GlobalData::~GlobalData()
+{
+	if (m_weaponBonus)
+		delete m_weaponBonus;
+	m_weaponBonus = NULL;
+
+	if (s_theOriginal == this) {
+		s_theOriginal = NULL;
+		TheWritableGlobalData = NULL;
+	}
+}
 
 // FUNCTION: BFME2 0x00237A6B size=70 name=?newOverride@GlobalData@@QAEPAV1@XZ evidence=N:ledger
 GlobalData *GlobalData::newOverride()
