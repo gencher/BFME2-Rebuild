@@ -359,9 +359,9 @@ void ProductionUpdate::addToProductionQueue(ProductionEntry *production)
 	++m_productionCount;
 
 	ModelConditionFlags condition = getObject()->getModelConditionFlags();
-	if (condition.testShifted(MODELCONDITION_ACTIVELY_CONSTRUCTING) == FALSE)
+	if (condition.testShifted(73) == FALSE)
 	{
-		m_setFlags.set(MODELCONDITION_ACTIVELY_CONSTRUCTING);
+		m_setFlags.set(73);
 		m_flagsDirty = TRUE;
 	}
 }
@@ -389,10 +389,10 @@ void ProductionUpdate::removeFromProductionQueue(ProductionEntry *production)
 	--m_productionCount;
 
 	ModelConditionFlags condition = getObject()->getModelConditionFlags();
-	if (m_productionCount == 0 && condition.testShifted(MODELCONDITION_ACTIVELY_CONSTRUCTING) == TRUE)
+	if (m_productionCount == 0 && condition.testShifted(73) == TRUE)
 	{
-		m_clearFlags.set(MODELCONDITION_ACTIVELY_CONSTRUCTING);
-		m_setFlags.clear(MODELCONDITION_ACTIVELY_CONSTRUCTING);
+		m_clearFlags.set(73);
+		m_setFlags.clear(73);
 		m_flagsDirty = TRUE;
 	}
 }
