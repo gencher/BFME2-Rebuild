@@ -49,7 +49,7 @@ void ProductionUpdate::rva0049CC15(ProductionID id, Int value)
 {
 	for (ProductionEntry *p = m_productionQueue; p; p = p->m_next)
 	{
-		if (p->m_unk0x10 == id)
+		if (p->m_productionID == id)
 		{
 			p->m_unk0x3C = value;
 			return;
@@ -62,7 +62,7 @@ Bool ProductionUpdate::rva0049CC36(ProductionID id) const
 {
 	for (const ProductionEntry *p = m_productionQueue; p; p = p->m_next)
 	{
-		if (p->getProductionObject() && p->m_unk0x10 == id)
+		if (p->getProductionObject() && p->m_productionID == id)
 			return true;
 	}
 	return false;
@@ -75,7 +75,7 @@ void ProductionUpdate::rva0049CC61(const ThingTemplate *unitType)
 	{
 		if (p->getProductionObject() && unitType->isEquivalentTo(p->m_unk0x08))
 		{
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			return;
 		}
 	}
@@ -92,7 +92,7 @@ void ProductionUpdate::rva0049CC9D(const ThingTemplate *unitType, Bool allowMany
 			break;
 		if (p->getProductionObject() && unitType->isEquivalentTo(p->m_unk0x08))
 		{
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			--remaining;
 			p = m_productionQueueTail;
 		}
@@ -160,7 +160,7 @@ void ProductionUpdate::cancelAndRefundAllProduction()
 		{
 		case 1:
 		case 3:
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			continue;
 		case 2:
 			cancelUpgrade(p->m_unk0x0C);
@@ -453,6 +453,27 @@ void ProductionUpdate::cancelUpgrade(const UpgradeTemplate *upgrade)
 // FUNCTION: BFME2 0x0049DA34 size=540 name=?queueCreateUnit@ProductionUpdate@@UAE_NPBVThingTemplate@@HW4ProductionID@@H_NABVAsciiString@@2@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0049DC50 size=187 name=?rva0049DC50@Rva0049DC50@@QAEXH@Z evidence=?:placeholder tier=A
+void ProductionUpdate::cancelUnitCreate(ProductionID productionID)
+{
+	for (ProductionEntry *production = m_productionQueue; production; production = production->m_next)
+	{
+		Bool finished = production->m_unk0x14 >= 100.0f && m_spawnedObjectID != INVALID_ID;
+		if (production->m_productionID == productionID && (m_unk0x11D || !finished))
+		{
+			Player *player = getObject()->getControllingPlayer();
+			if (!finished)
+			{
+				player->getMoney()->deposit(production->m_unk0x28, player->getScoreKeeper(), true);
+				player->getScoreKeeper()->rva0039BAD2(production->m_unk0x08, -production->m_unk0x28);
+			}
+			if (production->m_unk0x04 == 3)
+				player->m_unitRevivalTracker.productionSystemCancelUnitCreate(production->m_productionID);
+			removeFromProductionQueue(production);
+			::delete production;
+			return;
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x0049DD0B size=45 name=?Rva0049DD0BConstruct@@YAXPAXPBX@Z evidence=?:placeholder tier=A
 
@@ -566,7 +587,7 @@ void ProductionUpdate::rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow
 		if (p->m_unk0x14 < 100.0f && (type == 1 || type == 3) && typeName->isEquivalentTo(p->m_unk0x08))
 		{
 			ProductionEntry *next = p->m_next;
-			pslot10(p->m_unk0x10);
+			cancelUnitCreate(p->m_productionID);
 			p = next;
 		}
 		else

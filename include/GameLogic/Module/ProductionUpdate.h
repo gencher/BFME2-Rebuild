@@ -86,7 +86,7 @@ public:
 	Int m_unk0x04;														// 0x04
 	const ThingTemplate *m_unk0x08;										// 0x08
 	const UpgradeTemplate *m_unk0x0C;									// 0x0C
-	Int m_unk0x10;														// 0x10 = 1
+	ProductionID m_productionID;										// 0x10 = 1
 	Real m_unk0x14;														// 0x14
 	Real m_unk0x18;														// 0x18
 	Int m_unk0x1C;														// 0x1C
@@ -122,7 +122,7 @@ public:
 	virtual Bool queueCreateUnit(const ThingTemplate *unitType, Int, ProductionID productionID, Int, Bool,
 		const AsciiString &, const AsciiString &) = 0;														// 8
 	virtual Bool rva0049CC36(ProductionID) const = 0;															// 9 0x0049CC36
-	virtual void pslot10(Int) = 0;																			// 10 0x0049DC50
+	virtual void cancelUnitCreate(ProductionID productionID) = 0;											// 10
 	virtual void rva0049CC61(const ThingTemplate *) = 0;														// 11 0x0049CC61
 	virtual void pslot12(Int) = 0;																			// 12 0x0049CCF0
 	virtual void rva0049F8A9(const ThingTemplate *, Bool) = 0;												// 13 0x0049F8A9
@@ -214,7 +214,7 @@ public:
 	virtual void rva0049CC15(ProductionID id, Int value);				// (slot 14)
 	virtual UnsignedInt rva0049CEAE(const ThingTemplate *unitType) const;	// (slot 18)
 	virtual UnsignedInt rva0049CEE1(Int id) const;					// (slot 19)
-	virtual void pslot10(Int);											// 0x0049DC50
+	virtual void cancelUnitCreate(ProductionID productionID);			// refunds and drops the entry unless it finished and spawned
 	virtual void setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt);	// 0x0049D617 (slot 23)
 	virtual UnsignedInt rva0049D0DE(const ProductionIDSet *mask) const;	// (slot 20)
 	virtual void rva0049F8A9(const ThingTemplate *typeName, Bool cancelNow);	// (slot 13): records a type name for later, or cancels the type's unfinished units
