@@ -173,6 +173,16 @@ UnicodeString MapMetaData::bfme_getDisplayName(bool includePlayerCount)
 }
 
 // FUNCTION: BFME2 0x00300D0E size=108 name=?rva00300D0E@MapMetaData@@QAE?AVUnicodeString@@XZ evidence=?:placeholder
+UnicodeString MapMetaData::rva00300D0E()
+{
+	UnicodeString name;
+	const char *slash = m_fileName.reverseFind('\\');
+	if (slash)
+		name.translate(slash + 1);
+	else
+		name.translate(m_fileName);
+	return name;
+}
 
 // FUNCTION: BFME2 0x00300D7A size=200 name=?rva00300D7A@Rva00300D7A@@QAE?AVAsciiString@@XZ evidence=?:placeholder
 AsciiString MapCache::getUserMapDir()
@@ -195,8 +205,18 @@ AsciiString MapCache::getUserMapDir()
 // FUNCTION: BFME2 0x00300EB4 size=967 name=?getMapPreviewImage@@YAPAVImage@@VAsciiString@@@Z evidence=N:ledger
 
 // FUNCTION: BFME2 0x0030145C size=122 name=??RRva0030145CCmp@@QBE_NPAVMapMetaData@@0@Z evidence=N:ledger
+bool MapSortByPlayers::operator()(MapMetaData *left, MapMetaData *right) const
+{
+	if (left->m_numPlayers == right->m_numPlayers)
+		return left->bfme_getDisplayName(true).compareNoCase(right->bfme_getDisplayName(true)) < 0;
+	return left->m_numPlayers < right->m_numPlayers;
+}
 
 // FUNCTION: BFME2 0x003014D6 size=94 name=??RRva003014D6Cmp@@QBE_NPAVMapMetaData@@0@Z evidence=N:ledger
+bool MapSortByFileName::operator()(MapMetaData *left, MapMetaData *right) const
+{
+	return left->rva00300D0E().compareNoCase(right->rva00300D0E()) < 0;
+}
 
 // FUNCTION: BFME2 0x00301534 size=155 name=?bfme_getDescriptionFirstLine@MapMetaData@@QAE?AVUnicodeString@@XZ evidence=N:ledger
 UnicodeString MapMetaData::bfme_getDescriptionFirstLine()
