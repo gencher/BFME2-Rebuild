@@ -24,6 +24,9 @@ class Vector4;
 
 class StreakLineClass;
 
+// The maximum allowable level of subdivision.
+#define MAX_STREAK_SUBDIV_LEVELS 7
+
 class StreakRendererClass
 {
 	friend class StreakLineClass;
@@ -81,7 +84,19 @@ public:
 	friend class StreakLineClass;
 
 private:
+	struct StreakSubdivision
+	{
+		Vector3 StartPos;
+		Vector3 EndPos;
+		float StartTexV;		// V texture coordinate of start point
+		float EndTexV;			// V texture coordinate of end point
+		float Rand;
+		unsigned int Level;		// Subdivision level
+	};
+
 	VertexFormatXYZUV1 *getVertexBuffer(unsigned int number);
+	void subdivision_util(unsigned int point_cnt, const Vector3 *xformed_pts, const float *base_tex_v,
+		unsigned int *p_sub_point_cnt, Vector3 *xformed_subdiv_pts, float *subdiv_tex_v);
 
 	TextureClass Texture;				// +0x00 the handle (one factory pointer)
 	ShaderClass Shader;					// +0x04
