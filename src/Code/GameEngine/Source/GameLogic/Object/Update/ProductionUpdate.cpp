@@ -471,9 +471,20 @@ NameKeyType ProductionUpdate::getModuleNameKey() const
 // FUNCTION: BFME2 0x0049F91A size=1192 name=?xfer@ProductionUpdate@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0049FDF9 size=113 name=?Rva0049FDF9Parse@@YAXPAVINI@@PAVProductionUpdateModuleData@@@Z evidence=?:placeholder tier=B hypothesis:K
+void ProductionUpdateModuleData::parseAppendQuantityModifier(INI *ini, void *instance, void * /*store*/, const void * /*userData*/)
+{
+	ProductionUpdateModuleData *data = (ProductionUpdateModuleData *)instance;
+	const char *name = ini->getNextToken();
+	const char *countStr = ini->getNextTokenOrNull();
+	Int count = countStr ? ini->scanInt(countStr) : 1;
+
+	QuantityModifier qm;
+	qm.m_quantity = count;
+	qm.m_templateName.set(name);
+	data->m_quantityModifiers.push_back(qm);
+}
 
 class ProductionUpdateModuleData;
-void Rva0049FDF9Parse(INI *ini, ProductionUpdateModuleData *owner);
 void Rva0049DE6DParse(INI *ini, void *instance, void *store, const void *userData);
 static const FieldParse s_productionUpdateModuleDataFieldParse[] =
 {
@@ -483,7 +494,7 @@ static const FieldParse s_productionUpdateModuleDataFieldParse[] =
 	{ "DoorWaitOpenTime", INI::parseDurationUnsignedInt, 0, 0x10 },
 	{ "DoorCloseTime", INI::parseDurationUnsignedInt, 0, 0x14 },
 	{ "ConstructionCompleteDuration", INI::parseDurationUnsignedInt, 0, 0x18 },
-	{ "QuantityModifier", (INIFieldParseProc)Rva0049FDF9Parse, 0, 0x1C },
+	{ "QuantityModifier", ProductionUpdateModuleData::parseAppendQuantityModifier, 0, 0x1C },
 	{ "ProductionModifier", Rva0049DE6DParse, 0, 0x0 },
 	{ "DisabledTypesToProcess", Rva0049DD83::parseFromINI, 0, 0x2C },
 	{ "GiveNoXP", INI::parseBool, 0, 0x30 },
