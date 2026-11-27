@@ -79,6 +79,26 @@
       "after": "0x002376C6 MATCH; 0x002376CC MATCH"
     },
     {
+      "id": "sciencetype-copy-ptrs-fold",
+      "rva": "0x0025BF40",
+      "op": "add_name",
+      "name": "??$__copy_ptrs@PAW4ScienceType@@PAW41@@_STL@@YAPAW4ScienceType@@PAW41@00ABU__false_type@0@@Z",
+      "change": "add accepted name to ICF fold F0025BF40: vector<ScienceType>'s erase and insert-overflow copy step resolves to this shared 29-byte __copy_ptrs body",
+      "pin": {
+        "size": 29,
+        "role": "icf_fold",
+        "name": "??$__copy_ptrs@PAURva005334A4Element@@PAU1@@_STL@@YAPAURva005334A4Element@@PAU1@00ABU__false_type@0@@Z",
+        "fold_group": "F0025BF40"
+      },
+      "evidence": {
+        "kind": "identical-copy",
+        "detail": "LivingWorldRegion::rva003F20B0 (0x003F20B0) clears its vector<ScienceType> at +0x158 through the erase fold 0x00532803, whose copy step at 0x00532816 calls 0x0025BF40; the compiled vector<ScienceType>::erase calls __copy_ptrs<ScienceType*, ScienceType*> there. The unit's own copy is discarded by COMDAT selection (no __copy_ptrs body for it in the LivingWorldRegion range: 0x003F24D6 forwards to a backward copy). Without the name the judge binds the compiled instance to 0x003F24D6 ('inconsistent relocation binding')",
+        "verified": "verify_tu laptop/s15 LivingWorldRegion.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect"
+      },
+      "before": "0x003F24D6 WRONG_REFERENCE (with rva003F2739/rva003F20B0 written)",
+      "after": "0x003F24D6 MISSING again (overlay-effect: the only changed row); 0x003F20B0, 0x003F2739 MATCH"
+    },
+    {
       "id": "aiupdateinterface-setemotionstate-nonvirtual",
       "rva": "0x0026320D",
       "op": "add_name",
@@ -156,6 +176,44 @@
       },
       "before": "0x00329AEA MISNAMED (compiled ?xfer@SidesList@@UAEXPAVXfer@@@Z, all 212 bytes equal)",
       "after": "0x00329AEA MATCH"
+    },
+    {
+      "id": "livingworldregion-canbuildbuilding-plot",
+      "rva": "0x003F07E5",
+      "op": "add_name",
+      "name": "?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVLivingWorldBuildPlot@@PAH@Z",
+      "change": "add accepted name: the first parameter is the LivingWorldBuildPlot being queried; the ledger spells it CreateAHeroData *",
+      "pin": {
+        "size": 85,
+        "role": "owned",
+        "name": "?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z"
+      },
+      "evidence": {
+        "kind": "judge-reason",
+        "detail": "retail 0x003F07E5 compares the first argument's +0x1C with this (LivingWorldBuildPlot::m_region, stored by the plot constructor 0x004FC807 from its region argument) and tests its +0x20 building; BuildBuilding's helper 0x003F1B7C passes it the plot it then checks at +0x20. CreateAHeroData has no such layout. The judge pairs the compiled body with retail: bytes equal, only the parameter type differs (MISNAMED)",
+        "verified": "verify_tu laptop/s15 LivingWorldRegion.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect"
+      },
+      "before": "0x003F07E5 MISNAMED",
+      "after": "0x003F07E5 MATCH"
+    },
+    {
+      "id": "livingworldregion-candestroybuilding-plot",
+      "rva": "0x003F1093",
+      "op": "add_name",
+      "name": "?CanDestroyBuilding@LivingWorldRegion@@QAE_NPAVLivingWorldBuildPlot@@PAH@Z",
+      "change": "add accepted name: the first parameter is the LivingWorldBuildPlot being queried; the ledger spells it CreateAHeroData *",
+      "pin": {
+        "size": 61,
+        "role": "owned",
+        "name": "?CanDestroyBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z"
+      },
+      "evidence": {
+        "kind": "judge-reason",
+        "detail": "retail 0x003F1093 compares the first argument's +0x1C with this (LivingWorldBuildPlot::m_region) and requires a building at +0x20; its caller 0x003F1CA2 passes a plot whose +0x20 and +0x34 it reads and on which it calls the plot method 0x004FC470. The judge pairs the compiled body with retail: bytes equal, only the parameter type differs (MISNAMED)",
+        "verified": "verify_tu laptop/s15 LivingWorldRegion.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect"
+      },
+      "before": "0x003F1093 MISNAMED",
+      "after": "0x003F1093 MATCH"
     },
     {
       "id": "commandtranslator-evaluateforceattack-nested-enum",

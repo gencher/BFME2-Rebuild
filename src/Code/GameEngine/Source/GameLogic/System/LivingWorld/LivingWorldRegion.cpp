@@ -16,17 +16,32 @@
 #include "GameClient/Image.h"
 #include "GameLogic/LivingWorldLogic.h"
 #include "GameLogic/LivingWorldPlayer.h"
+#include "GameLogic/LivingWorldBuilding.h"
+#include "Draft/RegionBonusInfo.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;
 
 // Helpers owned by their own units (rows at these RVAs elsewhere in the map).
-// Transfers the LivingWorldRegionID enum by its serialized name at 0x003EFE82.
-void XferLivingWorldRegionID(Xfer *xfer, int *regionID);
 // The detour-vector transfer (0x003F2C0C).
 Xfer *Rva003F2C0CXfer(Xfer *xfer, _STL::vector<Coord2D> *detourPoints);
 
 // FUNCTION: BFME2 0x003EFCD1 size=102 name=?xfer@RegionBonusInfo@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+void RegionBonusInfo::xfer(Xfer *xfer)
+{
+	Xfer::Version version(1, 1);
+	*xfer == version;
+	*xfer == m_unk0x04;
+	*xfer == m_unk0x0C;
+	*xfer == m_unk0x08;
+	*xfer == m_unk0x10;
+	*xfer == m_unk0x14;
+	*xfer == m_unk0x18;
+}
 // FUNCTION: BFME2 0x003EFD37 size=6 name=?GetSnapshotName@RegionBonusInfo@@MBEPBDXZ evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+const char *RegionBonusInfo::GetSnapshotName() const
+{
+	return "RegionBonusInfo";
+}
 // FUNCTION: BFME2 0x003EFD3D size=50 name=?IsOwnedByTeam@LivingWorldRegion@@QBE_NH@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 Bool LivingWorldRegion::IsOwnedByTeam(Int teamID) const
 {
@@ -44,6 +59,10 @@ Bool LivingWorldRegion::IsOwnedByTeam(Int teamID) const
 // FUNCTION: BFME2 0x003EFE63 size=15 name=?rva003EFE63@Rva003EF5E8@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003EFE72 size=16 name=?rva003EFE72@LivingWorldRegion@@QAEXPAXPAURva0059E647Entry@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003EFE82 size=24 name=?Rva003EFE82Get@@YAHPAURva003EFE82Obj@@PAX@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
+void XferLivingWorldRegionID(Xfer *xfer, int *regionID)
+{
+	xfer->XferEnum("LivingWorldRegionID", regionID, 4);
+}
 // FUNCTION: BFME2 0x003EFE9A size=6 name=?Rva003EFE9AGet@@YAHXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003EFEB2 size=379 name=?unmaskValue@@YAIHI@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F0038 size=11 name=?rva003F0038@Rva003F0038@@QBEHXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
@@ -56,8 +75,26 @@ Bool LivingWorldRegion::IsOwnedByTeam(Int teamID) const
 // FUNCTION: BFME2 0x003F0259 size=120 name=?CanSpawnUnitWithinCPLimit@LivingWorldRegion@@QBE_NPAVSpawnArmy@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F02D1 size=19 name=?rva003F02D1@Rva003F02D1Holder@@QAEXPBURva003F02D1Arg@@PAURva003EFDDBOut@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F02E4 size=82 name=?rva003F02E4@LivingWorldRegion@@QAE_NXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
+bool LivingWorldRegion::rva003F02E4()
+{
+	if (m_ownerPlayerID == -1)
+		return false;
+	if (m_unk0x11C)
+		return true;
+	for (_STL::vector<LivingWorldBuildPlot *>::iterator it = m_plots.begin(); it != m_plots.end(); ++it)
+	{
+		LivingWorldBuildPlot *plot = *it;
+		if (plot->m_building != NULL && !plot->m_unk0x34 && plot->m_building->get())
+			return true;
+	}
+	return false;
+}
 // FUNCTION: BFME2 0x003F0336 size=56 name=?rva003F0336@LivingWorldRegion@@QAE_NPBVRva002E071E@@@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F036E size=32 name=?rva003F036E@LivingWorldRegion@@QAEHXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
+int LivingWorldRegion::rva003F036E()
+{
+	return m_unk0x164.size() > 0 || rva003F02E4();
+}
 // FUNCTION: BFME2 0x003F038E size=43 name=?rva003F038E@Rva003F038E@@QAEPBVImage@@XZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F03B9 size=16 name=?rva003F03B9@Rva003F038E@@QAEPBVImage@@XZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F03C9 size=58 name=?rva003F03C9@Rva003F03C9@@QAE?AVUnicodeString@@XZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
@@ -82,13 +119,63 @@ UnicodeString LivingWorldRegion::GetFortressDisplayDescription()
 // FUNCTION: BFME2 0x003F055A size=46 name=?rva003F055A@Rva003F055A@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F0588 size=70 name=?rva003F0588@LivingWorldRegion@@QAEPAXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F05CE size=70 name=?rva003F05CE@LivingWorldRegion@@QAEHXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
+int LivingWorldRegion::rva003F05CE()
+{
+	int count = 0;
+	for (unsigned int i = 0; i < m_plots.size(); ++i)
+	{
+		LivingWorldBuildPlot *plot = m_plots[i];
+		if (plot->m_building != NULL && !plot->m_unk0x34)
+			++count;
+	}
+	return count;
+}
 // FUNCTION: BFME2 0x003F0614 size=87 name=?rva003F0614@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F066B size=87 name=?rva003F066B@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F06C2 size=79 name=?rva003F06C2@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F0711 size=92 name=?GetBuildingByIndex@LivingWorldRegion@@QBEPAVLivingWorldBuilding@@H@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+LivingWorldBuilding *LivingWorldRegion::GetBuildingByIndex(int index) const
+{
+	int found = 0;
+	for (unsigned int i = 0; i < m_plots.size(); ++i)
+	{
+		LivingWorldBuildPlot *plot = m_plots[i];
+		if (plot->m_building != NULL && !plot->m_unk0x34)
+		{
+			if (found == index)
+				return m_plots[i]->m_building;
+			++found;
+		}
+	}
+	return NULL;
+}
 // FUNCTION: BFME2 0x003F076D size=97 name=?rva003F076D@Rva003F076D@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F07CE size=23 name=?rva003F07CE@LivingWorldRegion@@QAE_NXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F07E5 size=85 name=?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z evidence=S:strong (caller-this+position+layout) tier=B hypothesis:mm1-held-object-same-path
+bool LivingWorldRegion::CanBuildBuilding(LivingWorldBuildPlot *plot, int *reason)
+{
+	if (plot->m_region != this)
+	{
+		if (reason)
+			*reason = 5;
+		return false;
+	}
+	if (m_unk0x1A3)
+	{
+		if (reason)
+			*reason = 3;
+		return false;
+	}
+	if (plot->m_building != NULL)
+	{
+		if (reason)
+			*reason = 4;
+		return false;
+	}
+	if (reason)
+		*reason = 0;
+	return true;
+}
 // FUNCTION: BFME2 0x003F083A size=82 name=?rva003F083A@LivingWorldRegion@@QAEPAVCreateAHeroData@@PAX@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F088C size=75 name=?rva003F088C@LivingWorldRegion@@QBEPAULivingWorldBuildPlot@@H@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F08D7 size=23 name=?rva003F08D7@LivingWorldRegion@@QAEHH@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
@@ -138,13 +225,31 @@ int LivingWorldRegion::rva003F1053()
 {
 	int count = 0;
 	for (unsigned int i = 0; i < m_plots.size(); ++i)
-		if (m_plots[i]->m_unk0x20 == 0)
+		if (m_plots[i]->m_building == NULL)
 			++count;
 	return count;
 }
 
 
 // FUNCTION: BFME2 0x003F1093 size=61 name=?CanDestroyBuilding@Rva003F1093@@QAE_NPAVCreateAHeroData@@PAH@Z evidence=?:placeholder
+bool LivingWorldRegion::CanDestroyBuilding(LivingWorldBuildPlot *plot, int *reason)
+{
+	if (plot->m_region != this)
+	{
+		if (reason)
+			*reason = 2;
+		return false;
+	}
+	if (plot->m_building == NULL)
+	{
+		if (reason)
+			*reason = 1;
+		return false;
+	}
+	if (reason)
+		*reason = 0;
+	return true;
+}
 
 // FUNCTION: BFME2 0x003F10D0 size=44 name=?Rva003F10D0Pick@@YAXPAH0@Z evidence=?:placeholder
 
@@ -225,10 +330,25 @@ int LivingWorldRegion::rva003F1053()
 // FUNCTION: BFME2 0x003F209C size=20 name=?rva003F209C@Rva003F209C@@QAEXXZ evidence=?:placeholder
 
 // FUNCTION: BFME2 0x003F20B0 size=53 name=?rva003F20B0@Rva003F20B0@@QAEXXZ evidence=?:placeholder
+void LivingWorldRegion::rva003F20B0()
+{
+	m_unk0x158.clear();
+	m_unk0x14C = 0;
+	m_unk0x150 = 0;
+	m_unk0x154 = 0;
+	m_unk0x1A0 = false;
+	m_unk0x1A1 = false;
+}
 
 // FUNCTION: BFME2 0x003F20E5 size=33 name=?rva003F20E5@Rva003F209C@@QAEXHH@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x003F2106 size=74 name=?rva003F2106@Rva003F2106@@QAEXXZ evidence=?:placeholder
+void LivingWorldRegion::rva003F2106()
+{
+	for (unsigned int i = 0; i < m_plots.size(); ++i)
+		::delete m_plots[i];
+	m_plots.clear();
+}
 
 // FUNCTION: BFME2 0x003F2150 size=480 name=?rva003F2150@LivingWorldRegion@@QAEXPAVRva003F7BB4@@@Z evidence=?:placeholder
 
@@ -276,8 +396,26 @@ LivingWorldRegionConnection::~LivingWorldRegionConnection()
 // FUNCTION: BFME2 0x003F26AA size=143 name=?rva003F26AA@LivingWorldRegionConnection@@QAE_NPBVModuleData@@PAURva003F26AAPair@@@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x003F2739 size=19 name=?rva003F2739@Rva003F2739@@QAEXW4ScienceType@@@Z evidence=?:placeholder
+void LivingWorldRegion::rva003F2739(ScienceType science)
+{
+	m_unk0x164.push_back(science);
+}
 
 // FUNCTION: BFME2 0x003F274C size=204 name=?CreateBuildPlots@LivingWorldRegion@@QAEXXZ evidence=N:ledger
+void LivingWorldRegion::CreateBuildPlots()
+{
+	if (m_plots.size() != 0)
+		rva003F2106();
+	m_plots.reserve(m_plotPositions.size());
+	for (unsigned int i = 0; i < m_plotPositions.size(); ++i)
+	{
+		int id = TheLivingWorldLogic->rva002B3166();
+		LivingWorldBuildPlot *plot = new LivingWorldBuildPlot(id, this, m_plotPositions[i]);
+		m_plots.push_back(plot);
+	}
+	m_unk0x17C = NULL;
+	m_unk0x1A3 = false;
+}
 
 // FUNCTION: BFME2 0x003F2947 size=33 name=?rva003F2947@Rva003F2352@@QAEPAV1@PAV1@@Z evidence=?:placeholder
 

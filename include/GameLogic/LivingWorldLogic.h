@@ -37,6 +37,7 @@ public:
 	bool isSelectionLocked() const;
 	bool rva0051AEEF() const;
 	int rva002B2B66();
+	int rva002B3166();	// Pre-increments the id counter at +0xA4 and returns it (plot ids)
 	bool rva002B3669();
 	bool rva002B4B83();
 	LivingWorldPlayer *findPlayer(int id, unsigned int *index);

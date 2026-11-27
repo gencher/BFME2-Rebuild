@@ -24,6 +24,7 @@ public:
     virtual void BeginTurn(Int turn, Int phase);
     void createIcon();
     void createGhostObject();
+    UnsignedByte get() const;
     virtual const char *GetSnapshotName() const;
 
 protected:
