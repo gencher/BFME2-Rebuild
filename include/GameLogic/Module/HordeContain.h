@@ -78,6 +78,8 @@ public:
 	}
 
 	void rva0046D738();	// 0x0046D738 (non-virtual)
+	void rva00469F3A(Object *unit);	// 0x00469F3A (non-virtual; adjusts the unit's model condition flags, not written yet)
+	void rva0046AA85();	// 0x0046AA85 (non-virtual; hands every rider to rva00469F3A)
 	UnsignedByte usingMeleeAttack();	// 0x004695DA
 	Coord3D rva00472620(Object *unit, Real *angle);	// 0x00472620 (non-virtual; getUnitsIntendedPosition's fallback; the map spells it QAEPAVCoord3D@@PAU2@PAVObject@@H@Z)
 	void notifyContainerOfUnit(Object *unit);	// 0x00469B73 (the map spells the argument void *)
