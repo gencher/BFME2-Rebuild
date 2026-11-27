@@ -363,6 +363,37 @@ ObjectTOCEntry *GameLogic::findTOCEntryByName(AsciiString name)
 // FUNCTION: BFME2 0x00240D8C size=73 name=?rva00240D8C@Rva002419ABOwner@@QAEPAXPBVAsciiString@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00240E18 size=164 name=?rva00240E18@Rva00240E18@@QAEX_N@Z evidence=?:placeholder tier=A
+void GameLogic::rva00240E18(Bool keepMode)
+{
+	m_frame = 0;
+	m_objList = NULL;
+	m_unk0x30 = 64.0f;
+	m_unk0x34 = 64.0f;
+
+	for (Int phase = 0; phase < 4; ++phase)
+	{
+		for (_STL::vector<UpdateModule *>::iterator it = m_normalUpdates[phase].begin(); it != m_normalUpdates[phase].end(); ++it)
+		{
+			UpdateModule *u = *it;
+			u->m_unk0x1C = -1;
+			u->m_indexInLogic = -1;
+		}
+		m_normalUpdates[phase].clear();
+	}
+
+	for (_STL::vector<UpdateModule *>::iterator it = m_sleepyUpdates.begin(); it != m_sleepyUpdates.end(); ++it)
+	{
+		UpdateModule *u = *it;
+		u->m_unk0x1C = -1;
+		u->m_indexInLogic = -1;
+	}
+	m_sleepyUpdates.clear();
+	m_curUpdateModule = NULL;
+
+	if (!keepMode)
+		m_unk0x10C = 1;
+}
+
 
 // FUNCTION: BFME2 0x00240EBC size=51 name=?rva00240EBC@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
 void GameLogic::rva00240EBC()
