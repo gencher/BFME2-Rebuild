@@ -70,7 +70,27 @@ void PathfindZoneManager::setAllPassable()
 }
 
 // FUNCTION: BFME2 0x00531342 size=239 name=?MarkDirty@PathfindZoneManager@@QAEXPAURva005312BERect@@@Z evidence=N:ledger tier=B hypothesis:K
-
+void PathfindZoneManager::MarkDirty(IRegion2D *cells)
+{
+	if (cells->hi.x < cells->lo.x || cells->hi.y < cells->lo.y)
+		return;
+	if (cells->hi.x < 0 || cells->hi.y < 0)
+		return;
+	if (cells->lo.x >= m_zoneBlockExtent.x * ZONE_BLOCK_SIZE || cells->lo.y >= m_zoneBlockExtent.y * ZONE_BLOCK_SIZE)
+		return;
+	m_dirty = true;
+	Int loX = cells->lo.x < 0 ? 0 : cells->lo.x / ZONE_BLOCK_SIZE;
+	Int loY = cells->lo.y < 0 ? 0 : cells->lo.y / ZONE_BLOCK_SIZE;
+	Int hiX = cells->hi.x / ZONE_BLOCK_SIZE;
+	Int hiY = cells->hi.y / ZONE_BLOCK_SIZE;
+	if (hiX >= m_zoneBlockExtent.x)
+		hiX = m_zoneBlockExtent.x - 1;
+	if (hiY >= m_zoneBlockExtent.y)
+		hiY = m_zoneBlockExtent.y - 1;
+	for (Int i = loX; i <= hiX; ++i)
+		for (Int j = loY; j <= hiY; ++j)
+			m_zoneBlocks[i][j].m_dirty = true;
+}
 // FUNCTION: BFME2 0x00531431 size=80 name=?MarkDirty@PathfindZoneManager@@QAEXHH@Z evidence=N:ledger tier=A
 void PathfindZoneManager::MarkDirty(Int cellX, Int cellY)
 {
