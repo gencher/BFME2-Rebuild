@@ -13,6 +13,7 @@
 #include <d3d9.h>
 #include "WW3D2/VertexMaterialClass.h"
 #include "WW3D2/dxwrapper.h"
+#include "WW3D2/DX8Caps.h"
 #include "WW3D2/WW3D.h"
 #include "WW3D2/mapper.h"
 #include "WW3D2/w3d_file.h"
@@ -460,6 +461,47 @@ VertexMaterialClass::VertexMaterialClass(void) :
 }
 
 // FUNCTION: BFME2 0x0013D570 size=1084 name=?Apply@VertexMaterialClass@@ABEXXZ evidence=N:ledger tier=A
+void VertexMaterialClass::Apply(void) const
+{
+	int i;
+
+	DXWrapper::Set_DX8_Material(Material);
+
+	if (WW3D::Is_Coloring_Enabled())
+		DXWrapper::Set_DX8_Render_State(D3DRS_LIGHTING, FALSE);
+	else
+		DXWrapper::Set_DX8_Render_State(D3DRS_LIGHTING, UseLighting);
+	DXWrapper::Set_DX8_Render_State(D3DRS_AMBIENTMATERIALSOURCE, AmbientColorSource);
+	DXWrapper::Set_DX8_Render_State(D3DRS_DIFFUSEMATERIALSOURCE, DiffuseColorSource);
+	DXWrapper::Set_DX8_Render_State(D3DRS_EMISSIVEMATERIALSOURCE, EmissiveColorSource);
+
+	// set to default values if no mappers
+	for (i = 0; i < MAX_STAGES; i++) {
+		if (Mapper[i]) {
+			Mapper[i]->Apply(UVSource[i]);
+		} else {
+			DXWrapper::Set_DX8_Texture_Stage_State(i, D3DTSS_TEXCOORDINDEX, D3DTSS_TCI_PASSTHRU | UVSource[i]);
+			DXWrapper::Set_DX8_Texture_Stage_State(i, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+		}
+	}
+
+	// Some ATI Radeon drivers keep using the texture transform of a stage that has
+	// no mapper when only one of the first two stages has one, so give that stage
+	// an identity transform.
+	const DX8Caps *caps = DXWrapper::Get_Current_Caps();
+	if (caps != NULL && caps->Get_Vendor() == DX8Caps::VENDOR_ATI) {
+		unsigned device_id = caps->Get_Raw_Device_ID();
+		if (device_id == 0x5144 || (device_id >= 0x5157 && device_id <= 0x515A)) {
+			if ((Mapper[0] == NULL) != (Mapper[1] == NULL)) {
+				int stage = (Mapper[0] != NULL) ? 1 : 0;
+				Matrix4x4 identity;
+				identity.Make_Identity();
+				DXWrapper::Set_Transform((D3DTRANSFORMSTATETYPE)(D3DTS_TEXTURE0 + stage), identity);
+				DXWrapper::Set_DX8_Texture_Stage_State(stage, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x0013D9B0 size=141 name=?Init@VertexMaterialClass@@SAXXZ evidence=N:ledger tier=A
 void VertexMaterialClass::Init(void)
