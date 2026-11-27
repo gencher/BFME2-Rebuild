@@ -29,7 +29,7 @@
 #include "GameClient/GameWindowManager.h"
 #include "GameClient/AnimateWindowManager.h"
 // VA 0x00E01D0C (no map name; role name): set when a reloaded CommandSet or CommandButton block replaced an existing object, read by attemptReload 0x0031E7F0 to ask for a restart.
-extern bool ControlBarReloadNeedsRestart;
+static Bool ControlBarReloadNeedsRestart;
 #include "GameClient/GameWindowTransitionsHandler.h"
 extern GameWindowManager *TheWindowManager;
 extern NameKeyGenerator *TheNameKeyGenerator;
@@ -805,6 +805,26 @@ bool ControlBar::rva0031E068(Player *player, int science)
 // FUNCTION: BFME2 0x0031E25E size=604 name=?update@ControlBar@@UAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0031E7F0 size=137 name=?rva0031E7F0@Rva0031DCF0@@QAE_NPA_N@Z evidence=?:placeholder tier=A
+Bool ControlBar::attemptReload(Bool *needsRestart)
+{
+	Bool reloaded = false;
+	ControlBarReloadNeedsRestart = false;
+	if (loadIniFilesFromLegend())
+	{
+		TheInGameUI->multiplayerMessage(UnicodeString(L"RIF: ControlBar (CommandSet/CommandButton) reloaded. Changes effective immediately."));
+		for (CommandSetMap::iterator it = m_commandSets.begin(); it != m_commandSets.end(); ++it)
+			it->second->refreshIfStale();
+		postProcessCommands();
+		markUIDirty();
+		reloaded = true;
+	}
+	if (ControlBarReloadNeedsRestart)
+	{
+		*needsRestart = true;
+		ControlBarReloadNeedsRestart = false;
+	}
+	return reloaded;
+}
 
 // FUNCTION: BFME2 0x0031E879 size=92 name=?forgetStaleCommandSet@ControlBar@@QAEXABVAsciiString@@@Z evidence=N:ledger tier=A
 void ControlBar::forgetStaleCommandSet(const AsciiString &name)
