@@ -148,14 +148,14 @@ void RTS3DScene::Render(RenderInfoClass &rinfo)
 
 	if (TheWeatherSetting)
 	{
-		Set_Fog_Enable(static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogEnable && !bfmeCameraProjectionOverride && LODTextureReduction >= 1);
-		if (static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogEnable)
+		Set_Fog_Enable(TheWeatherSetting->m_hardwareFogEnable && !bfmeCameraProjectionOverride && LODTextureReduction >= 1);
+		if (TheWeatherSetting->m_hardwareFogEnable)
 		{
-			Set_Fog_Color(Vector3(static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogColor.red,
-				static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogColor.green,
-				static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogColor.blue));
-			Set_Fog_Range(static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogStart,
-				static_cast<const WeatherSetting *>(TheWeatherSetting)->m_hardwareFogEnd);
+			Set_Fog_Color(Vector3(TheWeatherSetting->m_hardwareFogColor.red,
+				TheWeatherSetting->m_hardwareFogColor.green,
+				TheWeatherSetting->m_hardwareFogColor.blue));
+			Set_Fog_Range(TheWeatherSetting->m_hardwareFogStart,
+				TheWeatherSetting->m_hardwareFogEnd);
 		}
 	}
 
