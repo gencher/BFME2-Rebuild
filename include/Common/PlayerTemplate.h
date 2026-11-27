@@ -54,6 +54,7 @@ public:
 
 	static void parseStartMoney(INI *ini, void *instance, void *store, const void *userData);		// 0x001FD1B7
 
+	NameKeyType getNameKey() const { return m_nameKey; }
 	AsciiString getName() const;							// 0x0023E95E: the name behind m_nameKey (NameKeyGenerator::keyToName)
 	UnicodeString getDisplayName() const;							// 0x00449B8F (an out-of-line copy of m_displayName; the map folds it into the LANAPI region)
 	const Image *getHeadWaterMarkImage() const;						// 0x001FD1E8 (map: Rva001FD1E8)

@@ -13,6 +13,7 @@ class StaticNameKey
 public:
 	StaticNameKey(const char *p) : m_key(NAMEKEY_INVALID), m_name(p) {}	// Zero Hour's
 	NameKeyType key() const;			// 0x00148F5E
+	inline operator NameKeyType() const { return key(); }	// Zero Hour's: lets a StaticNameKey stand for its NameKeyType
 
 private:
 	NameKeyType m_key;					// +0x00
@@ -29,5 +30,12 @@ extern StaticNameKey TheKey_playerAllies;				// 0x00DBDE54
 extern const StaticNameKey TheKey_multiplayerIsLocal;	// 0x00DBDE8C
 extern const StaticNameKey TheKey_playerColor;			// 0x00DBDE64 (Player::setColorsFromDict 0x002A9ACC)
 extern const StaticNameKey TheKey_playerNightColor;		// 0x00DBDE6C
+// Named by the name pointers of their static records (Zero Hour's WellKnownKeys); the observer side 0x0023E0C7 uses them.
+extern const StaticNameKey TheKey_playerDisplayName;		// 0x00DBDE3C
+extern const StaticNameKey TheKey_playerFaction;			// 0x00DBDE44
+extern const StaticNameKey TheKey_multiplayerStartIndex;	// 0x00DBDE7C
+extern const StaticNameKey TheKey_teamName;				// 0x00DBD9F4
+extern const StaticNameKey TheKey_teamOwner;				// 0x00DBD9FC
+extern const StaticNameKey TheKey_teamIsSingleton;		// 0x00DBDA04
 
 #endif

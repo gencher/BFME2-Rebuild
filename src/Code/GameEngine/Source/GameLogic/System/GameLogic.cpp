@@ -6,6 +6,7 @@
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:cohesion
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
+#include <stdio.h>
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Bridge.h"
 #include "GameLogic/GameLogic.h"
@@ -17,6 +18,7 @@
 #include "GameLogic/Module/DestroyModule.h"
 #include "GameLogic/Module/AIUpdate.h"
 #include "GameClient/GameClient.h"
+#include "GameClient/Drawable.h"
 #include "GameClient/LoadScreen.h"
 #include "Common/ThingTemplate.h"
 #include "Common/PlayerTemplate.h"
@@ -26,6 +28,22 @@
 #include "Common/Xfer.h"
 #include "debug/Debug.h"
 #include "Common/GlobalData.h"
+#include "Common/MultiplayerColorDefinition.h"
+#include "GameLogic/SidesList.h"
+#include "Common/StaticNameKey.h"
+#include "Common/Dict.h"
+#include "GameClient/MapCache.h"
+#include "GameClient/GameText.h"
+#include "Common/GameState.h"
+#include "Common/FileSystem.h"
+#include "Common/INI.h"
+#include "GameLogic/LuaScriptEngine.h"
+#include "Common/ThingFactory.h"
+#include "Common/RandomValue.h"
+#include "Common/Player.h"
+#include "Common/PlayerList.h"
+#include "Common/Money.h"
+#include "Common/ScoreKeeper.h"
 #include "GameLogic/LivingWorldLogic.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;
@@ -40,12 +58,38 @@ GameLogic *TheGameLogic = NULL;
 // FUNCTION: BFME2 0x0023D661 size=45 name=?rva0023D661@Rva0023D661@@QAEXH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023D68E size=71 name=?rva0023D68E@GameLogic@@QAEX_N@Z evidence=?:placeholder tier=A
+void GameLogic::rva0023D68E(Bool on)
+{
+	for (Object *obj = m_objList; obj; obj = obj->getNextObject())
+	{
+		if (!on && obj->isKindOf(KINDOF_BASE_SITE))
+			continue;
+		Drawable *draw = obj->getDrawable();
+		if (draw)
+		{
+			draw->rva00270FAC(on);
+			obj->rva0028D680();
+		}
+	}
+}
+
 
 // FUNCTION: BFME2 0x0023D6D5 size=27 name=?rva0023D6D5@Rva0023D6D5@@QAEX_N@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023D6F0 size=10 name=?get@Rva0023D6F0SarAvgField@@QBEHXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023D6FA size=70 name=?rva0023D6FA@@YAHPAVObject@@@Z evidence=?:placeholder tier=A
+Int rva0023D6FA(Object *obj)
+{
+	if (obj && obj->isKindOf(KINDOF_COMMANDCENTER))
+	{
+		UnsignedInt playerMask = obj->getControllingPlayer()->getPlayerMask();
+		TheGameLogic->selectObject(obj, true, playerMask, obj->isLocallyControlled());
+		return 0;
+	}
+	return 1;
+}
+
 
 // FUNCTION: BFME2 0x0023D740 size=46 name=?processProgress@GameLogic@@QAEXHH@Z evidence=N:ledger tier=A
 void GameLogic::processProgress(Int slot, Int percent)
@@ -68,6 +112,45 @@ void GameLogic::processProgressComplete(Int slot)
 }
 
 // FUNCTION: BFME2 0x0023D793 size=241 name=?CallPlayerGiveMoney@GameLogic@@QAEXHHH@Z evidence=N:ledger tier=A
+void GameLogic::CallPlayerGiveMoney(Int fromPlayerIndex, Int toPlayerIndex, Int amount)
+{
+	if (!canPlayersTransferMoneyYet())
+		return;
+	if (fromPlayerIndex < 0 || fromPlayerIndex >= MAX_PLAYER_COUNT || toPlayerIndex < 0 || toPlayerIndex >= MAX_PLAYER_COUNT)
+		return;
+
+	Player *toPlayer = NULL;
+	Player *fromPlayer = NULL;
+	for (Int i = 0; i < MAX_PLAYER_COUNT; ++i)
+	{
+		Player *player = ThePlayerList->getNthPlayer(i);
+		if (player == NULL)
+			continue;
+		if (player->getPlayerIndex() == fromPlayerIndex)
+			fromPlayer = player;
+		else if (player->getPlayerIndex() == toPlayerIndex)
+			toPlayer = player;
+		if (fromPlayer && toPlayer)
+			break;
+	}
+
+	if (fromPlayer == NULL || toPlayer == NULL)
+		return;
+	if (fromPlayer->isPlayerDead() || toPlayer->isPlayerDead())
+		return;
+
+	Money *money = fromPlayer->getMoney();
+	if (money == NULL)
+		return;
+
+	UnsignedInt request = amount;
+	UnsignedInt cash = money->countMoney();
+	UnsignedInt given = money->withdraw(_STL::min(request, cash), fromPlayer->getScoreKeeper(), true);
+	toPlayer->getMoney()->deposit(given, toPlayer->getScoreKeeper(), true);
+	fromPlayer->getScoreKeeper()->rva0039B7E3(given);
+	toPlayer->getScoreKeeper()->rva0039B7CB(given);
+}
+
 
 // FUNCTION: BFME2 0x0023D884 size=144 name=?GetLivingWorldTacticalVictor@GameLogic@@QAEPAURva003F468DParticipant@@XZ evidence=N:ledger tier=A
 
@@ -173,10 +256,85 @@ void checkForDuplicateColors(GameInfo *game)
 }
 
 // FUNCTION: BFME2 0x0023E0C7 size=579 name=?rva0023E0C7@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
+void GameLogic::rva0023E0C7()
+{
+	// Always add in an observer Player
+	Dict d(0);
+	d.setAsciiString(TheKey_playerName, "ReplayObserver");
+	d.setBool(TheKey_playerIsHuman, TRUE);
+	d.setUnicodeString(TheKey_playerDisplayName, UnicodeString(L"Observer"));
+	const PlayerTemplate *pt = ThePlayerTemplateStore->findPlayerTemplate(TheNameKeyGenerator->nameToKey("FactionObserver"));
+	if (pt)
+		d.setAsciiString(TheKey_playerFaction, TheNameKeyGenerator->keyToName(pt->getNameKey()));
+	d.setAsciiString(TheKey_playerAllies, AsciiString::TheEmptyString);
+	d.setAsciiString(TheKey_playerEnemies, AsciiString::TheEmptyString);
+	d.setInt(TheKey_playerColor, TheMultiplayerSettings->getColor(0)->getColor());
+	d.setInt(TheKey_playerNightColor, TheMultiplayerSettings->getColor(0)->getNightColor());
+	d.setInt(TheKey_multiplayerStartIndex, 0);
+	d.setBool(TheKey_multiplayerIsLocal, FALSE);
+
+	TheSidesList->addSide(&d);
+	d.clear();
+	d.setAsciiString(TheKey_teamName, "teamReplayObserver");
+	d.setAsciiString(TheKey_teamOwner, "ReplayObserver");
+	d.setBool(TheKey_teamIsSingleton, true);
+	TheSidesList->addTeam(&d);
+	TheSidesList->validateSides();
+}
+
 
 // FUNCTION: BFME2 0x0023E323 size=171 name=?rva0023E323@Rva0023E323@@QAEHMH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023E3CE size=602 name=?loadMapINI@GameLogic@@QAEXVAsciiString@@@Z evidence=N:ledger tier=A
+void GameLogic::loadMapINI(AsciiString mapName)
+{
+	if (!TheMapCache)
+	{
+		// Need the map cache to get the map and user map directories.
+		return;
+	}
+
+	char filename[_MAX_PATH];
+	char fullFledgeFilename[_MAX_PATH];
+
+	memset(filename, 0, _MAX_PATH);
+	strcpy(filename, mapName.str());
+
+	// a map extracted from a save game: load the map.ini of the pristine map instead
+	if (TheGameState->isInSaveDirectory(UnicodeString(AsciiString(filename))))
+		strcpy(filename, TheGameState->getSaveGameInfo()->m_unk0x8.str());
+
+	// sanity
+	int length = strlen(filename);
+	if (length < 4)
+		return;
+
+	// back up over the ".map" extension and to the first directory separator
+	char *extension = filename + length - 4;
+	while ((extension > filename) && (*extension != '\\') && (*extension != '/'))
+		--extension;
+	*extension = 0;
+
+	sprintf(fullFledgeFilename, "%s\\map.ini", filename);
+	if (TheFileSystem->doesFileExist(fullFledgeFilename))
+	{
+		INI ini;
+		ini.loadFile(AsciiString(fullFledgeFilename), INI_LOAD_CREATE_OVERRIDES, NULL);
+	}
+
+	sprintf(fullFledgeFilename, "%s\\solo.ini", filename);
+	if (TheFileSystem->doesFileExist(fullFledgeFilename))
+	{
+		INI ini;
+		ini.loadFile(AsciiString(fullFledgeFilename), INI_LOAD_CREATE_OVERRIDES, NULL);
+	}
+
+	// now look for a string file
+	sprintf(fullFledgeFilename, "%s\\map.str", filename);
+	if (TheFileSystem->doesFileExist(fullFledgeFilename))
+		TheGameText->initMapStringFile(AsciiString(fullFledgeFilename));
+}
+
 
 // FUNCTION: BFME2 0x0023E628 size=396 name=?rva0023E628@GameLogic@@QAEXVAsciiString@@@Z evidence=?:placeholder tier=A
 
@@ -209,10 +367,91 @@ AsciiString PlayerTemplate::getName() const
 // FUNCTION: BFME2 0x0023F88C size=78 name=?rva0023F88C@Rva0023E7D9@@QAEX_N@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023F8DA size=484 name=?rva0023F8DA@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
+void GameLogic::rva0023F8DA()
+{
+	if (m_unk0x6C || m_unk0x58.size() == 0)
+		return;
+
+	AsciiString *report = &m_unk0x58[m_unk0x58.size() - 1];
+	if (report == NULL)
+		return;
+
+	m_unk0x6C = TRUE;
+	AsciiString line;
+	report->concat("    Game Over Details:\n");
+
+	for (Int slot = 0; slot < MAX_SLOTS; ++slot)
+	{
+		PlayerLeaveStatus *status = getPlayerLeaveStatus(slot);
+		if (status)
+		{
+			Player *player = ThePlayerList->getNthPlayer(slot);
+			if (player && player->getScoreKeeper() && player->getPlayerTemplate())
+			{
+				static char templateName[256];
+				sprintf(templateName, "%s", player->getPlayerTemplate()->getName().str());
+				player->getScoreKeeper()->m_unk0xF0 = status->m_quitFrame;
+			}
+
+			AsciiString reason;
+			switch (status->m_reason)
+			{
+				case 0:
+					reason.format("n/a");
+					break;
+				case 1:
+					reason.format("graceful");
+					break;
+				case 2:
+					reason.format("voted out");
+					break;
+				default:
+					reason.format("unknown");
+					break;
+			}
+
+			if (status->m_victoryFrame)
+				line.format("      Slot %d: Victory frame: %d, Quit frame: %d(%s)\n", slot, status->m_victoryFrame, status->m_quitFrame, reason.str());
+			else if (status->m_defeatFrame)
+				line.format("      Slot %d: Defeat frame: %d, Quit frame: %d(%s)\n", slot, status->m_defeatFrame, status->m_quitFrame, reason.str());
+			else if (status->m_unk0x10)
+				line.format("      Slot %d: n/a\n", slot);
+			else
+				line.format("      Slot %d: Present at final frame\n", slot);
+		}
+		else
+		{
+			line.format("      Slot %d: PlayerLeaveStatus does not exist.\n", slot);
+		}
+		report->concat(line);
+	}
+}
+
 
 // FUNCTION: BFME2 0x0023FABE size=154 name=?rva0023FABE@GameLogic@@QAEXPAVObject@@@Z evidence=?:placeholder tier=A
+void GameLogic::rva0023FABE(Object *obj)
+{
+	Int seed = GetGameLogicRandomValue(1, 999, "C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\System\\GameLogic.cpp", 6557);
+	Int statusBits = 0;
+	if (obj->testStatus(OBJECT_STATUS_CREATE_DRAWABLE_WITH_LOW_DETAIL))
+		statusBits = 0x20;
+	bindObjectAndDrawable(obj, TheThingFactory->newDrawable(obj->getTemplate(), statusBits, seed));
+
+	DelayedLuaEventList list;
+	TheLuaScriptEngine->DispatchEvent(12, obj, &list);
+}
+
 
 // FUNCTION: BFME2 0x0023FB58 size=104 name=?rva0023FB58@GameLogic@@QAEABVAsciiString@@H@Z evidence=?:placeholder tier=A
+const AsciiString &GameLogic::rva0023FB58(Int slot)
+{
+	if (slot >= 0 && slot < m_unk0x58.size())
+		return m_unk0x58[slot];
+
+	static AsciiString invalidSlot("Invalid Slot");
+	return invalidSlot;
+}
+
 
 // FUNCTION: BFME2 0x0023FBDB size=53 name=?rva0023FBDB@Rva0023FBDB@@QAEXPAURva0023FBDBNode@@@Z evidence=?:placeholder tier=A
 
@@ -271,6 +510,37 @@ ObjectTOCEntry *GameLogic::findTOCEntryByName(AsciiString name)
 // FUNCTION: BFME2 0x00240D8C size=73 name=?rva00240D8C@Rva002419ABOwner@@QAEPAXPBVAsciiString@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00240E18 size=164 name=?rva00240E18@Rva00240E18@@QAEX_N@Z evidence=?:placeholder tier=A
+void GameLogic::rva00240E18(Bool keepMode)
+{
+	m_frame = 0;
+	m_objList = NULL;
+	m_unk0x30 = 64.0f;
+	m_unk0x34 = 64.0f;
+
+	for (Int phase = 0; phase < 4; ++phase)
+	{
+		for (_STL::vector<UpdateModule *>::iterator it = m_normalUpdates[phase].begin(); it != m_normalUpdates[phase].end(); ++it)
+		{
+			UpdateModule *u = *it;
+			u->m_unk0x1C = -1;
+			u->m_indexInLogic = -1;
+		}
+		m_normalUpdates[phase].clear();
+	}
+
+	for (_STL::vector<UpdateModule *>::iterator it = m_sleepyUpdates.begin(); it != m_sleepyUpdates.end(); ++it)
+	{
+		UpdateModule *u = *it;
+		u->m_unk0x1C = -1;
+		u->m_indexInLogic = -1;
+	}
+	m_sleepyUpdates.clear();
+	m_curUpdateModule = NULL;
+
+	if (!keepMode)
+		m_unk0x10C = 1;
+}
+
 
 // FUNCTION: BFME2 0x00240EBC size=51 name=?rva00240EBC@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
 void GameLogic::rva00240EBC()

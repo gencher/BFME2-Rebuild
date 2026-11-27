@@ -61,6 +61,21 @@ typedef _STL::hash_map<AsciiString, BuildableStatus, rts::hash<AsciiString>, _ST
 // freelist (FreelistPool::pop 0x002393E2); destroyObject 0x00242C09 and prepareLogicForObjectLoad 0x00242C86 call it.
 typedef _STL::list<Object *, FreelistAllocator<Object *> > ObjectPointerList;
 
+// Why and when a player slot left the game: GameLogic +0x1C4 holds one per slot.
+// setPlayerQuitStatus 0x0023D201 stores the reason and the frame; setPlayerLeaveStatus 0x0023D1A5
+// clears +0x10 and stores +0x14 and the name; the game-over report 0x0023F8DA reads them all.
+struct PlayerLeaveStatus
+{
+	Int m_reason;			// +0x00 0 none, 1 graceful, 2 voted out
+	UnsignedInt m_quitFrame;	// +0x04
+	UnsignedInt m_defeatFrame;	// +0x08
+	UnsignedInt m_victoryFrame;	// +0x0C
+	Bool m_unk0x10;			// +0x10 the report says "Present at final frame" while it is clear
+	Int m_unk0x14;			// +0x14
+	AsciiString m_name;		// +0x18
+};
+// SIZE 0x1C
+
 // The class the map names DOTManager (0x0043B72D is its only recovered member, taking an object id); GameLogic +0x174 points at one.
 class DOTManager
 {
@@ -126,6 +141,7 @@ public:
 	// Handles a type-30 save-game command message from the network; the ledger spells the message class as the placeholder Rva0023E928.
 	void ProcessSaveGameCommand(Rva0023E928 *cmd, Bool isLocal);
 	void clearGameData(Bool showScoreScreen, Bool unknown);	// 0x00376E92
+	void CallPlayerGiveMoney(Int fromPlayerIndex, Int toPlayerIndex, Int amount);	// 0x0023D793
 	void LivingWorldTacticalBattleComplete();	// 0x0023D914
 	void setMissionName(const AsciiString &name);	// 0x0023DC8E: kept unless empty or GlobalData +0x9AD is set
 	// 0x0023DCCE (placeholder row): inline in retail (a COMDAT in GameLogic's unit, expanded by its caller 0x002423E3;
@@ -133,6 +149,7 @@ public:
 	void setMissionOpening(const AsciiString &opening, const OpaqueRefElement4 &ref, const OpaqueRefElement4 &voice);
 	void rva0023DA4E();	// 0x0023DA4E: clearGameData(false, true) when the living-world query 0x002B3669 holds, else LivingWorldTacticalBattleComplete
 	void startNewGame(Bool fromSave);	// 0x00248558
+	void loadMapINI(AsciiString mapName);	// 0x0023E3CE
 	void logicMessageDispatcher(GameMessage *msg, void *userData);	// 0x00377613
 	void processDestroyList();		// 0x002413DF
 	void prepareLogicForObjectLoad();	// 0x00242C86
@@ -157,6 +174,13 @@ public:
 	void rva0023CD9E(Bool paused, Int mode, Bool affectInput);	// 0x0023CD9E
 	void rva0023D0C2(Object *obj, Int value);	// 0x0023D0C2, +0x184 forwarder
 	void rva0023D007(Int value);		// 0x0023D007, +0x184 forwarder
+	const AsciiString &rva0023FB58(Int slot);	// 0x0023FB58: the slot's name, "Invalid Slot" out of range
+	void rva00240E18(Bool keepMode);	// 0x00240E18: restarts the frame count and empties the object list and every update queue
+	void rva0023FABE(Object *obj);	// 0x0023FABE: gives the object a new drawable and raises its Lua event
+	PlayerLeaveStatus *getPlayerLeaveStatus(Int slot);	// 0x0023D1E3: NULL outside 0..7
+	void rva0023F8DA();	// 0x0023F8DA: appends the game-over details of every slot to the last slot-name string, once
+	void rva0023E0C7();	// 0x0023E0C7: adds the observer side and its team to the sides list, then validates the sides
+	void rva0023D68E(Bool on);		// 0x0023D68E: passes the flag to every object's drawable (base sites only when set)
 
 	UnsignedInt getFrame() const { return m_frame; }
 	Bool getCommandButtonOverride(const AsciiString &commandSetName, Int slot, const CommandButton **button);	// looks up (slot, command set name) in the override tree at +0x24 and hands back its CommandButton
@@ -186,7 +210,7 @@ public:
 	unsigned char m_unk0x4C[4];		// +0x4C not set by the ctor
 	_STL::list<Int> m_unk0x50;		// +0x50 (_List_base<int> ctor, cleared at the end of the ctor)
 	Int m_unk0x54;				// +0x54
-	_STL::vector<Int> m_unk0x58;		// +0x58 (_Vector_base<int> ctor)
+	_STL::vector<AsciiString> m_unk0x58;	// +0x58 one name per player slot: rva0023FB58 returns a const AsciiString & into it
 	Int m_unk0x64;				// +0x64
 	Int m_unk0x68;				// +0x68
 	Bool m_unk0x6C;				// +0x6C
@@ -254,12 +278,15 @@ public:
 	WindowLayout *m_background;		// +0x1B8 window cleanup 0x00376D49 owns it
 	Bool m_backgroundPending;		// +0x1BC
 	ObjectTOCList m_objectTOC;		// +0x1C0 template name -> save-file ID (addTOCEntry 0x00245F14 pushes {name, id}; xferObjectTOC 0x00245F79)
-	unsigned char m_unk0x1C4[8 * 0x1C];	// +0x1C4 eight 0x1C-byte records (eh vector ctor)
+	PlayerLeaveStatus m_playerLeaveStatus[8];	// +0x1C4 one per slot (getPlayerLeaveStatus 0x0023D1E3; eh vector ctor)
 	Int m_unk0x2A4;				// +0x2A4 (2 in the ctor)
 };
 // SIZE 0x2A8
 
 extern GameLogic *TheGameLogic;
+
+// True once the game has run long enough for players to give each other money.
+Bool canPlayersTransferMoneyYet();
 
 // Logic frames per second, a variable in BFME2 (Zero Hour's LOGICFRAMES_PER_SECOND).
 extern Int BfmeLogicFramesPerSecond;

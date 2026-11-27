@@ -136,6 +136,7 @@ public:
 	UnicodeString getFilePathInSaveDirectory(const UnicodeString &leaf) const;	// 0x002DC74A (map: Rva002DC74A)
 	Bool doesSaveGameExist(UnicodeString fileName);							// 0x002DCCFB (map: Rva002DCCFB): the save file exists in the save directory
 	Bool isInSaveDirectory(const UnicodeString &path) const;				// 0x002DC7C1 (map: Rva002DC7C1)
+	SaveGameInfo *getSaveGameInfo() { return &m_saveGameInfo; }	// Zero Hour's accessor (GameLogic::loadMapINI reads +0x24 + 8)
 	const UnsignedShort *getSaveFileExtension(Int mode);					// 0x002DBC97 (map: rva002DBC97Get@GameState): the file name suffix of a save mode
 
 	void xferSaveData(Xfer *xfer, SnapshotType which);				// 0x002DCE24
