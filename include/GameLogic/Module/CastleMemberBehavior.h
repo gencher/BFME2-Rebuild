@@ -32,9 +32,9 @@ public:
 
 
 	virtual NameKeyType getModuleNameKey() const;
-	const char *name() const;
 
 protected:
+	virtual const char *GetSnapshotName() const;
 	virtual void xfer(Xfer *xfer);
 	virtual ~CastleMemberBehavior();
 
