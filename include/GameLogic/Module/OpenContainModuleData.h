@@ -12,9 +12,12 @@
 #define BFME2_OPEN_CONTAIN_MODULE_DATA_H
 
 #include <stddef.h>
+#include <list>
+#include <map>
 #include <vector>
 #include "Common/AsciiString.h"
 #include "Common/BitFlags.h"
+#include "Common/ModelConditionFlags.h"
 #include "Common/GameType.h"
 #include "GameLogic/Module/ModuleData.h"
 #include "GameLogic/Module/DieMuxData.h"
@@ -23,6 +26,13 @@
 
 class INI;
 class MultiIniFieldParse;
+
+// One PassengerBonePrefix entry: the PassengerBone name and the KindOf mask it serves.
+struct PassengerBonePrefix
+{
+	KindOfMaskType m_kindOf;
+	AsciiString m_passengerBone;
+};
 
 class OpenContainModuleData : public ModuleData
 {
@@ -37,7 +47,8 @@ public:
 	OpaqueRefElement4 m_exitSound;                         // +0x3C ExitSound; doUnloadSound 0x0046282B
 	ObjectFilter m_passengerFilter;                        // +0x40 PassengerFilter
 	ObjectFilter m_manualPickUpFilter;                     // +0x44 ManualPickUpFilter
-	UnsignedByte m_unk0x48[0x10];
+	std::list<PassengerBonePrefix> m_passengerBonePrefixes;	// PassengerBonePrefix
+	std::map<UnsignedInt, ModelConditionFlags> m_boneSpecificConditionStates;	// BoneSpecificConditionState: bone index to condition state
 	ObjectStatusMaskType m_objectStatusOfContained;	// The containment INI parser parses ObjectStatusTypes into this mask.
 	Real m_passengersTestCollisionHeight;                  // +0x68 PassengersTestCollisionHeight
 	Real m_damagePercentToUnits;                           // +0x6C DamagePercentToUnits; percent
@@ -66,6 +77,8 @@ typedef char OpenContainModuleData_off_m_enterSound[(offsetof(OpenContainModuleD
 typedef char OpenContainModuleData_off_m_exitSound[(offsetof(OpenContainModuleData, m_exitSound) == 0x3C) ? 1 : -1];
 typedef char OpenContainModuleData_off_m_passengerFilter[(offsetof(OpenContainModuleData, m_passengerFilter) == 0x40) ? 1 : -1];
 typedef char OpenContainModuleData_off_m_manualPickUpFilter[(offsetof(OpenContainModuleData, m_manualPickUpFilter) == 0x44) ? 1 : -1];
+typedef char OpenContainModuleData_off_m_passengerBonePrefixes[(offsetof(OpenContainModuleData, m_passengerBonePrefixes) == 0x48) ? 1 : -1];
+typedef char OpenContainModuleData_off_m_boneSpecificConditionStates[(offsetof(OpenContainModuleData, m_boneSpecificConditionStates) == 0x4C) ? 1 : -1];
 typedef char OpenContainModuleData_off_m_objectStatusOfContained[(offsetof(OpenContainModuleData, m_objectStatusOfContained) == 0x58) ? 1 : -1];
 typedef char OpenContainModuleData_off_m_passengersTestCollisionHeight[(offsetof(OpenContainModuleData, m_passengersTestCollisionHeight) == 0x68) ? 1 : -1];
 typedef char OpenContainModuleData_off_m_damagePercentToUnits[(offsetof(OpenContainModuleData, m_damagePercentToUnits) == 0x6C) ? 1 : -1];
