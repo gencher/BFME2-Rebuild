@@ -821,6 +821,32 @@ Bool HordeContain::hasSpotForUnit(const Object *unit)
 }
 
 // FUNCTION: BFME2 0x0046BB6F size=193 name=?rva0046BB6F@HordeContain@@UAE_NPAHI@Z evidence=?:placeholder tier=A
+Bool HordeContain::rva0046BB6F(Int *out, UnsignedInt frame)
+{
+	*out = 0;
+	UnsignedInt now = TheGameLogic->getFrame();
+	if (frame >= now)
+		return false;
+	if (m_unk0x298 != (UnsignedInt)-1 && m_unk0x298 + frame >= now)
+	{
+		*out = m_unk0x29C;
+		return true;
+	}
+	ContainmentListView riders = getList();
+	for (_STL::list<Object *>::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+	{
+		Object *rider = *it;
+		if (rider && rider->rva0028C264(out, 4))
+			return true;
+	}
+	for (_STL::set<Int>::const_iterator it2 = m_memberIDs.begin(); it2 != m_memberIDs.end(); ++it2)
+	{
+		Object *member = TheGameLogic->findObjectByID((ObjectID)*it2);
+		if (member && member->rva0028C264(out, 4))
+			return true;
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x0046BC30 size=320 name=?rva0046BC30@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 
