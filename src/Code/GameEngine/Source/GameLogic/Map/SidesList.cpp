@@ -10,6 +10,7 @@
 #include "GameLogic/SidesInfo.h"
 #include "GameLogic/SidesList.h"
 #include "Common/Xfer.h"
+#include "Common/XferException.h"
 #include "Common/StaticNameKey.h"
 
 // The sides list singleton (retail VA 0x00E01D58, .bss: followed by this object's DRAWABLE_FRAMES_PER_FLASH copy and its
@@ -95,6 +96,29 @@ void SidesList::duplicateScripts(const SidesList &other)
 }
 
 // FUNCTION: BFME2 0x00329AEA size=212 name=?DoXfer@SidesList@@UAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
+void SidesList::xfer(Xfer *xfer)
+{
+	if (xfer->IsLightCRC())
+		return;
+	Xfer::Version version(1, 1);
+	*xfer == version;
+	Int sideCount = getNumSides();
+	*xfer == sideCount;
+	if (sideCount != getNumSides())
+		throw XferException(5, 0);
+	for (Int i = 0; i < sideCount; ++i)
+	{
+		ScriptList *scriptList = &getSideInfo(i)->m_scripts;
+		Bool scriptListPresent = scriptList != NULL;
+		*xfer == scriptListPresent;
+		if ((scriptList == NULL && scriptListPresent == TRUE) || (scriptList != NULL && scriptListPresent == FALSE))
+			throw XferException(5, 0);
+		if (scriptListPresent)
+			*xfer == *scriptList;
+	}
+	*xfer == m_unk0xF7C;
+}
+
 
 // FUNCTION: BFME2 0x00329BBF size=305 name=?xfer@BuildListInfo@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 void BuildListInfo::xfer(Xfer *xfer)
