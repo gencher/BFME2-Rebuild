@@ -1161,7 +1161,11 @@ void View::slot109(Real value)
 }
 
 // FUNCTION: BFME2 0x0008BBA1 size=23 name=?setValues@Offset140IntegerPairSetterThunk@@QAEXHH@Z evidence=N:ledger tier=B hypothesis:cohesion
-
+void View::slot120(Int a, Int b)
+{
+	m_unk0x8C.x = a;
+	m_unk0x8C.y = b;
+}
 
 // FUNCTION: BFME2 0x0008BBB8 size=15 name=?rva0008BBB8@Rva0008BBB8@@QAEXXZ evidence=?:placeholder tier=B hypothesis:cohesion
 void View::slot121()
@@ -1177,7 +1181,11 @@ Bool View::slot122()
 }
 
 // FUNCTION: BFME2 0x0008BBE0 size=22 name=?copyTo@Offset140IntegerTripleCopyThunk@@QAEPAHPAH@Z evidence=N:ledger tier=B hypothesis:cohesion
-
+ICoord3D *View::slot123(ICoord3D *out)
+{
+	*out = m_unk0x8C;
+	return out;
+}
 
 // FUNCTION: BFME2 0x0008BBF6 size=53 name=?rva0008BBF6@Rva0008BC2B@@QAEXM@Z evidence=?:placeholder tier=B hypothesis:cohesion
 void View::slot127(Real value)
@@ -1197,6 +1205,10 @@ void View::slot128()
 }
 
 // FUNCTION: BFME2 0x0008BC37 size=7 name=?slot129@View@@UAEMXZ evidence=N:ledger tier=B hypothesis:cohesion
+Real View::slot129()
+{
+	return m_unk0x98;
+}
 
 
 // FUNCTION: BFME2 0x0008BC3E size=31 name=?rva0008BC3E@Rva0008BC2B@@QAEXMM@Z evidence=?:placeholder tier=B hypothesis:cohesion
