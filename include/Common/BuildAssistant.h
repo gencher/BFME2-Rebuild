@@ -105,6 +105,7 @@ public:
 	// Checks whether the factory's command set offers this template.
 	bool offersBuildCommand(const ThingTemplate *builder, const ThingTemplate *whatToBuild);
 	bool isRemovableForConstruction(Object *);
+	void clearRemovableForConstruction(const ThingTemplate *whatToBuild, const Coord3D *pos, float angle);
 	void xferTheSellList(Xfer *xfer);	// 0x003924FE: the list of objects being sold
 
 private:
