@@ -1569,6 +1569,31 @@ Bool HordeContain::rva0046F8F4()
 // FUNCTION: BFME2 0x00471FFA size=571 name=?attackTargetNow@HordeContain@@UAEXPAVObject@@H@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00472235 size=244 name=?rva00472235@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
+// Unless the horde is in melee, regathers the members and sends the riders whose rank is listed in
+// RanksToReleaseWhenAttacking after the closest enemy they can attack within their vision range.
+void HordeContain::rva00472235()
+{
+	if (usingMeleeAttack())
+		return;
+	if (!m_memberIDs.empty())
+		returnToFormation(false);
+	ContainmentListView riders = getContainList();
+	const _STL::set<Int> &releaseRanks = ((const HordeContainModuleData *)getModuleData())->RanksToReleaseWhenAttacking;
+	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+	{
+		Object *rider = *it;
+		if (m_slotIndexByMemberID.find(rider->getID()) != m_slotIndexByMemberID.end())
+		{
+			Int rank = m_formationSlots[(*m_slotIndexByMemberID.find(rider->getID())).second].m_rank;
+			if (releaseRanks.find(rank) != releaseRanks.end())
+			{
+				Object *enemy = TheAI->findClosestEnemy(rider, rider->getVisionRange(), AI::CAN_ATTACK, NULL, NULL, 0);
+				if (enemy)
+					rider->getAI()->rva0026C2D9(enemy, 0x7fffffff, CMD_FROM_AI);
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x00472329 size=201 name=?rva00472329@HordeContain@@UAEXPBVCoord3D@@H@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 // Unless the horde is in melee, the riders whose rank is listed in RanksToReleaseWhenAttacking attack the position.

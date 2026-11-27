@@ -32,6 +32,8 @@ class AIGroup;
 class Object;
 class Xfer;
 class INI;
+class AttackPriorityInfo;
+class PartitionFilter;
 
 enum { MAX_AI_UPGRADES = 20 };
 // Native parseScience indexes twenty 4-byte sciences after the count;
@@ -156,6 +158,16 @@ public:
 	void newOverride();			// 0x002FFDC3
 	AIGroup *createGroup();			// 0x002FEC4B
 	void destroyGroup(AIGroup *group);	// 0x002FE712
+	enum
+	{
+		CAN_SEE = 1 << 0,
+		CAN_ATTACK = 1 << 1,
+		IGNORE_INSIGNIFICANT_BUILDINGS = 1 << 2,
+		ATTACK_BUILDINGS = 1 << 3,
+		WITHIN_ATTACK_RANGE = 1 << 4,
+		UNFOGGED = 1 << 5
+	};
+	Object *findClosestEnemy(const Object *me, Real range, UnsignedInt qualifiers, const AttackPriorityInfo *info, PartitionFilter *optionalFilter, Int arg);	// 0x002FFFA3
 	Object *findClosestAlly(const Object *me, Real range, UnsignedInt flags);	// 0x002FDBC4
 	Object *findClosestRepulsor(const Object *me, Real range);	// 0x002FDC9A
 	static Real getAdjustedVisionRangeForObject(const Object *obj, Int flags);	// 0x002FDD0A
