@@ -475,8 +475,57 @@ Bool HordeContain::rva0046A2A7()
 }
 
 // FUNCTION: BFME2 0x0046A2EC size=149 name=?rva0046A2EC@HordeContain@@UAE_NPAVObject@@@Z evidence=?:placeholder tier=A
+Bool HordeContain::rva0046A2EC(Object *target)
+{
+	ContainmentListView riders = getContainList();
+	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+	{
+		Object *rider = *it;
+		if (rider && !rider->isEffectivelyDead())
+		{
+			AIUpdateInterface *ai = rider->getAI();
+			if (ai)
+			{
+				if (!ai->rva00262D8F())
+					return false;
+				Object *victim = ai->getCurrentVictim();
+				if (!victim)
+					return false;
+				if (victim->getID() != target->getID())
+					return false;
+				if (target->getTemplate()->isKindOf0x115() && !target->getContain()->containSlot58((Int)victim))
+					return false;
+			}
+		}
+	}
+	return true;
+}
 
 // FUNCTION: BFME2 0x0046A381 size=149 name=?rva0046A381@HordeContain@@UAE_NPAVObject@@@Z evidence=?:placeholder tier=A
+Bool HordeContain::rva0046A381(Object *target)
+{
+	ContainmentListView riders = getContainList();
+	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+	{
+		Object *rider = *it;
+		if (rider && !rider->isEffectivelyDead())
+		{
+			AIUpdateInterface *ai = rider->getAI();
+			if (ai && ai->rva00262D8F())
+			{
+				Object *victim = ai->getCurrentVictim();
+				if (victim)
+				{
+					if (victim->getID() == target->getID())
+						return true;
+					if (target->getTemplate()->isKindOf0x115() && target->getContain()->containSlot58((Int)victim))
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x0046A416 size=89 name=?rva0046A416@HordeContain@@UAE_NXZ evidence=?:placeholder tier=A
 Bool HordeContain::rva0046A416()
@@ -979,7 +1028,6 @@ Object *HordeContain::rva0046CC09()
 // FUNCTION: BFME2 0x0046CCEF size=218 name=?rva0046CCEF@HordeContain@@UAE_NPBVThingTemplate@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0046CDC9 size=212 name=?rva0046CDC9@HordeContain@@UAE_NXZ evidence=?:placeholder tier=A
-
 // FUNCTION: BFME2 0x0046CE9D size=132 name=?rva0046CE9D@Rva0046CE9D@@QAE_NPAVObject@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0046CF21 size=567 name=?rva0046CF21@HordeContain@@QAEXXZ evidence=?:placeholder tier=A
