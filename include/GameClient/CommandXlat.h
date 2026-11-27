@@ -36,6 +36,7 @@ private:
     int issueMoveToLocationCommand(const Coord3D *pos, Drawable *drawableInWay, int commandType);	// 0x004292F6
     int issueAttackCommand(Drawable *target, const Coord3D *pos, int commandType, int command);	// 0x004297F0
     int issueCombatDropCommand(const CommandButton *command, int commandType, Drawable *target, const Coord3D *pos);
+    int evaluateForceAttack(Drawable *draw, const Coord3D *pos, CommandEvaluateType type);
     Int m_objective; // +04, Zero Hour CommandXlat.h spelling
     Bool m_teamExists; // +08
     ICoord2D m_mouseRightDragAnchor; // +0C
