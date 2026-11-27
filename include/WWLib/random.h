@@ -74,7 +74,7 @@ protected:
 class Random3Class
 {
 public:
-	Random3Class(unsigned seed1 = 0, unsigned seed2 = 0) : Seed(seed1), Index(seed2) {}
+	Random3Class(unsigned seed1 = 0, unsigned seed2 = 0);
 
 	operator int (void) {return(operator()());}
 	int operator () (void);

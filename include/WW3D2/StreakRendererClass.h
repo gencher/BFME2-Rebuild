@@ -24,6 +24,9 @@ class Vector4;
 
 class StreakLineClass;
 
+// The maximum allowable level of subdivision.
+#define MAX_STREAK_SUBDIV_LEVELS 7
+
 class StreakRendererClass
 {
 	friend class StreakLineClass;
@@ -55,6 +58,7 @@ public:
 	void RenderStreak(RenderInfoClass &rinfo, const Matrix3D &transform, unsigned int point_count, Vector3 *points, Vector4 *rgbas, float *widths, const SphereClass &obj_sphere, unsigned int *personalities);
 
 	int Is_Merge_Intersections() const;
+	int Is_Freeze_Random() const;
 	int Is_Sorting_Disabled() const;
 	void Set_Noise_Amplitude(float amplitude);
 	void Set_Current_Subdivision_Level(unsigned int level);	// (the level is not stored: retail writes 0)
@@ -63,6 +67,7 @@ public:
 	void Set_Disable_Sorting(int onoff);
 	void Set_End_Caps(int onoff);
 	TextureMapMode Get_Texture_Mapping_Mode() const;
+	void Set_Current_UV_Offset(const Vector2 &offset);
 	void Set_UV_Offset_Rate(const Vector2 &rate);
 	void Set_Texture(TextureClass *texture);				// 0x001911E0 (retail's body is shared with SegLineRendererClass::Set_Texture)
 	void Set_Shader(ShaderClass shader) { Shader = shader; }
@@ -79,7 +84,19 @@ public:
 	friend class StreakLineClass;
 
 private:
+	struct StreakSubdivision
+	{
+		Vector3 StartPos;
+		Vector3 EndPos;
+		float StartTexV;		// V texture coordinate of start point
+		float EndTexV;			// V texture coordinate of end point
+		float Rand;
+		unsigned int Level;		// Subdivision level
+	};
+
 	VertexFormatXYZUV1 *getVertexBuffer(unsigned int number);
+	void subdivision_util(unsigned int point_cnt, const Vector3 *xformed_pts, const float *base_tex_v,
+		unsigned int *p_sub_point_cnt, Vector3 *xformed_subdiv_pts, float *subdiv_tex_v);
 
 	TextureClass Texture;				// +0x00 the handle (one factory pointer)
 	ShaderClass Shader;					// +0x04
