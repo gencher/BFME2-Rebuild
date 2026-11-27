@@ -20,6 +20,7 @@ class RadarMarkerClientUpdateModuleData : public ModuleData
 {
 public:
 	RadarMarkerClientUpdateModuleData();
+	virtual ~RadarMarkerClientUpdateModuleData();
 	static void buildFieldParse(MultiIniFieldParse &parse);
 	static ModuleData *friend_newModuleData(INI *ini);
 

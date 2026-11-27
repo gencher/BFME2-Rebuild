@@ -61,6 +61,9 @@ RadarMarkerClientUpdateModuleData::RadarMarkerClientUpdateModuleData()
 }
 
 // FUNCTION: BFME2 0x004C9CA5 size=54 name=??1RadarMarkerClientUpdateModuleData@@UAE@XZ evidence=N:ledger tier=B hypothesis:cohesion
+RadarMarkerClientUpdateModuleData::~RadarMarkerClientUpdateModuleData()
+{
+}
 
 // FUNCTION: BFME2 0x004C9CF7 size=128 name=?clientUpdate@RadarMarkerClientUpdate@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 

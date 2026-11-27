@@ -279,6 +279,3 @@ void DynamicShroudClearingRangeUpdate::loadPostProcess()
 const char *DynamicShroudClearingRangeUpdate::GetSnapshotName() const { return "DynamicShroudClearingRangeUpdate"; }
 
 // FUNCTION: BFME2 0x0048B634 size=48 name=??1DynamicShroudClearingRangeUpdateModuleData@@UAE@XZ evidence=N:ledger tier=B hypothesis:legacy-membership
-DynamicShroudClearingRangeUpdateModuleData::~DynamicShroudClearingRangeUpdateModuleData()
-{
-}
