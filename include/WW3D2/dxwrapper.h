@@ -76,6 +76,7 @@ class DX8Caps;
 // Zero Hour's counters: each DX8 call through the device counts one.
 extern unsigned number_of_DX8_calls;		// ?number_of_DX8_calls@@3IA, 0x00DEDA98
 extern bool _DX8SingleThreaded;
+extern int DX8Wrapper_PreserveFPU;		// set from the command line (parseFPUPreserve)
 void DX8_Assert();
 void Log_DX8_ErrorCode(unsigned res);		// 0x0011F450 (Zero Hour's DX8_ErrorCode macro tests the HRESULT and calls it)
 
