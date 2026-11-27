@@ -1,4 +1,4 @@
-// cl: /O1 -Ireference/shims/bfmealloc_alloconly /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_STATIC_LIB /D_CRTIMP=
+// cl: /O1 -Ireference/shims/bfmealloc_alloconly /D_BFME_RETAIL_TREE_INSERT_LAYOUT /D_STLP_USE_STATIC_LIB
 // stlport46
 #include "GameClient/Eva.h"
 #include "Common/INI.h"

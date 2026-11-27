@@ -28,7 +28,7 @@ int GetGameLogicRandomValue(int,int,char*,int);
 #include "Common/NameKeyGenerator.h"
 #include "Common/Xfer.h"
 // GameLogic/Object/Update/DetachableRiderUpdate.cpp: retail translation unit (skeleton).
-// cl: /Oi- /D_CRTIMP= 
+// cl: /Oi- 
 
 
 DetachableRiderUpdate::~DetachableRiderUpdate() {}

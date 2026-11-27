@@ -27,7 +27,7 @@
 // FUNCTION: BFME2 0x0058A290 size=384 name=??0DockUpdate@@QAE@PAVThing@@PBVModuleData@@@Z evidence=N:ledger
 // FUNCTION: BFME2 0x0058A410 size=439 name=?xfer@DockUpdate@@MAEXPAVXfer@@@Z evidence=N:ledger
 
-// cl: /Ob2 /EHsc /D_STLP_USE_STATIC_LIB -Ireference/shims/bfmealloc_alloconly /D_CRTIMP=
+// cl: /Ob2 /EHsc /D_STLP_USE_STATIC_LIB -Ireference/shims/bfmealloc_alloconly
 
 // stlport46
 

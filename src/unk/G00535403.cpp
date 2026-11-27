@@ -1,4 +1,4 @@
-// cl: /O1 /EHsc /D_CRTIMP=
+// cl: /O1 /EHsc
 // Portions derived from Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "Common/AsciiString.h"
 #include "Common/UnicodeString.h"

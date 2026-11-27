@@ -1,4 +1,4 @@
-// cl: /O1 -Ireference/shims/bfmealloc_alloconly /D_CRTIMP=
+// cl: /O1 -Ireference/shims/bfmealloc_alloconly
 // stlport46
 // bfmealloc_alloconly
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.

@@ -1,4 +1,4 @@
-// cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB /D_STLP_BFME_COPY_TRIVIAL_EXTERN /D_STLP_NO_EXCEPTIONS /D_CRTIMP=
+// cl: /O1 /D_BFME_RETAIL_TREE_INSERT_LAYOUT -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB /D_STLP_BFME_COPY_TRIVIAL_EXTERN /D_STLP_NO_EXCEPTIONS
 // stlport46
 #include <vector>
 #include "Common/AsciiString.h"

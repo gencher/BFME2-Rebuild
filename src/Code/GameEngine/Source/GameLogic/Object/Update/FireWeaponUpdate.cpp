@@ -22,7 +22,7 @@
 #include "GameLogic/Weapon.h"
 #include "GameLogic/WeaponStore.h"
 // GameLogic/Object/Update/FireWeaponUpdate.cpp: retail translation unit (skeleton).
-// cl: /EHsc- -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB /D_CRTIMP=
+// cl: /EHsc- -Ireference/shims/bfmealloc_alloconly /D_STLP_USE_STATIC_LIB
 #include "Common/Xfer.h"
 #include "WWMath/Vector3.h"
 #include <math.h>
