@@ -17,17 +17,31 @@
 #include "GameLogic/LivingWorldLogic.h"
 #include "GameLogic/LivingWorldPlayer.h"
 #include "GameLogic/LivingWorldBuilding.h"
+#include "Draft/RegionBonusInfo.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;
 
 // Helpers owned by their own units (rows at these RVAs elsewhere in the map).
-// Transfers the LivingWorldRegionID enum by its serialized name at 0x003EFE82.
-void XferLivingWorldRegionID(Xfer *xfer, int *regionID);
 // The detour-vector transfer (0x003F2C0C).
 Xfer *Rva003F2C0CXfer(Xfer *xfer, _STL::vector<Coord2D> *detourPoints);
 
 // FUNCTION: BFME2 0x003EFCD1 size=102 name=?xfer@RegionBonusInfo@@MAEXPAVXfer@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+void RegionBonusInfo::xfer(Xfer *xfer)
+{
+	Xfer::Version version(1, 1);
+	*xfer == version;
+	*xfer == m_unk0x04;
+	*xfer == m_unk0x0C;
+	*xfer == m_unk0x08;
+	*xfer == m_unk0x10;
+	*xfer == m_unk0x14;
+	*xfer == m_unk0x18;
+}
 // FUNCTION: BFME2 0x003EFD37 size=6 name=?GetSnapshotName@RegionBonusInfo@@MBEPBDXZ evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+const char *RegionBonusInfo::GetSnapshotName() const
+{
+	return "RegionBonusInfo";
+}
 // FUNCTION: BFME2 0x003EFD3D size=50 name=?IsOwnedByTeam@LivingWorldRegion@@QBE_NH@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 Bool LivingWorldRegion::IsOwnedByTeam(Int teamID) const
 {
@@ -45,6 +59,10 @@ Bool LivingWorldRegion::IsOwnedByTeam(Int teamID) const
 // FUNCTION: BFME2 0x003EFE63 size=15 name=?rva003EFE63@Rva003EF5E8@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003EFE72 size=16 name=?rva003EFE72@LivingWorldRegion@@QAEXPAXPAURva0059E647Entry@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003EFE82 size=24 name=?Rva003EFE82Get@@YAHPAURva003EFE82Obj@@PAX@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
+void XferLivingWorldRegionID(Xfer *xfer, int *regionID)
+{
+	xfer->XferEnum("LivingWorldRegionID", regionID, 4);
+}
 // FUNCTION: BFME2 0x003EFE9A size=6 name=?Rva003EFE9AGet@@YAHXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003EFEB2 size=379 name=?unmaskValue@@YAIHI@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F0038 size=11 name=?rva003F0038@Rva003F0038@@QBEHXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
