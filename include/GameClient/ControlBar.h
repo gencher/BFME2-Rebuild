@@ -207,7 +207,7 @@ public:
     void rva00405D77();
     CommandSet *rva00406D95(const AsciiString &);
     void rva004C1B60(GameWindow *, void *);
-    int selectMatchingOnDoubleClick(Object *);	// 0x005399D0: a double click on one of the local player's selectable non-structure objects selects all of its type on screen (role name; CommandTranslator::rva0042AF97 0x0042AF97 calls it)
+    int selectMatchingOnDoubleClick(Object *);	// 0x005399D0: a double click on one of the local player's selectable non-structure objects selects all of its type on screen (role name; CommandTranslator::selectMatchingOnDoubleClick 0x0042AF97 calls it)
     int rva0053BA87(const CommandButton *, Object *) const;
     void rva0053E4B1();
     void rva0053E6E1();

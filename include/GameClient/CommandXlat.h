@@ -29,6 +29,7 @@ public:
     int createDockMessage(Drawable *draw, int commandType);
     // Retail 0x00429E11 (non-virtual): the context-command evaluation GameClient forwards to.
     GameMessage::Type evaluateContextCommand(Drawable *draw, const Coord3D *pos, CommandEvaluateType cmdType);
+    void selectMatchingOnDoubleClick(const GameMessage *msg);	// role name: a single-point click on a drawable selects its kind through the control bar
 private:
     int issueGuardCommand(const CommandButton *command, int commandType, Drawable *target, const Coord3D *pos);	// 0x00428EEB (role name)
     int createAttackMessage(Drawable *draw, Drawable *other, int commandType);	// 0x004293EE
