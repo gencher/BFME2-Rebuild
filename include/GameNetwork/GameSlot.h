@@ -109,6 +109,12 @@ public:
 	void setState(SlotState state, UnicodeString name, const GameSlotConnectInfo *info);	// 0x003FFC28
 	Bool hasMap() const { return m_hasMap; }						// +9, the map-availability flag
 	Int getStartPos() const { return m_startPos; }
+	Int getColor() const { return m_color; }
+	Int getPlayerTemplate() const { return m_playerTemplate; }
+	Int getTeamNumber() const { return m_teamNumber; }
+	Int getHandicap() const { return m_unk0x20; }
+	Int getLivingWorldPlayerID() const { return m_livingWorldPlayerID; }
+	const UnicodeString &getName() const { return m_name; }
 	void saveOffOriginalInfo();										// 0x003FF0D4
 	UnsignedByte encodeHero() const;								// 0x003FF16F (packs the hero kind and its two ids into one byte)
 	UnicodeString getApparentPlayerTemplateDisplayName() const;	// 0x003FFBB4 (the template name the lobby shows: Random or Observer where the slot hides it)

@@ -45,6 +45,9 @@
 #include "Common/Money.h"
 #include "Common/ScoreKeeper.h"
 #include "GameLogic/LivingWorldLogic.h"
+#include "Common/Team.h"
+#include "Common/TeamFactory.h"
+#include "GameLogic/VictoryConditions.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;
 
@@ -359,6 +362,120 @@ AsciiString PlayerTemplate::getName() const
 // FUNCTION: BFME2 0x0023E984 size=17 name=?str@Rva003879F0Str@@QAEPBDXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023E99A size=1217 name=?CreateWOTRMPPlayers@GameLogic@@QAEXXZ evidence=N:ledger tier=A
+void GameLogic::CreateWOTRMPPlayers()
+{
+	if (TheGameInfo == NULL)
+		return;
+
+	GameInfo *game = TheGameInfo;
+	ThePlayerList->reset();
+	TheSidesList->reset();
+	TheTeamFactory->reset();
+
+	for (Int i = 0; i < MAX_SLOTS; ++i)
+		game->getSlot(i)->m_unk0x1A4 = TRUE;
+
+	Int index = TheSidesList->m_teamRec.m_teams[0].m_next;
+	while (index)
+	{
+		Int next = TheSidesList->m_teamRec.m_teams[index].m_next;
+		if (TheSidesList->m_teamRec.m_teams[index].m_overriddenByID)
+			TheSidesList->m_teamRec.removeTeam(index);
+		index = next;
+	}
+
+	// name every occupied slot's player
+	for (Int j = 0; j < MAX_SLOTS; ++j)
+	{
+		GameSlot *slot = game->getSlot(j);
+		if (slot && slot->isOccupied() && m_unk0x114 != 3)
+		{
+			AsciiString playerName;
+			if (slot->getPlayerTemplate() >= 0)
+				playerName.format("Player_%d", j + 1);
+			else
+				playerName.format("Observer_%d", j + 1);
+			slot->m_unk0x34 = playerName;
+		}
+	}
+
+	for (Int slotNum = 0; slotNum < MAX_SLOTS; ++slotNum)
+	{
+		GameSlot *slot = game->getSlot(slotNum);
+		if (!slot || !slot->isOccupied())
+			continue;
+
+		Dict d(0);
+		d.clear();
+		const AsciiString &playerName = slot->m_unk0x34;
+		d.setAsciiString(TheKey_playerName, playerName);
+		d.setBool(TheKey_playerIsHuman, slot->isHuman());
+		d.setUnicodeString(TheKey_playerDisplayName, slot->m_name);
+		const PlayerTemplate *pt;
+		if (slot->getPlayerTemplate() >= 0)
+			pt = ThePlayerTemplateStore->getNthPlayerTemplate(slot->getPlayerTemplate());
+		else
+			pt = ThePlayerTemplateStore->findPlayerTemplate(TheNameKeyGenerator->nameToKey("FactionObserver"));
+		if (pt)
+			d.setAsciiString(TheKey_playerFaction, TheNameKeyGenerator->keyToName(pt->getNameKey()));
+
+		if (game->isPlayerPreorder(slotNum))
+			d.setBool(TheKey_playerIsPreorder, TRUE);
+
+		AsciiString enemiesString, alliesString;
+		Int team = slot->getTeamNumber();
+		for (Int j = 0; j < MAX_SLOTS; ++j)
+		{
+			GameSlot *teamSlot = game->getSlot(j);
+			if (slotNum == j || !teamSlot->isOccupied())
+				continue;
+
+			const AsciiString &teamPlayerName = teamSlot->m_unk0x34;
+			Bool isEnemy = FALSE;
+			if (team == -1 || teamSlot->getTeamNumber() != team)
+				isEnemy = TRUE;
+
+			if (isEnemy)
+			{
+				if (!enemiesString.isEmpty())
+					enemiesString.concat(" ");
+				enemiesString.concat(teamPlayerName);
+			}
+			else
+			{
+				if (!alliesString.isEmpty())
+					alliesString.concat(" ");
+				alliesString.concat(teamPlayerName);
+			}
+		}
+		d.setAsciiString(TheKey_playerAllies, alliesString);
+		d.setAsciiString(TheKey_playerEnemies, enemiesString);
+		d.setInt(TheKey_playerHandicap, slot->getHandicap());
+		d.setInt(TheKey_playerColor, TheMultiplayerSettings->getColor(slot->getColor())->getColor());
+		d.setInt(TheKey_playerNightColor, TheMultiplayerSettings->getColor(slot->getColor())->getNightColor());
+		d.setBool(TheKey_multiplayerIsLocal, slot->isHuman() && slot->getName().compare(game->getSlot(game->getLocalSlotNum())->getName().str()) == 0);
+		d.setInt(TheKey_livingWorldPlayerID, slot->getLivingWorldPlayerID());
+
+		TheSidesList->findSideInfo(playerName);
+		TheSidesList->addSide(&d);
+
+		AsciiString teamName;
+		teamName.set("team");
+		teamName.concat(playerName);
+		d.clear();
+		d.setAsciiString(TheKey_teamName, teamName);
+		d.setAsciiString(TheKey_teamOwner, playerName);
+		d.setBool(TheKey_teamIsSingleton, true);
+		TheSidesList->addTeam(&d);
+	}
+
+	TheVictoryConditions->reset();
+	TheTeamFactory->reset();
+	ThePlayerList->newGame();
+	TheVictoryConditions->cachePlayerPtrs();
+}
+
+
 // FUNCTION: BFME2 0x0023EE5B size=1685 name=?CreateMPPlayers@GameLogic@@QAEX_NH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0023F52C size=864 name=?rva0023F52C@GameLogic@@QAEX_N@Z evidence=?:placeholder tier=A

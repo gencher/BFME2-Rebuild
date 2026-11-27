@@ -37,5 +37,8 @@ extern const StaticNameKey TheKey_multiplayerStartIndex;	// 0x00DBDE7C
 extern const StaticNameKey TheKey_teamName;				// 0x00DBD9F4
 extern const StaticNameKey TheKey_teamOwner;				// 0x00DBD9FC
 extern const StaticNameKey TheKey_teamIsSingleton;		// 0x00DBDA04
+extern StaticNameKey TheKey_playerHandicap;
+extern const StaticNameKey TheKey_playerIsPreorder;
+extern StaticNameKey TheKey_livingWorldPlayerID;
 
 #endif
