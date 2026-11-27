@@ -19,6 +19,7 @@
 #include <map>
 #include <utility>
 #include "GameLogic/ScriptList.h"
+#include "Common/StaticNameKey.h"
 
 class BuildListInfo;
 
@@ -36,6 +37,7 @@ public:
 	void addToBuildList(BuildListInfo *info, Int position);
 	Int removeFromBuildList(BuildListInfo *info);
 	void reorderInBuildList(BuildListInfo *info, Int position);
+	Dict *getDict() { return &m_dict; }
 
 	BuildListInfo *m_pBuildList;								// +0x00
 	Dict m_dict;												// +0x04
@@ -44,6 +46,10 @@ public:
 };
 // SIZE 0x60
 typedef char SidesInfoSize[(sizeof(SidesInfo) == 0x60) ? 1 : -1];
+
+// The team Dict keys (retail's StaticNameKey objects for "teamOwner" and "teamName").
+extern const StaticNameKey TheKey_teamOwner;
+extern const StaticNameKey TheKey_teamName;
 
 // TeamsInfoRec: a map's team records (SidesList keeps two, +0xF44 and +0xF60). SIZE 0x1C.
 // Retail evidence: its constructor 0x0032CD6D builds the index map at +0 and a one-slot team
@@ -62,6 +68,7 @@ class TeamsInfo
 {
 public:
 	TeamsInfo();
+	Dict *getDict() { return &m_dict; }
 	short m_next;					// +0x00
 	short m_prev;					// +0x02
 	short m_overridesID;			// +0x04
@@ -82,6 +89,9 @@ public:
 	void removeFromIndex(Int index);					// Unlinks the slot from its index entry's override chain
 	void removeTeam(Int index);							// removeFromIndex, clear the Dict, move the slot to the free list
 	void removeOverriddenTeams();						// 0x0032C2C4: removeTeam on every active slot that another overrides
+	void addToIndex(Int index);							// Files the slot under its (owner, name) key
+	void renameTeam(Int index, const AsciiString &owner, const AsciiString &name);
+	void moveTeamsToNewOwner(const AsciiString &oldOwner, const AsciiString &newOwner);
 
 	TeamIndex m_index;					// +0x00
 	_STL::vector<TeamsInfo> m_teams;	// +0x0C

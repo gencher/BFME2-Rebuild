@@ -454,6 +454,17 @@ SidesInfo::SidesInfo() : m_pBuildList(NULL), m_dict(0)
 // FUNCTION: BFME2 0x0032C88F size=258 name=?rva0032C88F@SidesList@@QAEXH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0032C991 size=53 name=?discardOverriddenScriptsAndTeams@SidesList@@QAEXXZ evidence=N:ledger tier=A
+void SidesList::discardOverriddenScriptsAndTeams()
+{
+	Int numSides = m_numSides;
+	for (Int i = 0; i < numSides; i++)
+	{
+		ScriptList *scripts = &getSideInfo(i)->m_scripts;
+		if (scripts)
+			scripts->commit();
+	}
+	m_teamRec.removeOverriddenTeams();
+}
 
 // FUNCTION: BFME2 0x0032C9C6 size=58 name=?clear@TeamsInfoRec@@QAEXXZ evidence=N:ledger tier=A
 void TeamsInfoRec::clear()
@@ -503,8 +514,36 @@ void SidesList::emptyTeams()
 // FUNCTION: BFME2 0x0032D0B5 size=78 name=?lookup@Rva0019C520Member@@QAEHPAVAsciiString@@H@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0032D103 size=288 name=?addToIndex@TeamsInfoRec@@QAEXH@Z evidence=N:ledger tier=A
+void TeamsInfoRec::addToIndex(Int index)
+{
+	TeamsInfo &team = m_teams[index];
+	Dict &dict = team.m_dict;
+	TeamNameKey key(dict.getAsciiString(TheKey_teamOwner.key()), dict.getAsciiString(TheKey_teamName.key()));
+	team.m_indexIt = m_index.find(key);
+	if (team.m_indexIt == m_index.end())
+	{
+		team.m_indexIt = m_index.insert(_STL::make_pair(key, index)).first;
+	}
+	else
+	{
+		// a team already filed under this key: this slot overrides it
+		Int overridden = team.m_indexIt->second;
+		TeamsInfo &previous = m_teams[overridden];
+		previous.m_overriddenByID = index;
+		team.m_overridesID = overridden;
+		team.m_indexIt->second = index;
+	}
+}
 
 // FUNCTION: BFME2 0x0032D223 size=86 name=?renameTeam@TeamsInfoRec@@QAEXHABVAsciiString@@0@Z evidence=N:ledger tier=A
+void TeamsInfoRec::renameTeam(Int index, const AsciiString &owner, const AsciiString &name)
+{
+	removeFromIndex(index);
+	Dict &dict = m_teams[index].m_dict;
+	dict.setAsciiString(TheKey_teamOwner.key(), owner);
+	dict.setAsciiString(TheKey_teamName.key(), name);
+	addToIndex(index);
+}
 
 // FUNCTION: BFME2 0x0032D4AD size=8 name=?clear@SidesInfo@@QAEXXZ evidence=N:ledger tier=A
 void SidesInfo::clear()
@@ -547,6 +586,26 @@ void SidesList::emptySides()
 // FUNCTION: BFME2 0x0032D850 size=119 name=?removeSide@SidesList@@QAEXH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0032D8C7 size=221 name=?removeSideAndTeams@SidesList@@QAEXH@Z evidence=N:ledger tier=A
+void SidesList::removeSideAndTeams(Int index)
+{
+	Bool exists;
+	Dict *sideDict = m_sides[index].getDict();
+	AsciiString playerName = sideDict->getAsciiString(TheKey_playerName.key(), &exists);
+	if (exists)
+	{
+		// remove every team the side owns
+		Int next;
+		for (Int i = m_teamRec.m_teams[0].m_next; i != 0; i = next)
+		{
+			next = m_teamRec.m_teams[i].m_next;
+			Dict *teamDict = m_teamRec.m_teams[i].getDict();
+			AsciiString owner = teamDict->getAsciiString(TheKey_teamOwner.key(), &exists);
+			if (exists && owner == playerName)
+				m_teamRec.removeTeam(i);
+		}
+	}
+	removeSide(index);
+}
 
 // FUNCTION: BFME2 0x0032D9A4 size=170 name=??0TeamsInfoRec@@QAE@ABV0@@Z evidence=N:ledger tier=A
 TeamsInfoRec::TeamsInfoRec(const TeamsInfoRec &that)
@@ -568,6 +627,34 @@ TeamsInfoRec::TeamsInfoRec(const TeamsInfoRec &that)
 // FUNCTION: BFME2 0x0032DB06 size=20 name=catch_0032db06 evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0032DB1B size=357 name=?moveTeamsToNewOwner@TeamsInfoRec@@QAEXABVAsciiString@@0@Z evidence=N:ledger tier=A
+void TeamsInfoRec::moveTeamsToNewOwner(const AsciiString &oldOwner, const AsciiString &newOwner)
+{
+	if (newOwner == oldOwner)
+		return;
+	TeamIndex::iterator end = m_index.end();
+	TeamIndex::iterator it = m_index.lower_bound(TeamNameKey(oldOwner, AsciiString::TheEmptyString));
+	while (it != end)
+	{
+		if (it->first.first != oldOwner)
+			break;
+		TeamIndex::iterator next = it;
+		++next;
+		AsciiString name = it->first.second;
+		Int index = it->second;
+		TeamNameKey newKey(newOwner, name);
+		TeamIndex::iterator newIt = m_index.insert(_STL::make_pair(newKey, index)).first;
+		// refile the slot and every slot it overrides under the new owner
+		while (index != 0)
+		{
+			TeamsInfo &team = m_teams[index];
+			team.m_dict.setAsciiString(TheKey_teamOwner.key(), newOwner);
+			team.m_indexIt = newIt;
+			index = m_teams[index].m_overridesID;
+		}
+		m_index.erase(it);
+		it = next;
+	}
+}
 
 // FUNCTION: BFME2 0x0032DD66 size=27 name=?Rva0032DD66RangeForward@@YAPAURva0032DD66Output@@PAURva0032DD66Input@@0PAU1@@Z evidence=?:placeholder tier=A
 
