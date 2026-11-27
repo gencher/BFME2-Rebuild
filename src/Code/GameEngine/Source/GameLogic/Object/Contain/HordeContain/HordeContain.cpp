@@ -670,6 +670,12 @@ void HordeContain::rva0046A712(const Coord3D *)
 // FUNCTION: BFME2 0x0046AA11 size=30 name=?get@Rva0046AA11AsciiField@@QBE?AVAsciiString@@XZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0046AA85 size=51 name=?rva0046AA85@HordeContain@@QAEXXZ evidence=?:placeholder tier=A
+void HordeContain::rva0046AA85()
+{
+	ContainmentListView riders = getContainList();
+	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+		rva00469F3A(*it);
+}
 
 // FUNCTION: BFME2 0x0046AAB8 size=33 name=?rva0046AAB8@HordeContain@@UAE_NXZ evidence=?:placeholder tier=A
 
