@@ -51,6 +51,8 @@ extern NameKeyGenerator *TheNameKeyGenerator;
 ControlBar *TheControlBar = NULL;
 void Rva0043C96FEnable();	// 0x0043C96F (SpellStore.cpp)
 void finishShowPurchaseScience();	// SpellStore.cpp
+// The override-copy guard byte, set around every copy into a new override.
+extern unsigned char g_00E01EA8;
 // FUNCTION: BFME2 0x0031A9EC size=6 name=?getCommandSetFieldParseTable@@YAPBUFieldParse@@XZ evidence=N:ledger tier=B hypothesis:mm1-neighbour-shared-data
 // FUNCTION: BFME2 0x0031A9F2 size=14 name=?rva0031A9F2@Rva0031A9F2@@QAEXPAPAV1@@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-shared-data
 // FUNCTION: BFME2 0x0031AA00 size=6 name=?Rva0031AA00Get@@YAHXZ evidence=?:placeholder tier=B hypothesis:mm1-contiguity-shared-data
@@ -327,6 +329,19 @@ void ControlBar::hideSpecialPowerShortcut( void )
 // FUNCTION: BFME2 0x0031AFDE size=83 name=?rva0031AFDE@Rva0031AFDE@@QAEHXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0031B05B size=115 name=?rva0031B05B@ControlBar@@QAEPAVCommandSet@@PAV2@@Z evidence=?:placeholder tier=A
+CommandSet *ControlBar::newCommandSetOverride(CommandSet *setToOverride)
+{
+	if (!setToOverride)
+		return NULL;
+
+	CommandSet *newSet = new CommandSet(setToOverride->getName(), 0);
+	g_00E01EA8 = 1;
+	*newSet = *setToOverride;
+	g_00E01EA8 = 0;
+	newSet->markAsOverride();
+	setToOverride->setNextOverride(newSet);
+	return newSet;
+}
 
 // FUNCTION: BFME2 0x0031B0CE size=102 name=?setDefaultControlBarConfig@ControlBar@@IAEXXZ evidence=N:ledger tier=A
 void ControlBar::setDefaultControlBarConfig()
@@ -531,6 +546,27 @@ void ControlBar::updateSlotExitImage(const Image *image)
 }
 
 // FUNCTION: BFME2 0x0031BF1B size=73 name=?rva0031BF1B@Rva0031BF1B@@QAEXPAVModuleData@@@Z evidence=?:placeholder tier=A
+void ControlBar::removeCommandButton(CommandButton *button)
+{
+	if (!button)
+		return;
+
+	CommandButton *prev = NULL;
+	for (CommandButton *cur = m_commandButtons; cur; cur = cur->m_next)
+	{
+		if (cur == button)
+		{
+			if (prev)
+				prev->m_next = cur->m_next;
+			else
+				m_commandButtons = cur->m_next;
+			m_retiredCommandButtons.push_back(button);
+			button->setReloadState(1);
+			return;
+		}
+		prev = cur;
+	}
+}
 
 // FUNCTION: BFME2 0x0031BF64 size=1150 name=?switchToContext@ControlBar@@QAEXHPAX@Z evidence=N:ledger tier=A
 
@@ -631,6 +667,13 @@ void ControlBar::setControlBarSchemeByPlayerTemplate(const PlayerTemplate *pt)
 // FUNCTION: BFME2 0x0031D230 size=968 name=?rva0031D230@ControlBar@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0031D5F8 size=38 name=?rva0031D5F8@Rva0031D5F8@@QAEPAXPBVAsciiString@@@Z evidence=?:placeholder tier=A
+const CommandSet *ControlBar::findCommandSet(const AsciiString &name)
+{
+	CommandSetMap::iterator it = m_commandSets.find(name);
+	if (it != m_commandSets.end())
+		return it->second;
+	return NULL;
+}
 
 // FUNCTION: BFME2 0x0031D61E size=49 name=?rva0031D61E@ControlBar@@QAEXPBVAsciiString@@@Z evidence=?:placeholder tier=A
 
@@ -728,6 +771,20 @@ bool ControlBar::rva0031E068(Player *player, int science)
 // FUNCTION: BFME2 0x0031E7F0 size=137 name=?rva0031E7F0@Rva0031DCF0@@QAE_NPA_N@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0031E879 size=92 name=?forgetStaleCommandSet@ControlBar@@QAEXABVAsciiString@@@Z evidence=N:ledger tier=A
+void ControlBar::forgetStaleCommandSet(const AsciiString &name)
+{
+	CommandSetMap::iterator it = m_commandSets.find(name);
+	if (it == m_commandSets.end())
+		return;
+
+	CommandSet *set = it->second;
+	m_commandSets.erase(it);
+	if (set)
+	{
+		m_retiredCommandSets.push_back(set);
+		set->setReloadState(1);
+	}
+}
 
 // FUNCTION: BFME2 0x0031E8D5 size=88 name=?rva0031E8D5@ControlBar@@QAEPAVCommandSet@@ABVAsciiString@@H@Z evidence=?:placeholder tier=A
 
