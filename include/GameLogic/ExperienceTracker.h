@@ -40,7 +40,8 @@ public:
 	Bool rva0039B4EC(Int levels, Bool a, Bool b);						// 0x0039B4EC (placeholder-owned row in ExperienceTracker.cpp; the crate collides call it to grant levels)
 	Bool isTrainable() const;											// 0x0039ADAF
 	Bool rva0039AE04() const;										// 0x0039AE04 (map: ?rva0039AE04@Rva0039ADF3@@QBE_NXZ; the object at +0x34 is in the right state and the tracker is trainable: SupplyCenterDockUpdate::action 0x004A0EAD and 8 more callers)
-	void rva0039B315(Real amount, Bool a, Bool b, Bool c, Bool d);	// 0x0039B315 (map: ?rva0039B315@ExperienceTracker@@QAEXM_N000@Z; grants experience)
+	void rva0039B315(Real amount, Bool a, Bool b, Bool c, Bool d);
+	void rva0039B3D1(Real amount, Bool flag);	// 0x0039B3D1 (map: ?rva0039B3D1@ExperienceTracker@@QAEXM_N@Z; follows the +0x38 owner chain first)	// 0x0039B315 (map: ?rva0039B315@ExperienceTracker@@QAEXM_N000@Z; grants experience)
 	void reset();												// 0x0039B548 (placeholder-owned row in ExperienceTracker.cpp; ActiveBody 0x004BDA67 calls it): clears the level, the experience and the scalar
 	void resetCurrentLevel();											// 0x0039AD45 (descriptive; the map holds a placeholder): clears +0x08 and +0x0C
 

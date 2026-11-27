@@ -14,6 +14,7 @@
 #include "GameLogic/Module/HordeContainInterface.h"
 #include "Common/Coord3D.h"
 #include "GameLogic/Module/HordeMeleeBase.h"
+#include "GameLogic/Module/HordeContainModuleData.h"
 
 class Thing;
 class ModuleData;
@@ -42,6 +43,14 @@ struct HordeTemplateScan
 };
 // 0x004698EE: the iterateContained visitor that fills a HordeTemplateScan.
 void hordeTemplateScanVisitor(Object *unit, void *userData);
+
+// The block rva004707DB hands iterateContained with the visitor rva00468AEC: the experience to grant and the
+// template id of the units that receive it.
+struct HordeExperienceGrant
+{
+	Real m_amount;
+	UnsignedShort m_templateID;
+};
 
 // One banner carrier entry (the vector at +0x270): +0 the carrier's template, +4 the index getBannerCarrierIndexToUse
 // (0x0046A521) hands back. Only these two members are recovered.
@@ -72,6 +81,7 @@ public:
 	static Module *friend_newModuleInstance(Thing *thing, const ModuleData *moduleData);
 	virtual NameKeyType getModuleNameKey() const;
 	virtual ~HordeContain();
+	const HordeContainModuleData *getHordeContainModuleData() const { return (const HordeContainModuleData *)getModuleData(); }
 	virtual DisabledMaskType getDisabledTypesToProcess() const
 	{
 		return DisabledMaskType(DisabledMaskType::kInit, DISABLED_HELD);
@@ -98,6 +108,9 @@ public:
 	Int getBannerCarrierIndexToUse(const Object *unit, const ThingTemplate **carrier);	// 0x0046A521
 	const ThingTemplate *pickRandomRankTemplate();	// 0x0046AF12 (the map spells the return void *)
 	Bool rankUnitTypeMatches(Object *unit, const AsciiString &unitType);	// 0x004723F2
+	Bool rva00468F0F(Object *unit, Object *other);	// 0x00468F0F (non-virtual)
+	Int rva0046ACF6(Int id);
+	void rva0046A893(Object *unit);	// 0x0046A893 (non-virtual; swaps the unit's alternate-formation armor and model conditions to the horde's state)	// 0x0046ACF6 (non-virtual; the member's formation slot index, 0 when absent)
 	void rva00469886(Object *unit);	// 0x00469886 (non-virtual; HordeContainInterface slot 12 forwards to it)
 	virtual void onDelete();	// override: onDelete slot 8 at +0x0 (0x0046E697)
 	virtual void createPayload();	// override: createPayload slot 28 at +0x0 (0x0046E8EE)
@@ -176,7 +189,7 @@ public:
 	virtual Bool rva0046AAB8();	// 62 0x0046AAB8
 	virtual void rva004738B6(Object *obj);	// 63 0x004738B6
 	virtual void hordeSlot64(Int value);	// 64 0x0046F7EB
-	virtual Object *hordeSlot65();	// 65 0x0046F7F8
+	virtual Int hordeSlot65();	// 65 0x0046F7F8
 	virtual ContainmentListView hordeSlot66();	// 66 0x0046F7FF
 	virtual void rva0046D1F7(HordeConstObjectList &list);	// 67 0x0046D1F7
 	virtual Object *rva0046D27A();	// 68 0x0046D27A
