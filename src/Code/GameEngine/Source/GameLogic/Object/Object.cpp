@@ -1975,6 +1975,11 @@ template void BitFlags<104>::xfer(Xfer *xfer);
 // FUNCTION: BFME2 0x0028F95C size=26 name=?getName@Weapon@@QBE?AVAsciiString@@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0028F976 size=12 name=?update@ObjectWeaponStatusHelper@@UAE?AW4UpdateSleepTime@@XZ evidence=N:ledger tier=A
+UpdateSleepTime ObjectWeaponStatusHelper::update()
+{
+	getObject()->adjustModelConditionForWeaponStatus();
+	return UPDATE_SLEEP_NONE;
+}
 
 // FUNCTION: BFME2 0x0028F982 size=335 name=?DescribeObject@@YA?AVAsciiString@@PBVObject@@@Z evidence=N:ledger tier=A
 
