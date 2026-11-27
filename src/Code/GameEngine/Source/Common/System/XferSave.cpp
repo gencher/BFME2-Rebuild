@@ -79,38 +79,33 @@ void XferSave::EndBlock()
 // FUNCTION: BFME2 0x0060CE41 size=281 name=?rva0060CE41@XferSave@@UAEAAVXfer@@AAVRva0060CE41Argument@@@Z evidence=?:placeholder tier=B hypothesis:cohesion
 Xfer &XferSave::operator==(const char *const &value)
 {
-	if (m_file != 0)
+	if (m_file == 0)
+		return *this;
+	if (!m_stringTableMode || value == 0 || *value == 0)
+		return *this;
+	UnsignedInt tag = 0x44534352;
+	if (m_file->write(&tag, 4) != 4)
+		throw XferException(1, 0);
+	const char *name = value;
+	_STL::hash_map<const char *, Int>::iterator found = m_literalIds.find(name);
+	if (found != m_literalIds.end())
 	{
-		if (m_stringTableMode)
-		{
-			if (value != 0 && *value != 0)
-			{
-				UnsignedInt tag = 0x44534352;
-				if (m_file->write(&tag, 4) != 4)
-					throw XferException(1, 0);
-				const char *name = value;
-				_STL::hash_map<const char *, Int>::iterator found = m_literalIds.find(name);
-				if (found != m_literalIds.end())
-				{
-					UnsignedByte marker = 0xFF;
-					if (m_file->write(&marker, 1) != 1)
-						throw XferException(1, 0);
-					if (m_file->write(&found->second, 4) != 4)
-						throw XferException(1, 0);
-				}
-				else
-				{
-					UnsignedInt length = strlen(name);
-					if (length > 0xFE)
-						length = 0xFE;
-					if (m_file->write(&length, 1) != 1)
-						throw XferException(1, 0);
-					if (m_file->write(name, length) != (Int)length)
-						throw XferException(1, 0);
-					m_literalIds[name] = m_literalIds.size() + m_nameIds.size();
-				}
-			}
-		}
+		UnsignedByte marker = 0xFF;
+		if (m_file->write(&marker, 1) != 1)
+			throw XferException(1, 0);
+		if (m_file->write(&found->second, 4) != 4)
+			throw XferException(1, 0);
+	}
+	else
+	{
+		UnsignedInt length = strlen(name);
+		if (length > 0xFE)
+			length = 0xFE;
+		if (m_file->write(&length, 1) != 1)
+			throw XferException(1, 0);
+		if (m_file->write(name, length) != (Int)length)
+			throw XferException(1, 0);
+		m_literalIds[name] = m_literalIds.size() + m_nameIds.size();
 	}
 	return *this;
 }
