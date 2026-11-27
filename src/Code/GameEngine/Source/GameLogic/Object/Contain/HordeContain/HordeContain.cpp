@@ -46,7 +46,7 @@ void rva00468AEC(Object *unit, void *userData)
 	const ThingTemplate *unitTemplate = unit->getTemplate();
 	if (unitTemplate == NULL)
 		return;
-	HordeExperienceGrant *grant = (HordeExperienceGrant *)userData;
+	HordeExperienceGrant *grant = static_cast<HordeExperienceGrant *>(userData);
 	if (unitTemplate->m_templateID != grant->m_templateID)
 		return;
 	ExperienceTracker *tracker = unit->getExperienceTracker();
@@ -331,13 +331,13 @@ void hordeBestExperienceVisitor(Object *unit, void *userData)
 // FUNCTION: BFME2 0x004696CD size=24 name=?rva004696CD@HordeContain@@UAEPAXXZ evidence=?:placeholder tier=A
 void *HordeContain::rva004696CD()
 {
-	return (void *)TheThingFactory->findTemplate(((const HordeContainModuleData *)getModuleData())->AlternateFormation);
+	return (void *)TheThingFactory->findTemplate(getHordeContainModuleData()->AlternateFormation);
 }
 
 // FUNCTION: BFME2 0x004696E5 size=40 name=?rva004696E5@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 void HordeContain::rva004696E5()
 {
-	const ThingTemplate *formation = TheThingFactory->findTemplate(((const HordeContainModuleData *)getModuleData())->AlternateFormation);
+	const ThingTemplate *formation = TheThingFactory->findTemplate(getHordeContainModuleData()->AlternateFormation);
 	if (formation)
 		changeToFormation(formation);
 }
@@ -347,7 +347,7 @@ void HordeContain::rva004696E5()
 // FUNCTION: BFME2 0x0046979B size=13 name=?rva0046979B@HordeContain@@UAEHXZ evidence=?:placeholder tier=A
 Int HordeContain::rva0046979B()
 {
-	return ((const HordeContainModuleData *)getModuleData())->m_slots;
+	return getHordeContainModuleData()->m_slots;
 }
 
 // FUNCTION: BFME2 0x004697A8 size=37 name=?rva004697A8@HordeContain@@UAEXHHH@Z evidence=?:placeholder tier=A
@@ -355,7 +355,7 @@ Int HordeContain::rva0046979B()
 // FUNCTION: BFME2 0x004697CD size=20 name=?rva004697CD@HordeContain@@UAEHXZ evidence=?:placeholder tier=A
 UnsignedInt HordeContain::rva004697CD()
 {
-	const HordeContainModuleData *data = (const HordeContainModuleData *)getModuleData();
+	const HordeContainModuleData *data = getHordeContainModuleData();
 	return data ? data->m_slots : 0;
 }
 
@@ -364,7 +364,7 @@ UnsignedInt HordeContain::rva004697CD()
 // FUNCTION: BFME2 0x0046981C size=53 name=?rva0046981C@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 void HordeContain::rva0046981C()
 {
-	const HordeContainModuleData *data = (const HordeContainModuleData *)getModuleData();
+	const HordeContainModuleData *data = getHordeContainModuleData();
 	if (data != NULL)
 	{
 		for (_STL::vector<AsciiString>::const_iterator it = data->AttributeModifiers.begin(); it != data->AttributeModifiers.end(); ++it)
@@ -375,7 +375,7 @@ void HordeContain::rva0046981C()
 // FUNCTION: BFME2 0x00469851 size=53 name=?rva00469851@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 void HordeContain::rva00469851()
 {
-	const HordeContainModuleData *data = (const HordeContainModuleData *)getModuleData();
+	const HordeContainModuleData *data = getHordeContainModuleData();
 	if (data != NULL)
 	{
 		for (_STL::vector<AsciiString>::const_iterator it = data->AttributeModifiers.begin(); it != data->AttributeModifiers.end(); ++it)
@@ -388,7 +388,7 @@ void HordeContain::rva00469886(Object *unit)
 {
 	if (unit == NULL)
 		return;
-	const HordeContainModuleData *data = (const HordeContainModuleData *)getModuleData();
+	const HordeContainModuleData *data = getHordeContainModuleData();
 	if (data == NULL)
 		return;
 	for (_STL::vector<AsciiString>::const_iterator it = data->AttributeModifiers.begin(); it != data->AttributeModifiers.end(); ++it)
@@ -398,20 +398,20 @@ void HordeContain::rva00469886(Object *unit)
 // FUNCTION: BFME2 0x004698BC size=26 name=?rva004698BC@HordeContain@@UAE_NXZ evidence=?:placeholder tier=A
 Bool HordeContain::rva004698BC()
 {
-	const HordeContainModuleData *data = (const HordeContainModuleData *)getModuleData();
+	const HordeContainModuleData *data = getHordeContainModuleData();
 	return data->SplitHordes.size() > 0 ? true : false;
 }
 
 // FUNCTION: BFME2 0x004698D6 size=12 name=?rva004698D6@HordeContain@@UAEPBXXZ evidence=?:placeholder tier=A
 const void *HordeContain::rva004698D6()
 {
-	return &((const HordeContainModuleData *)getModuleData())->SplitHordes;
+	return &getHordeContainModuleData()->SplitHordes;
 }
 
 // FUNCTION: BFME2 0x004698E2 size=12 name=?rva004698E2@HordeContain@@UAEPBXXZ evidence=?:placeholder tier=A
 const void *HordeContain::rva004698E2()
 {
-	return &((const HordeContainModuleData *)getModuleData())->RankInfos;
+	return &getHordeContainModuleData()->RankInfos;
 }
 
 // FUNCTION: BFME2 0x004698EE size=62 name=?rva004698EE@@YAXPAVObject@@PAX@Z evidence=?:placeholder tier=A
@@ -1537,7 +1537,7 @@ NameKeyType HordeContain::getModuleNameKey() const
 // ThisFormationIsTheMainFormation (module data +0x1D8).
 Bool HordeContain::rva0046F8A5()
 {
-	return ((const HordeContainModuleData *)getModuleData())->ThisFormationIsTheMainFormation;
+	return getHordeContainModuleData()->ThisFormationIsTheMainFormation;
 }
 
 // FUNCTION: BFME2 0x0046F8B2 size=27 name=?rva0046F8B2@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
@@ -1550,26 +1550,26 @@ void HordeContain::rva0046F8B2()
 // FUNCTION: BFME2 0x0046F8CD size=13 name=?rva0046F8CD@HordeContain@@UAE_NXZ evidence=?:placeholder tier=A
 Bool HordeContain::rva0046F8CD()
 {
-	return ((const HordeContainModuleData *)getModuleData())->NotComboFormation;
+	return getHordeContainModuleData()->NotComboFormation;
 }
 
 // FUNCTION: BFME2 0x0046F8DA size=13 name=?rva0046F8DA@HordeContain@@UAEMXZ evidence=?:placeholder tier=A
 Real HordeContain::rva0046F8DA()
 {
-	return ((const HordeContainModuleData *)getModuleData())->VisionRearOverride;
+	return getHordeContainModuleData()->VisionRearOverride;
 }
 
 // FUNCTION: BFME2 0x0046F8E7 size=13 name=?rva0046F8E7@HordeContain@@UAEMXZ evidence=?:placeholder tier=A
 Real HordeContain::rva0046F8E7()
 {
-	return ((const HordeContainModuleData *)getModuleData())->VisionSideOverride;
+	return getHordeContainModuleData()->VisionSideOverride;
 }
 
 // FUNCTION: BFME2 0x0046F8F4 size=13 name=?rva0046F8F4@HordeContain@@UAE_NXZ evidence=?:placeholder tier=A
 // IsPorcupineFormation (module data +0x230).
 Bool HordeContain::rva0046F8F4()
 {
-	return ((const HordeContainModuleData *)getModuleData())->IsPorcupineFormation;
+	return getHordeContainModuleData()->IsPorcupineFormation;
 }
 
 // FUNCTION: BFME2 0x0046F901 size=325 name=??1HordeContain@@UAE@XZ evidence=N:ledger tier=A
@@ -1610,7 +1610,7 @@ void HordeContain::rva00472235()
 	if (!m_memberIDs.empty())
 		returnToFormation(false);
 	ContainmentListView riders = getContainList();
-	const _STL::set<Int> &releaseRanks = ((const HordeContainModuleData *)getModuleData())->RanksToReleaseWhenAttacking;
+	const _STL::set<Int> &releaseRanks = getHordeContainModuleData()->RanksToReleaseWhenAttacking;
 	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
 	{
 		Object *rider = *it;
@@ -1634,7 +1634,7 @@ void HordeContain::rva00472329(const Coord3D *pos, Int)
 	if (usingMeleeAttack())
 		return;
 	ContainmentListView riders = getContainList();
-	const _STL::set<Int> &releaseRanks = ((const HordeContainModuleData *)getModuleData())->RanksToReleaseWhenAttacking;
+	const _STL::set<Int> &releaseRanks = getHordeContainModuleData()->RanksToReleaseWhenAttacking;
 	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
 	{
 		ObjectID id = (*it)->getID();

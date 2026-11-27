@@ -14,6 +14,7 @@
 #include "GameLogic/Module/HordeContainInterface.h"
 #include "Common/Coord3D.h"
 #include "GameLogic/Module/HordeMeleeBase.h"
+#include "GameLogic/Module/HordeContainModuleData.h"
 
 class Thing;
 class ModuleData;
@@ -50,8 +51,6 @@ struct HordeExperienceGrant
 	Real m_amount;
 	UnsignedShort m_templateID;
 };
-// 0x00468AEC: the iterateContained visitor that grants a HordeExperienceGrant.
-void rva00468AEC(Object *unit, void *userData);
 
 // One banner carrier entry (the vector at +0x270): +0 the carrier's template, +4 the index getBannerCarrierIndexToUse
 // (0x0046A521) hands back. Only these two members are recovered.
@@ -82,6 +81,7 @@ public:
 	static Module *friend_newModuleInstance(Thing *thing, const ModuleData *moduleData);
 	virtual NameKeyType getModuleNameKey() const;
 	virtual ~HordeContain();
+	const HordeContainModuleData *getHordeContainModuleData() const { return (const HordeContainModuleData *)getModuleData(); }
 	virtual DisabledMaskType getDisabledTypesToProcess() const
 	{
 		return DisabledMaskType(DisabledMaskType::kInit, DISABLED_HELD);
