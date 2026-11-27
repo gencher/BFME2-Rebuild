@@ -16,6 +16,8 @@
 #include "Common/BitFlags.h"
 #include "GameLogic/Module/ModuleData.h"
 #include "Common/AsciiString.h"
+#include "Common/StlList.h"
+#include "GameLogic/ObjectFilter.h"
 
 class INI;
 class MultiIniFieldParse;
@@ -28,6 +30,24 @@ class Rva0049DD83
 public:
 	static void parseFromINI(INI *ini, void *instance, void *store, const void *userData);
 };
+
+// One ProductionModifier INI block (field table "RequiredUpgrade", "ModifierFilter", "CostMultiplier",
+// "TimeMultiplier", "HeroPurchase", "HeroRevive" at +0x0..+0x11; the parser allocates 0x14 bytes).
+class ProductionModifierEntry
+{
+public:
+	ProductionModifierEntry();
+	~ProductionModifierEntry();
+
+	AsciiString m_requiredUpgrade;                         // +0x0 RequiredUpgrade
+	ObjectFilter m_modifierFilter;                         // +0x4 ModifierFilter
+	Real m_costMultiplier;                                 // +0x8 CostMultiplier
+	Real m_timeMultiplier;                                 // +0xC TimeMultiplier
+	Bool m_heroPurchase;                                   // +0x10 HeroPurchase
+	Bool m_heroRevive;                                     // +0x11 HeroRevive
+};
+// SIZE 0x14
+typedef char ProductionModifierEntry_size[(sizeof(ProductionModifierEntry) == 0x14) ? 1 : -1];
 
 class ProductionUpdateModuleData : public ModuleData
 {
@@ -47,7 +67,7 @@ public:
 	Bool m_giveNoXP;                                       // +0x30 GiveNoXP
 	UnsignedInt m_unitInvulnerableTime;                    // +0x34 UnitInvulnerableTime; duration, frames
 	UnsignedInt m_specialPrepModelconditionTime;           // +0x38 SpecialPrepModelconditionTime; duration, frames
-	UnsignedByte m_unk0x3C[0x4];
+	_STL::list<ProductionModifierEntry *> m_productionModifiers;	// +0x3C ProductionModifier; the destructor deletes each entry
 	Bool m_veteranUnitsFromVeteranFactory;                 // +0x40 VeteranUnitsFromVeteranFactory
 	Bool m_setBonusModelConditionOnSpeedBonus;             // +0x41 SetBonusModelConditionOnSpeedBonus
 	AsciiString m_bonusForType;                            // +0x44 BonusForType
@@ -67,6 +87,7 @@ typedef char ProductionUpdateModuleData_off_m_disabledTypesToProcess[(offsetof(P
 typedef char ProductionUpdateModuleData_off_m_giveNoXP[(offsetof(ProductionUpdateModuleData, m_giveNoXP) == 0x30) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_unitInvulnerableTime[(offsetof(ProductionUpdateModuleData, m_unitInvulnerableTime) == 0x34) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_specialPrepModelconditionTime[(offsetof(ProductionUpdateModuleData, m_specialPrepModelconditionTime) == 0x38) ? 1 : -1];
+typedef char ProductionUpdateModuleData_off_m_productionModifiers[(offsetof(ProductionUpdateModuleData, m_productionModifiers) == 0x3C) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_veteranUnitsFromVeteranFactory[(offsetof(ProductionUpdateModuleData, m_veteranUnitsFromVeteranFactory) == 0x40) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_setBonusModelConditionOnSpeedBonus[(offsetof(ProductionUpdateModuleData, m_setBonusModelConditionOnSpeedBonus) == 0x41) ? 1 : -1];
 typedef char ProductionUpdateModuleData_off_m_bonusForType[(offsetof(ProductionUpdateModuleData, m_bonusForType) == 0x44) ? 1 : -1];

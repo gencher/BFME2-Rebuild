@@ -23,7 +23,7 @@ Int UnitRevivalEntry::revivalEntryCalcCostToBuild(const Player *player, Object *
 	{
 		ProductionUpdateInterface *production = object->getProductionUpdateInterface();
 		if (production)
-			factor = production->pslot28(m_unk0xA0);
+			factor = production->rva0049D2BE(m_unk0xA0);
 	}
 	const ThingTemplate *tmpl = TheThingFactory->findTemplate(m_thingTemplateName);
 	if (tmpl)
@@ -39,7 +39,7 @@ Int UnitRevivalEntry::revivalEntryCalcTimeToBuild(const Player *player, Object *
 	{
 		ProductionUpdateInterface *production = object->getProductionUpdateInterface();
 		if (production)
-			factor = production->pslot29(m_unk0xA0);
+			factor = production->rva0049D33D(m_unk0xA0);
 	}
 	const ThingTemplate *tmpl = TheThingFactory->findTemplate(m_thingTemplateName);
 	if (tmpl)

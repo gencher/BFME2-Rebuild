@@ -23,6 +23,8 @@
 #include "Common/INI.h"
 #include "Common/INI/FieldParse.h"
 
+extern KindOfMaskType KINDOFMASK_NONE;
+
 // The model-condition bits of each exit door's opening, closing and waiting-open states (retail .rdata
 // 0x00C51304, 0x00C51314, 0x00C51324 in this object, four words each: DOOR_1..4; Zero Hour's file statics of
 // the same names and order).
@@ -250,14 +252,85 @@ UnsignedInt ProductionUpdate::rva0049D0DE(const ProductionIDSet *mask) const
 // FUNCTION: BFME2 0x0049D114 size=25 name=?rva0049D114@Drawable@@QAE?AVRva002390CB@@XZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049D12D size=53 name=??1ProductionModifierEntry@@QAE@XZ evidence=N:ledger tier=A
+ProductionModifierEntry::~ProductionModifierEntry()
+{
+}
 
 // FUNCTION: BFME2 0x0049D1CA size=122 name=?rva0049D1CA@Rva0049D1CA@@QAEMPBVThingTemplate@@@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D1CA(const ThingTemplate *unitType)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if (entry->m_modifierFilter.testTemplate(unitType, NULL, NULL))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_costMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D244 size=122 name=?rva0049D244@Rva0049D244@@QAEMPBVThingTemplate@@@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D244(const ThingTemplate *unitType)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if (entry->m_modifierFilter.testTemplate(unitType, NULL, NULL))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_timeMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D2BE size=127 name=?rva0049D2BE@Rva0049D2BE@@QAEME@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D2BE(UnsignedByte revive)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if ((entry->m_heroRevive && revive) || (entry->m_heroPurchase && !revive))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_costMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D33D size=127 name=?rva0049D33D@Rva0049D33D@@QAEME@Z evidence=?:placeholder tier=A
+Real ProductionUpdate::rva0049D33D(UnsignedByte revive)
+{
+	Real multiplier = 1.0f;
+	const ProductionUpdateModuleData *data = getProductionUpdateModuleData();
+	for (_STL::list<ProductionModifierEntry *>::const_iterator it = data->m_productionModifiers.begin();
+		it != data->m_productionModifiers.end(); ++it)
+	{
+		const ProductionModifierEntry *entry = *it;
+		if ((entry->m_heroRevive && revive) || (entry->m_heroPurchase && !revive))
+		{
+			const UpgradeTemplate *upgrade = TheUpgradeCenter->findUpgrade(entry->m_requiredUpgrade);
+			if (upgrade == NULL || getObject()->hasUpgrade(upgrade))
+				multiplier *= entry->m_timeMultiplier;
+		}
+	}
+	return multiplier;
+}
 
 // FUNCTION: BFME2 0x0049D3BC size=362 name=?rva0049D3BC@ProductionUpdate@@QAEXXZ evidence=?:placeholder tier=A
 
@@ -285,6 +358,14 @@ void ProductionUpdate::setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt)
 // FUNCTION: BFME2 0x0049D67F size=308 name=?rva0049D67F@Rva0049D67F@@QAE_NPBDPA_N1@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0049D7B3 size=124 name=??0ProductionModifierEntry@@QAE@XZ evidence=N:ledger tier=A
+ProductionModifierEntry::ProductionModifierEntry()
+{
+	m_modifierFilter.initFromStorages(KINDOFMASK_NONE, KINDOFMASK_NONE);
+	m_costMultiplier = 1.0f;
+	m_timeMultiplier = 1.0f;
+	m_heroPurchase = false;
+	m_heroRevive = false;
+}
 
 // FUNCTION: BFME2 0x0049D867 size=315 name=?queueUpgrade@ProductionUpdate@@UAE_NPBVUpgradeTemplate@@@Z evidence=N:ledger tier=A
 

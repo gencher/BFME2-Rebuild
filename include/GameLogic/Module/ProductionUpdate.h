@@ -135,11 +135,11 @@ public:
 	virtual void setHoldDoorOpen(ExitDoorType exitDoor, Bool holdIt) = 0;										// 23 0x0049D617 (the map spells it Rva0049D617::rva0049D617(int, unsigned char); Zero Hour's name)
 	virtual void pslot24(UnsignedByte) = 0;																	// 24 0x003BA5D0 (folded byte setter)
 	virtual UnsignedByte pslot25() const = 0;																// 25 0x002C8E83 (folded byte getter)
-	virtual Real pslot26(const ThingTemplate *) = 0;														// 26 0x0049D1CA
-	virtual Real pslot27(const ThingTemplate *) = 0;														// 27 0x0049D244
-	virtual Real pslot28(UnsignedByte) = 0;																	// 28 0x0049D2BE
-	virtual Real pslot29(UnsignedByte) = 0;																	// 29 0x0049D33D
-	virtual Bool pslot30() const = 0;																		// 30 0x0049CF9E
+	virtual Real rva0049D1CA(const ThingTemplate *) = 0;														// 26
+	virtual Real rva0049D244(const ThingTemplate *) = 0;														// 27
+	virtual Real rva0049D2BE(UnsignedByte) = 0;																	// 28
+	virtual Real rva0049D33D(UnsignedByte) = 0;																	// 29
+	virtual Bool get() const = 0;																		// 30
 };
 
 // The constructor installs the death interface at +0x24.
@@ -169,17 +169,22 @@ public:
 	virtual void pslot17();	// ProductionUpdateInterface slot 17, retail word 0x0057E556
 	virtual void pslot24(UnsignedByte);	// ProductionUpdateInterface slot 24, retail word 0x003BA5D0
 	virtual UnsignedByte pslot25() const;	// ProductionUpdateInterface slot 25, retail word 0x002C8E83
-	virtual Real pslot26(const ThingTemplate *);	// ProductionUpdateInterface slot 26, retail word 0x0049D1CA
-	virtual Real pslot27(const ThingTemplate *);	// ProductionUpdateInterface slot 27, retail word 0x0049D244
-	virtual Real pslot28(UnsignedByte);	// ProductionUpdateInterface slot 28, retail word 0x0049D2BE
-	virtual Real pslot29(UnsignedByte);	// ProductionUpdateInterface slot 29, retail word 0x0049D33D
-	virtual Bool pslot30() const;	// ProductionUpdateInterface slot 30, retail word 0x0049CF9E
+	virtual Real rva0049D1CA(const ThingTemplate *unitType);	// ProductionUpdateInterface slot 26
+	virtual Real rva0049D244(const ThingTemplate *unitType);	// ProductionUpdateInterface slot 27
+	virtual Real rva0049D2BE(UnsignedByte revive);	// ProductionUpdateInterface slot 28
+	virtual Real rva0049D33D(UnsignedByte revive);	// ProductionUpdateInterface slot 29
+	virtual Bool get() const;	// ProductionUpdateInterface slot 30
 	virtual UpdateSleepTime update();	// 0x0049E3B5
 
 	// UpdateModuleInterface slot 1 reads the data mask (0x0049E1A3).
 	virtual DisabledMaskType getDisabledTypesToProcess() const
 	{
 		return static_cast<const ProductionUpdateModuleData *>(getModuleData())->m_disabledTypesToProcess;
+	}
+
+	const ProductionUpdateModuleData *getProductionUpdateModuleData() const
+	{
+		return static_cast<const ProductionUpdateModuleData *>(getModuleData());
 	}
 
 	static ProductionUpdateInterface *getProductionUpdateInterfaceFromObject(Object *obj);	// 0x0049CEFC
