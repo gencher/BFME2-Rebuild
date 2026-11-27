@@ -33,6 +33,12 @@ int Random3Class::Mix2[20] = {
 	0xac4874f6, 0xa9df0913, 0x86be4c74, 0xed2c123b
 };
 
+Random3Class::Random3Class(unsigned seed1, unsigned seed2) :
+	Seed(seed1),
+	Index(seed2)
+{
+}
+
 int Random3Class::operator() (void)
 {
 	int loword = Seed;
