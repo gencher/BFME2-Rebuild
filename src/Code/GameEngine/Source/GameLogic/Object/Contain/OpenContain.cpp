@@ -213,8 +213,8 @@ void releaseWeaponLockVisitor(Object *obj, void *userData)
 Bool OpenContain::setWeaponLock(WeaponSlotType weaponSlot, WeaponLockType lockType)
 {
 	SetWeaponLockData data;
-	data.weaponSlot = weaponSlot;
 	data.lockType = lockType;
+	data.weaponSlot = weaponSlot;
 	data.failed = false;
 	iterateContained(setWeaponLockVisitor, &data, 1);
 	return !data.failed;
