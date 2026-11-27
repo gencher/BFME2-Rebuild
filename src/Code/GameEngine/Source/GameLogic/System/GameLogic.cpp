@@ -294,6 +294,18 @@ AsciiString PlayerTemplate::getName() const
 // FUNCTION: BFME2 0x0023F8DA size=484 name=?rva0023F8DA@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023FABE size=154 name=?rva0023FABE@GameLogic@@QAEXPAVObject@@@Z evidence=?:placeholder tier=A
+void GameLogic::rva0023FABE(Object *obj)
+{
+	Int seed = GetGameLogicRandomValue(1, 999, "C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\System\\GameLogic.cpp", 6557);
+	Int statusBits = 0;
+	if (obj->testStatus(OBJECT_STATUS_CREATE_DRAWABLE_WITH_LOW_DETAIL))
+		statusBits = 0x20;
+	bindObjectAndDrawable(obj, TheThingFactory->newDrawable(obj->getTemplate(), statusBits, seed));
+
+	DelayedLuaEventList list;
+	TheLuaScriptEngine->DispatchEvent(12, obj, &list);
+}
+
 
 // FUNCTION: BFME2 0x0023FB58 size=104 name=?rva0023FB58@GameLogic@@QAEABVAsciiString@@H@Z evidence=?:placeholder tier=A
 const AsciiString &GameLogic::rva0023FB58(Int slot)
