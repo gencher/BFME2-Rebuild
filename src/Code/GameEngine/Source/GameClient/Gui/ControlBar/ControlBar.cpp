@@ -44,6 +44,7 @@ extern NameKeyGenerator *TheNameKeyGenerator;
 #include "Common/INI.h"
 #include "GameLogic/GameLogic.h"
 #include "GameClient/InGameUI.h"
+#include "Common/MessageStream.h"
 #include "GameNetwork/GameInfo.h"
 #include "Common/PlayerTemplate.h"
 
@@ -346,6 +347,22 @@ void ControlBar::hideSpecialPowerShortcut( void )
 }
 
 // FUNCTION: BFME2 0x0031AFDE size=83 name=?rva0031AFDE@Rva0031AFDE@@QAEHXZ evidence=?:placeholder tier=A
+int ControlBar::toggleControlBarVisibility()
+{
+	switch (field29C)
+	{
+		case 0:
+			field29C = 1;
+			break;
+		case 1:
+			field29C = 0;
+			break;
+	}
+	GameMessage *msg = TheMessageStream->appendMessage(GameMessage::MSG_DESTROY_SELECTED_GROUP);
+	msg->appendBooleanArgument(true);
+	TheInGameUI->deselectAllDrawables();
+	return field29C;
+}
 
 // FUNCTION: BFME2 0x0031B05B size=115 name=?rva0031B05B@ControlBar@@QAEPAVCommandSet@@PAV2@@Z evidence=?:placeholder tier=A
 CommandSet *ControlBar::newCommandSetOverride(CommandSet *setToOverride)

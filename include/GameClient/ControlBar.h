@@ -179,6 +179,7 @@ public:
     void onDrawableSelected(Drawable *);
     void onDrawableDeselected(Drawable *);
     void updateRadarAttackGlow();	// 0x0031AEFF
+    int toggleControlBarVisibility();	// 0x0031AFDE (role name): flips field29C between 0 and 1 for ShowControlBar and ToggleControlBar, then drops the selection
     unsigned char loadCommandIniFiles(INI *ini, int loadType);	// 0x0031B4D6 (role name): the three INI files in Data\INI
     void updateSlotExitImage(const Image *image);	// 0x0031BE58 (Zero Hour's name: sets the exit-slot image on Command_StructureExit and Command_TransportExit)
     const CommandSet *getPurchaseScienceCommandSet(Player *player);	// 0x0031DF89 (role name): the player template's PurchaseScienceCommandSet, or the MP one in a multiplayer game
