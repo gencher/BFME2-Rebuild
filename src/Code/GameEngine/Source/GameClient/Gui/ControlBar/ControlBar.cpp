@@ -51,9 +51,15 @@ extern NameKeyGenerator *TheNameKeyGenerator;
 ControlBar *TheControlBar = NULL;
 void Rva0043C96FEnable();	// 0x0043C96F (SpellStore.cpp)
 void finishShowPurchaseScience();	// SpellStore.cpp
+bool Rva0043C99AGet();	// SpellStore.cpp: whether the purchase science store is open
 // The override-copy guard byte, set around every copy into a new override.
 extern unsigned char g_00E01EA8;
 // FUNCTION: BFME2 0x0031A9EC size=6 name=?getCommandSetFieldParseTable@@YAPBUFieldParse@@XZ evidence=N:ledger tier=B hypothesis:mm1-neighbour-shared-data
+const FieldParse *getCommandSetFieldParseTable()
+{
+	return CommandSet::m_commandSetFieldParseTable;
+}
+
 // FUNCTION: BFME2 0x0031A9F2 size=14 name=?rva0031A9F2@Rva0031A9F2@@QAEXPAPAV1@@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-shared-data
 // FUNCTION: BFME2 0x0031AA00 size=6 name=?Rva0031AA00Get@@YAHXZ evidence=?:placeholder tier=B hypothesis:mm1-contiguity-shared-data
 // FUNCTION: BFME2 0x0031AA06 size=18 name=?commandButtonTooltip@@YAXPAVGameWindow@@PAVWinInstanceData@@I@Z evidence=N:ledger tier=B hypothesis:mm1-neighbour-callers
@@ -62,6 +68,12 @@ void commandButtonTooltip(GameWindow *window, WinInstanceData *instData, Unsigne
 	TheControlBar->rva004C1B60(window, 0);
 }
 // FUNCTION: BFME2 0x0031AA34 size=23 name=?rva0031AA34@ControlBar@@QAEXH@Z evidence=S:strong (caller-this) tier=B hypothesis:mm1-neighbour-class
+void ControlBar::onDrawableSelected(Drawable *draw)
+{
+	markUIDirty();
+	TheInGameUI->setGUICommand(NULL);
+}
+
 // FUNCTION: BFME2 0x0031AA4B size=59 name=?rva0031AA4B@BfmeWorldRV@@QAEXH@Z evidence=?:placeholder tier=A
 void ControlBar::onDrawableDeselected(Drawable *draw)
 {
@@ -210,6 +222,13 @@ void ControlBar::showPurchaseScience()
 }
 
 // FUNCTION: BFME2 0x0031AD94 size=26 name=?rva0031AD94@ControlBar@@QAEXXZ evidence=?:placeholder tier=A
+void ControlBar::togglePurchaseScience()
+{
+	if (!Rva0043C99AGet())
+		showPurchaseScience();
+	else
+		Rva0043C96FEnable();
+}
 
 // FUNCTION: BFME2 0x0031ADAE size=83 name=?rva0031ADAE@ControlBar@@QAEXXZ evidence=?:placeholder tier=A
 void ControlBar::rva0031ADAE()
