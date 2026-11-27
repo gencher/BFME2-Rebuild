@@ -16,6 +16,7 @@
 #include "GameClient/Image.h"
 #include "GameLogic/LivingWorldLogic.h"
 #include "GameLogic/LivingWorldPlayer.h"
+#include "GameLogic/LivingWorldBuilding.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;
 
@@ -56,8 +57,26 @@ Bool LivingWorldRegion::IsOwnedByTeam(Int teamID) const
 // FUNCTION: BFME2 0x003F0259 size=120 name=?CanSpawnUnitWithinCPLimit@LivingWorldRegion@@QBE_NPAVSpawnArmy@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F02D1 size=19 name=?rva003F02D1@Rva003F02D1Holder@@QAEXPBURva003F02D1Arg@@PAURva003EFDDBOut@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F02E4 size=82 name=?rva003F02E4@LivingWorldRegion@@QAE_NXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
+bool LivingWorldRegion::rva003F02E4()
+{
+	if (m_ownerPlayerID == -1)
+		return false;
+	if (m_unk0x11C)
+		return true;
+	for (_STL::vector<RegionPlotRecord *>::iterator it = m_plots.begin(); it != m_plots.end(); ++it)
+	{
+		RegionPlotRecord *plot = *it;
+		if (plot->m_building != NULL && !plot->m_unk0x34 && plot->m_building->get())
+			return true;
+	}
+	return false;
+}
 // FUNCTION: BFME2 0x003F0336 size=56 name=?rva003F0336@LivingWorldRegion@@QAE_NPBVRva002E071E@@@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F036E size=32 name=?rva003F036E@LivingWorldRegion@@QAEHXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
+int LivingWorldRegion::rva003F036E()
+{
+	return m_unk0x164.size() > 0 || rva003F02E4();
+}
 // FUNCTION: BFME2 0x003F038E size=43 name=?rva003F038E@Rva003F038E@@QAEPBVImage@@XZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F03B9 size=16 name=?rva003F03B9@Rva003F038E@@QAEPBVImage@@XZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F03C9 size=58 name=?rva003F03C9@Rva003F03C9@@QAE?AVUnicodeString@@XZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
@@ -86,6 +105,21 @@ UnicodeString LivingWorldRegion::GetFortressDisplayDescription()
 // FUNCTION: BFME2 0x003F066B size=87 name=?rva003F066B@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F06C2 size=79 name=?rva003F06C2@LivingWorldRegion@@QBEHPAVCreateAHeroData@@@Z evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F0711 size=92 name=?GetBuildingByIndex@LivingWorldRegion@@QBEPAVLivingWorldBuilding@@H@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+LivingWorldBuilding *LivingWorldRegion::GetBuildingByIndex(int index) const
+{
+	int found = 0;
+	for (unsigned int i = 0; i < m_plots.size(); ++i)
+	{
+		RegionPlotRecord *plot = m_plots[i];
+		if (plot->m_building != NULL && !plot->m_unk0x34)
+		{
+			if (found == index)
+				return m_plots[i]->m_building;
+			++found;
+		}
+	}
+	return NULL;
+}
 // FUNCTION: BFME2 0x003F076D size=97 name=?rva003F076D@Rva003F076D@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F07CE size=23 name=?rva003F07CE@LivingWorldRegion@@QAE_NXZ evidence=P:provisional (wb-file) tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x003F07E5 size=85 name=?CanBuildBuilding@LivingWorldRegion@@QAE_NPAVCreateAHeroData@@PAH@Z evidence=S:strong (caller-this+position+layout) tier=B hypothesis:mm1-held-object-same-path
@@ -138,7 +172,7 @@ int LivingWorldRegion::rva003F1053()
 {
 	int count = 0;
 	for (unsigned int i = 0; i < m_plots.size(); ++i)
-		if (m_plots[i]->m_unk0x20 == 0)
+		if (m_plots[i]->m_building == NULL)
 			++count;
 	return count;
 }
