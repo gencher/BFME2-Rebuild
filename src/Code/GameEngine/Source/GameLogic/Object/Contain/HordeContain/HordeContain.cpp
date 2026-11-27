@@ -161,6 +161,17 @@ Bool HordeContain::rva00468DCD(Object *obj)
 // FUNCTION: BFME2 0x00468E98 size=119 name=?rotate@Rva00468E98@@QAE?AVRva00468E98Point@@V2@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00468F0F size=89 name=?rva00468F0F@HordeContain@@QAE_NPAVObject@@0@Z evidence=?:placeholder tier=A
+// Whether the other object stands within the unit's locomotor close-enough distance.
+Bool HordeContain::rva00468F0F(Object *unit, Object *other)
+{
+	Real dx = unit->getPosition()->x - other->getPosition()->x;
+	Real dy = unit->getPosition()->y - other->getPosition()->y;
+	AIUpdateInterface *ai = unit->getAI();
+	if (ai == NULL)
+		return false;
+	Real dist = ai->m_curLocomotor->m_closeEnoughDist;
+	return dy * dy + dx * dx < dist * dist;
+}
 
 // FUNCTION: BFME2 0x00468F68 size=22 name=?rva00468F68@HordeContain@@UAEHXZ evidence=?:placeholder tier=A
 Int HordeContain::rva00468F68()
@@ -688,6 +699,13 @@ void HordeContain::rva0046AA85()
 // FUNCTION: BFME2 0x0046AC52 size=136 name=?rva0046AC52@Rva0046AC52@@QAE?AURva0046AC52Iter@@PAURva0046AC52Node@@0ABURva0046AC52Key@@0@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0046ACF6 size=34 name=?rva0046ACF6@Rva0046ACF6@@QAEHH@Z evidence=?:placeholder tier=A
+Int HordeContain::rva0046ACF6(Int id)
+{
+	_STL::map<Int, Int>::iterator it = m_slotIndexByMemberID.find(id);
+	if (it != m_slotIndexByMemberID.end())
+		return (*it).second;
+	return 0;
+}
 
 // FUNCTION: BFME2 0x0046AD18 size=58 name=?parseHordeContainRankSets@@YAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=A
 // Every remaining token is a rank number for the set.
@@ -1570,6 +1588,18 @@ void HordeContain::rva004730B0(Object *target)
 // FUNCTION: BFME2 0x004739B4 size=299 name=?rva004739B4@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00473ADF size=87 name=?rva00473ADF@HordeContain@@UAEXXZ evidence=?:placeholder tier=A
+void HordeContain::rva00473ADF()
+{
+	if (m_unk0x2A0 != INVALID_ID)
+		rva00468FDC();
+	ContainmentListView riders = getContainList();
+	for (ContainedItemsList::const_iterator it = riders.objects().begin(); it != riders.objects().end(); ++it)
+	{
+		AIUpdateInterface *ai = (*it)->getAI();
+		if (ai)
+			ai->rva0045003E(0, CMD_FROM_AI);
+	}
+}
 
 // FUNCTION: BFME2 0x00473B36 size=543 name=?instigateQuarrel@HordeContain@@UAEXHHUQuarrelPacket@@0@Z evidence=N:ledger tier=A
 
