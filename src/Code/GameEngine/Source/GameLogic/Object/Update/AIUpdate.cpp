@@ -907,6 +907,47 @@ void AIUpdateInterface::rva002631A6(Real angle, Int cmdSource)
 }
 
 // FUNCTION: BFME2 0x0026320D size=139 name=?SetEmotionState@AIUpdateInterface@@MAEXHPAVObject@@@Z evidence=N:ledger tier=B hypothesis:name:invented
+void AIUpdateInterface::SetEmotionState(int state, Object *target)
+{
+	StateID newState;
+	Int frameLimit = -1;
+	switch (state)
+	{
+		case 0:
+			newState = 0x30;
+			break;
+		case 2:
+			newState = 0x2A;
+			break;
+		case 3:
+			newState = 0x14;
+			break;
+		case 4:
+			newState = 0x3B;
+			frameLimit = -2;
+			break;
+		case 5:
+			newState = 0x3A;
+			frameLimit = -2;
+			break;
+		default:
+			return;
+	}
+
+	State *temporary = m_stateMachine->m_temporaryState;
+	StateID current = temporary ? temporary->getID() : INVALID_STATE_ID;
+	if (current == newState)
+		return;
+	if (!m_object)
+		return;
+
+	HordeContainInterface *horde = m_object->rva0029439D();
+	if (horde)
+		horde->rva00473ADF();
+	m_stateMachine->rva0033FCC8();
+	m_stateMachine->setGoalObject(target);
+	m_stateMachine->setTemporaryState(newState, frameLimit);
+}
 
 // FUNCTION: BFME2 0x00263298 size=27 name=?rva00263298@AIUpdateInterface@@QAEXXZ evidence=?:placeholder tier=B hypothesis:name:invented
 void AIUpdateInterface::rva00263298()
