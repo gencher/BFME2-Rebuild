@@ -16,7 +16,6 @@ class DynamicShroudClearingRangeUpdateModuleData : public ModuleData
 {
 public:
 	DynamicShroudClearingRangeUpdateModuleData();
-	virtual ~DynamicShroudClearingRangeUpdateModuleData();
 
 	const RadiusDecalTemplate &getGridDecalTemplate() const { return m_gridDecalTemplate; }
 	static void buildFieldParse(MultiIniFieldParse &parse);
