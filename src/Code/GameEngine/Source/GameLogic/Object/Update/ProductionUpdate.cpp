@@ -32,6 +32,9 @@ extern KindOfMaskType KINDOFMASK_NONE;
 static const UnsignedInt theOpeningFlags[4] = { 0x15, 0x19, 0x1D, 0x21 };
 static const UnsignedInt theClosingFlags[4] = { 0x16, 0x1A, 0x1E, 0x22 };
 static const UnsignedInt theWaitingOpenFlags[4] = { 0x17, 0x1B, 0x1F, 0x23 };
+// The model condition a factory holds while its production queue is not empty: entry 73 of the
+// ModelConditionFlag name table, ACTIVELY_CONSTRUCTING.
+static const UnsignedInt theActivelyConstructingFlag = 73;
 // FUNCTION: BFME2 0x0049CB82 size=4 name=?get@Rva0049CB82LeaField@@QBEPAXXZ evidence=?:placeholder tier=B hypothesis:K
 
 // FUNCTION: BFME2 0x0049CB86 size=4 name=?get@Rva0049CB86LeaField@@QBEPAXXZ evidence=?:placeholder tier=B hypothesis:K
@@ -359,9 +362,9 @@ void ProductionUpdate::addToProductionQueue(ProductionEntry *production)
 	++m_productionCount;
 
 	ModelConditionFlags condition = getObject()->getModelConditionFlags();
-	if (condition.testShifted(73) == FALSE)
+	if (condition.testShifted(theActivelyConstructingFlag) == FALSE)
 	{
-		m_setFlags.set(73);
+		m_setFlags.set(theActivelyConstructingFlag);
 		m_flagsDirty = TRUE;
 	}
 }
@@ -389,10 +392,10 @@ void ProductionUpdate::removeFromProductionQueue(ProductionEntry *production)
 	--m_productionCount;
 
 	ModelConditionFlags condition = getObject()->getModelConditionFlags();
-	if (m_productionCount == 0 && condition.testShifted(73) == TRUE)
+	if (m_productionCount == 0 && condition.testShifted(theActivelyConstructingFlag) == TRUE)
 	{
-		m_clearFlags.set(73);
-		m_setFlags.clear(73);
+		m_clearFlags.set(theActivelyConstructingFlag);
+		m_setFlags.clear(theActivelyConstructingFlag);
 		m_flagsDirty = TRUE;
 	}
 }
