@@ -99,7 +99,8 @@ public:
 	const ThingTemplate *pickRandomRankTemplate();	// 0x0046AF12 (the map spells the return void *)
 	Bool rankUnitTypeMatches(Object *unit, const AsciiString &unitType);	// 0x004723F2
 	Bool rva00468F0F(Object *unit, Object *other);	// 0x00468F0F (non-virtual)
-	Int rva0046ACF6(Int id);	// 0x0046ACF6 (non-virtual; the member's formation slot index, 0 when absent)
+	Int rva0046ACF6(Int id);
+	void rva0046A893(Object *unit);	// 0x0046A893 (non-virtual; swaps the unit's alternate-formation armor and model conditions to the horde's state)	// 0x0046ACF6 (non-virtual; the member's formation slot index, 0 when absent)
 	void rva00469886(Object *unit);	// 0x00469886 (non-virtual; HordeContainInterface slot 12 forwards to it)
 	virtual void onDelete();	// override: onDelete slot 8 at +0x0 (0x0046E697)
 	virtual void createPayload();	// override: createPayload slot 28 at +0x0 (0x0046E8EE)
