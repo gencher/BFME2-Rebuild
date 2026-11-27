@@ -117,6 +117,25 @@
       },
       "before": "MISNAMED with the body written (bytes identical)",
       "after": "MATCH"
+    },
+    {
+      "id": "controlbar-findnonconstcommandset-fold",
+      "rva": "0x0031D5F8",
+      "op": "add_name",
+      "name": "?findNonConstCommandSet@ControlBar@@IAEPAVCommandSet@@ABVAsciiString@@@Z",
+      "change": "add accepted name: Zero Hour's protected ControlBar::findNonConstCommandSet has a body identical to findCommandSet (hash_map find, return the CommandSet * or NULL); the linker folded the two into the one body at 0x0031D5F8",
+      "pin": {
+        "size": 38,
+        "role": "owned",
+        "name": "?findCommandSet@ControlBar@@QAEPBVCommandSet@@ABVAsciiString@@@Z"
+      },
+      "evidence": {
+        "kind": "identical-copy",
+        "detail": "parseCommandSetDefinition 0x0031EC03 (Zero Hour's body: findNonConstCommandSet, then newCommandSet / newCommandSetOverride(commandSet) / forgetStaleCommandSet) calls 0x0031D5F8 and passes the result to newCommandSetOverride 0x0031B05B, which takes a non-const CommandSet *; the same body serves findCommandSet's const callers. Only one copy of the body exists in game.dat, so retail cannot carry a second, differently named copy. Compiled findNonConstCommandSet is byte-identical to findCommandSet.",
+        "verified": "verify_tu --overlay-effect ControlBar.cpp"
+      },
+      "before": "0x0031EC03 WRONG_REFERENCE (code target identity at 0x31D5F8: compiled as ?findNonConstCommandSet@ControlBar@@IAE...)",
+      "after": "0x0031EC03 MATCH"
     }
   ]
 }
