@@ -39,6 +39,7 @@ public:
 	Real computeFlightDistToGoal(const Coord3D *pos, Coord3D &goal);
 	void optimizeGroundPath(Int flag);
 	void DoXfer(Xfer *xfer);
+	void markOptimized() { m_isOptimized = TRUE; }
 	PathNode *getLastNode() const { return m_pathTail; }					// inline (Zero Hour's): AIMoveAwayPanicState::update 0x00347B3D reads +0x08
 
 	UnsignedInt m_unk0x00;						// +0x00

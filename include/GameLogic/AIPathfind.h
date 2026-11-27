@@ -268,6 +268,8 @@ public:
 	void SetBridgeStateRepaired(Int, Bool);	// 0x002e7205 N:ledger
 	Bool IsValidMovementTerrain(PathfindLayerEnum, const Locomotor *, const Coord3D *);	// 0x002e7296 N:ledger
 	void SetDebugPathPosition(const Coord3D *);	// 0x002e74b5 N:ledger
+	void SetDebugPath(Path *path);	// replaces m_debugPath, deleting the old path
+	static void snapPosition(Object *obj, Coord3D *pos);	// snaps a position to its pathfind cell
 	Bool IsPointOnRamp(const Coord3D *);	// 0x002e757d N:ledger
 	void clip(Coord3D *, Coord3D *);	// 0x002e75a3 N:ledger
 	void AdjustMeleeOffset(Object *, Object *, Coord3D *);	// 0x002e8c6e N:ledger

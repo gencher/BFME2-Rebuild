@@ -1950,7 +1950,36 @@ void AIUpdateInterface::rva00265667(const Coord3D *pos, Int cmdSource)
 
 // FUNCTION: BFME2 0x00265691 size=14 name=?copy@Rva00265691IndirectCopy@@QBEPAPAXPAPAX@Z evidence=?:placeholder tier=B hypothesis:Z
 
+enum { WAYPOINT_PATH_LIMIT = 1024 };
+
 // FUNCTION: BFME2 0x0026569F size=303 name=?setPathFromWaypoint@AIUpdateInterface@@QAEXPBVWaypoint@@PBVCoord2D@@@Z evidence=N:ledger tier=B hypothesis:Z
+void AIUpdateInterface::setPathFromWaypoint(const Waypoint *way, const Coord2D *offset)
+{
+	destroyPath();
+	m_path = new Path;
+	Coord3D pos = *getObject()->getPosition();
+	m_path->prependNode(&pos, LAYER_GROUND, 0x7FFFFFFF);
+	m_path->markOptimized();
+	int count = 0;
+	while (way)
+	{
+		Coord3D wayPos = way->m_location;
+		wayPos.x += offset->x;
+		wayPos.y += offset->y;
+		if (way->getLink(0) == NULL)
+		{
+			Pathfinder::snapPosition(getObject(), &wayPos);
+		}
+		m_path->appendNode(&wayPos, LAYER_GROUND, 0x7FFFFFFF);
+		way = way->getLink(0);
+		count++;
+		if (count > WAYPOINT_PATH_LIMIT)
+			break;
+	}
+	m_waitingForPath = FALSE;
+	TheAI->pathfinder()->SetDebugPath(m_path);
+	wakeUpNow();
+}
 
 // FUNCTION: BFME2 0x002657CE size=385 name=?rva002657CE@AIUpdateInterface@@QAEXXZ evidence=?:placeholder tier=B hypothesis:Z
 
