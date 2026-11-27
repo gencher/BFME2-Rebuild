@@ -49,6 +49,19 @@ public:
 		Coord3D lightPos;
 	};
 
+	// The BasicTutorial* and AdvancedTutorial* tokens of one tutorial (0x24 bytes);
+	// the parse table writes each field at its offset from +0x1114 and +0x1138.
+	struct TutorialInfo
+	{
+		AsciiString map;									// +0x00 ...TutorialMap
+		AsciiString loadMovie;								// +0x04 ...TutorialLoadMovie
+		AsciiString loadScreenStillImage;					// +0x08 ...TutorialLoadScreenStillImage
+		AsciiString loadScreenVoiceTrack;					// +0x0C ...TutorialLoadScreenVoiceTrack
+		AsciiString loadScreenMusicTrack;					// +0x10 ...TutorialLoadScreenMusicTrack
+		_STL::vector<AsciiString> objective;				// +0x14 ...TutorialObjective
+		UnsignedInt millisecondsAfterStartToStartFadeUp;	// +0x20 ...TutorialMillisecondsAfterStartToStartFadeUp; duration, frames
+	};
+
 	GlobalData();				// 0x0023631C
 	virtual ~GlobalData();			// 0x002376CC
 
@@ -58,6 +71,7 @@ public:
 	virtual const FieldParse *getFieldParse() const; // 0x002376C6, slot6
 
 	GlobalData *newOverride();		// 0x00237A6B
+	static void parseGameDataDefinition(INI *ini);
 	AsciiString rva002360DE() const;	// 0x002360DE, copies m_unk0x1240
 	UnicodeString rva002360FC() const;	// 0x002360FC, copies m_unk0x1244
 	AsciiString getPicturePath() const;	// 0x0023611A
@@ -65,6 +79,7 @@ public:
 	Bool setTimeOfDay(TimeOfDay tod);	// 0x002352BC
 
 	static GlobalData *s_theOriginal;	// VA 0x00DFE75C
+	static const FieldParse s_GlobalDataFieldParseTable[];	// the GameData parse table (457 entries)
 
 	AsciiString m_mapName;                                 // +0xC MapName
 	AsciiString m_moveHintName;                            // +0x10 MoveHintName
@@ -118,10 +133,12 @@ public:
 	Bool m_hideLivingWorldRegions;                         // +0x87 HideLivingWorldRegions
 	Bool m_livingWorldTurbo;                               // +0x88 LivingWorldTurbo
 	unsigned char m_unk0x89[0x3];
-	Bool m_livingWorldCampaignOverrride;                   // +0x8C LivingWorldCampaignOverrride
+	// +0x8C: an AsciiString (the constructor clears it with the strings, the destructor releases it),
+	// although the parse table reads its LivingWorldCampaignOverrride token with parseBool.
+	AsciiString m_livingWorldCampaignOverrride;            // +0x8C LivingWorldCampaignOverrride
 	Int m_featherWater;                                    // +0x90 FeatherWater
 	Real m_downwindAngle;                                  // +0x94 DownwindAngle
-	Bool m_drawSkyBox;                                     // +0x98 DrawSkyBox
+	Real m_drawSkyBox;                                     // +0x98 DrawSkyBox; a Real (the constructor and the reload path treat it as one) though the table parses it with parseBool
 	Real m_defaultCameraMinHeight;                         // +0x9C DefaultCameraMinHeight
 	Real m_defaultCameraMaxHeight;                         // +0xA0 DefaultCameraMaxHeight
 	Real m_defaultCameraPitchAngle;                        // +0xA4 DefaultCameraPitchAngle
@@ -164,10 +181,10 @@ public:
 	// at 0x6C per time of day and 0x24 per light; row 0 (NONE) is never parsed.
 	TerrainLighting m_terrainLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];		// +0x140
 	TerrainLighting m_terrainObjectsLighting[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];	// +0x3C8
-	// +0x650: 0x288 bytes the parse table never writes (the size of a third
-	// lighting table: the blend 0x00235312
-	// interpolates it row by row with the same 0x6C/0x24 strides; its name is unknown).
-	unsigned char m_unk0x650[0x288];
+	// +0x650: a third table the parse table never writes; the blend interpolates it
+	// row by row with the same strides, and the destructor runs the element
+	// destructors over it like the two above. Its name is unknown.
+	TerrainLighting m_unk0x650[TIME_OF_DAY_COUNT][MAX_GLOBAL_LIGHTS];
 	// The lighting in use: setTimeOfDay 0x002352BC copies the chosen row of
 	// m_terrainLighting into these three arrays, light by light.
 	RGBColor m_terrainAmbient[MAX_GLOBAL_LIGHTS];		// +0x8D8
@@ -382,11 +399,20 @@ public:
 	Real m_animationSharingSpeedTolerance;                 // +0xC48 AnimationSharingSpeedTolerance
 	Real m_animationSharingWorryThreshold;                 // +0xC4C AnimationSharingWorryThreshold
 	Real m_animationSharingDrasticThreshold;               // +0xC50 AnimationSharingDrasticThreshold
-	unsigned char m_unk0xC54[0x16];
+	_STL::vector<AsciiString> m_unk0xC54;				// +0xC54 the destructor destroys a vector of strings here
+	unsigned char m_unk0xC60[0xA];
 	Bool m_taintOn;                                        // +0xC6A TaintOn
-	unsigned char m_unk0xC6B[0xB9];
+	unsigned char m_unk0xC6B[0x99];
+	AsciiString m_unk0xD04;								// +0xD04..+0xD3C: strings the destructor releases
+	AsciiString m_unk0xD08;
+	unsigned char m_unk0xD0C[0x18];
 	Bool m_checkDuplicateCommandIDs;                       // +0xD24 set to 1 by the ctor 0x00236EB4; CommandIDHistory::accept 0x004D2164 skips the duplicate filter when clear
-	unsigned char m_unk0xD25[0x21];
+	unsigned char m_unk0xD25[0xB];
+	AsciiString m_unk0xD30;
+	unsigned char m_unk0xD34[0x4];
+	AsciiString m_unk0xD38;
+	AsciiString m_unk0xD3C;
+	unsigned char m_unk0xD40[0x6];
 	Bool m_unk0xD46;										// +0xD46 set by the command-line parser 0x003B9A29
 	unsigned char m_unk0xD47[1];
 	Int m_unk0xD48;										// +0xD48 set from the next argument by the command-line parser 0x003B9A3D
@@ -467,28 +493,15 @@ public:
 	Real m_handicapBuildSpeed90;                           // +0x10E8 HandicapBuildSpeed90; percent
 	Real m_handicapBuildSpeed95;                           // +0x10EC HandicapBuildSpeed95; percent
 	Real m_handicapBuildSpeed100;                          // +0x10F0 HandicapBuildSpeed100; percent
-	AsciiString *m_scriptDebugFilterBegin;	// +0x10F4 (begin of the list of message prefixes the script debug window ignores)
-	AsciiString *m_scriptDebugFilterEnd;	// +0x10F8
-	unsigned char m_unk0x10FC[0xC];	// +0x10FC
+	_STL::vector<AsciiString> m_scriptDebugFilter;	// +0x10F4 message prefixes the script debug window ignores
+	unsigned char m_unk0x1100[0x8];	// +0x1100
 	Int m_blockedByWallLeeway;                             // +0x1108 BlockedByWallLeeway
 	Real m_secondsBeforeBaseCheckActive;                   // +0x110C SecondsBeforeBaseCheckActive
 	Bool m_unk0x1110;                                      // +0x1110 cleared by the command-line parser 0x003B9CDF
 	Bool m_unk0x1111;                                      // +0x1111 set by 0x003B99AB
 	unsigned char m_unk0x1112[2];
-	AsciiString m_basicTutorialMap;                        // +0x1114 BasicTutorialMap
-	AsciiString m_basicTutorialLoadMovie;                  // +0x1118 BasicTutorialLoadMovie
-	AsciiString m_basicTutorialLoadScreenStillImage;       // +0x111C BasicTutorialLoadScreenStillImage
-	AsciiString m_basicTutorialLoadScreenVoiceTrack;       // +0x1120 BasicTutorialLoadScreenVoiceTrack
-	AsciiString m_basicTutorialLoadScreenMusicTrack;       // +0x1124 BasicTutorialLoadScreenMusicTrack
-	_STL::vector<AsciiString> m_basicTutorialObjective;    // +0x1128 BasicTutorialObjective
-	UnsignedInt m_basicTutorialMillisecondsAfterStartToStartFadeUp;// +0x1134 BasicTutorialMillisecondsAfterStartToStartFadeUp; duration, frames
-	AsciiString m_advancedTutorialMap;                     // +0x1138 AdvancedTutorialMap
-	AsciiString m_advancedTutorialLoadMovie;               // +0x113C AdvancedTutorialLoadMovie
-	AsciiString m_advancedTutorialLoadScreenStillImage;    // +0x1140 AdvancedTutorialLoadScreenStillImage
-	AsciiString m_advancedTutorialLoadScreenVoiceTrack;    // +0x1144 AdvancedTutorialLoadScreenVoiceTrack
-	AsciiString m_advancedTutorialLoadScreenMusicTrack;    // +0x1148 AdvancedTutorialLoadScreenMusicTrack
-	_STL::vector<AsciiString> m_advancedTutorialObjective; // +0x114C AdvancedTutorialObjective
-	UnsignedInt m_advancedTutorialMillisecondsAfterStartToStartFadeUp;// +0x1158 AdvancedTutorialMillisecondsAfterStartToStartFadeUp; duration, frames
+	TutorialInfo m_basicTutorial;							// +0x1114 BasicTutorial* tokens
+	TutorialInfo m_advancedTutorial;						// +0x1138 AdvancedTutorial* tokens
 	unsigned char m_unk0x115C[0xC];
 	ObjectFilter m_objectsThatScore;                       // +0x1168 ObjectsThatScore; iniParseObjectFilter 0x00361CA5
 	Real m_scoreKeeperUnitsBuiltMultiplier;                // +0x116C ScoreKeeper_UnitsBuiltMultiplier
@@ -545,9 +558,9 @@ public:
 	UnsignedInt m_maxNumMembersToForceToImmediatelyEnter;  // +0x1230 MaxNumMembersToForceToImmediatelyEnter
 	UnsignedInt m_waitToForceMemberToEnterDelay;           // +0x1234 WaitToForceMemberToEnterDelay
 	unsigned char m_unk0x1238[0x8];
-	AsciiString m_unk0x1240;					// +0x1240 returned by 0x002360DE
-	UnicodeString m_unk0x1244;				// +0x1244 returned by 0x002360FC
-	unsigned char m_unk0x1248[0x4];
+	AsciiString m_userDataDir;					// +0x1240 returned by 0x002360DE
+	UnicodeString m_userDataDirW;				// +0x1244 returned by 0x002360FC
+	AsciiString m_picturePath;					// +0x1248 the folder getPicturePath creates and caches
 	AsciiString m_userDataLeafName;				// +0x124C UserDataLeafName
 	GlobalData *m_next;					// +0x1250 the override chain reset 0x00235736 walks
 };
@@ -557,6 +570,8 @@ typedef char GlobalDataMultiPlayMults[(offsetof(GlobalData, m_multiPlayMults) ==
 typedef char GlobalDataTerrainLighting[(offsetof(GlobalData, m_terrainLighting) == 0x140 && sizeof(GlobalData::TerrainLighting) == 0x24) ? 1 : -1];
 typedef char GlobalDataTerrainObjectsLighting[(offsetof(GlobalData, m_terrainObjectsLighting) == 0x3C8) ? 1 : -1];
 typedef char GlobalDataTerrainLightPos[(offsetof(GlobalData, m_terrainAmbient) == 0x8D8 && offsetof(GlobalData, m_terrainLightPos) == 0x920) ? 1 : -1];
+typedef char GlobalDataStrings[(offsetof(GlobalData, m_livingWorldCampaignOverrride) == 0x8C && offsetof(GlobalData, m_unk0xC54) == 0xC54 && offsetof(GlobalData, m_unk0xD04) == 0xD04 && offsetof(GlobalData, m_unk0xD30) == 0xD30 && offsetof(GlobalData, m_unk0xD3C) == 0xD3C) ? 1 : -1];
+typedef char GlobalDataTutorials[(offsetof(GlobalData, m_scriptDebugFilter) == 0x10F4 && offsetof(GlobalData, m_basicTutorial) == 0x1114 && offsetof(GlobalData, m_advancedTutorial) == 0x1138 && offsetof(GlobalData, m_picturePath) == 0x1248) ? 1 : -1];
 typedef char GlobalDataNext[(offsetof(GlobalData, m_next) == 0x1250) ? 1 : -1];
 
 extern GlobalData *TheWritableGlobalData;

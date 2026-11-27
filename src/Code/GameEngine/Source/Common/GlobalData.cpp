@@ -1,4 +1,7 @@
+// platformsdk
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
+#include <windows.h>
+#include <shlobj.h>
 #include "Common/INI.h"
 #include "Common/AsciiString.h"
 #include "Common/UnicodeString.h"
@@ -8,25 +11,17 @@
 #include "Common/OptionPreferences.h"
 #include "GameLogic/PartitionManager.h"
 #include "GameLogic/BfmeTaintManager.h"
+#include "GameLogic/WeaponBonusSet.h"
+#include "GameClient/GameText.h"
 
 class CollisionManager;
 
-// The registry calls the lookups below make (advapi32); the key handle type is the Platform SDK's.
-struct HKEY__;
-typedef HKEY__ *HKEY;
-extern "C" __declspec(dllimport) long __stdcall RegOpenKeyExW(HKEY key, const unsigned short *subKey, unsigned long options, unsigned long access, HKEY *result);
-extern "C" __declspec(dllimport) long __stdcall RegQueryValueExW(HKEY key, const unsigned short *valueName, unsigned long *reserved, unsigned long *type, unsigned char *data, unsigned long *size);
-extern "C" __declspec(dllimport) long __stdcall RegOpenKeyExA(HKEY key, const char *subKey, unsigned long options, unsigned long access, HKEY *result);
-extern "C" __declspec(dllimport) long __stdcall RegQueryValueExA(HKEY key, const char *valueName, unsigned long *reserved, unsigned long *type, unsigned char *data, unsigned long *size);
-extern "C" __declspec(dllimport) long __stdcall RegCreateKeyExA(HKEY key, const char *subKey, unsigned long reserved, char *keyClass, unsigned long options, unsigned long access, void *security, HKEY *result, unsigned long *disposition);
-extern "C" __declspec(dllimport) long __stdcall RegSetValueExA(HKEY key, const char *valueName, unsigned long reserved, unsigned long type, const unsigned char *data, unsigned long size);
-extern "C" __declspec(dllimport) long __stdcall RegCloseKey(HKEY key);
-enum { ERROR_SUCCESS = 0, KEY_READ = 0x20019, KEY_WRITE = 0x20006, REG_SZ = 1, REG_DWORD = 4 };
 
 // Defined further down in this file.
 AsciiString buildGameRegistryPath(const char *path);
 Bool GetStringFromRegistry(AsciiString path, AsciiString key, AsciiString &value);
 const char *GetRegistryUserDataLeafName();
+UnicodeString getUserDataLeafName();
 
 // The world-state singletons this object defines (retail VA 0x00DFE748..0x00DFE75C, address order).
 PartitionManager *ThePartitionManager = NULL;
@@ -569,6 +564,24 @@ void parseMultiPlayBuildingSpeedMult( INI *ini, void *, void *store, const void 
 // FUNCTION: BFME2 0x002360FC size=30 name=?rva002360FC@GlobalData@@QBE?AVUnicodeString@@XZ evidence=?:placeholder
 
 // FUNCTION: BFME2 0x0023611A size=304 name=?getPicturePath@GlobalData@@QBE?AVAsciiString@@XZ evidence=N:ledger
+AsciiString GlobalData::getPicturePath() const
+{
+	if (m_picturePath.isEmpty() && TheGameText)
+	{
+		WideChar path[MAX_PATH];
+		if (SHGetSpecialFolderPathW(NULL, path, CSIDL_MYPICTURES, TRUE))
+		{
+			UnicodeString folder = TheGameText->fetch("APPDATA:PictureFolder");
+			if (path[wcslen(path) - 1] != L'\\')
+				wcscat(path, L"\\");
+			wcscat(path, folder.str());
+			wcscat(path, L"\\");
+			CreateDirectoryW(path, NULL);
+			TheWritableGlobalData->m_picturePath = UnicodeString(path);
+		}
+	}
+	return m_picturePath;
+}
 
 // FUNCTION: BFME2 0x0023624A size=59 name=?vslot04@GlobalData@@UAE_NH@Z evidence=N:ledger
 
@@ -588,14 +601,64 @@ GlobalData *GlobalData::newOverride()
 }
 
 // FUNCTION: BFME2 0x00237AB1 size=588 name=?parseGameDataDefinition@GlobalData@@SAXPAVINI@@@Z evidence=N:ledger
+void GlobalData::parseGameDataDefinition(INI *ini)
+{
+	if (TheWritableGlobalData && ini->getLoadType() == INI_LOAD_RELOAD)
+	{
+		// A reload keeps the map name and the sky box setting.
+		AsciiString mapName = TheWritableGlobalData->m_mapName;
+		Bool drawSkyBox = TheWritableGlobalData->m_drawSkyBox != 0.0f;
+		ini->initFromINI(TheWritableGlobalData, s_GlobalDataFieldParseTable);
+		TheWritableGlobalData->m_mapName = mapName;
+		TheWritableGlobalData->m_drawSkyBox = drawSkyBox;
+		TheWritableGlobalData->applyOptionPreferences();
+		return;
+	}
+
+	if (TheWritableGlobalData && ini->getLoadType() != INI_LOAD_MULTIFILE)
+	{
+		if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+			TheWritableGlobalData->newOverride();
+	}
+	else if (!TheWritableGlobalData)
+	{
+		TheWritableGlobalData = new GlobalData;
+	}
+
+	ini->initFromINI(TheWritableGlobalData, s_GlobalDataFieldParseTable);
+
+	TheWritableGlobalData->m_userDataDir.clear();
+	TheWritableGlobalData->m_userDataDirW.clear();
+	TheWritableGlobalData->m_picturePath.clear();
+
+	UnicodeString leafName = getUserDataLeafName();
+	if (leafName.isEmpty())
+		leafName.translate(TheWritableGlobalData->m_userDataLeafName);
+	else
+		TheWritableGlobalData->m_userDataLeafName.translate(leafName);
+
+	WideChar path[MAX_PATH];
+	if (SHGetSpecialFolderPathW(NULL, path, CSIDL_APPDATA, TRUE))
+	{
+		if (path[wcslen(path) - 1] != L'\\')
+			wcscat(path, L"\\");
+		wcscat(path, leafName.str());
+		wcscat(path, L"\\");
+		CreateDirectoryW(path, NULL);
+		TheWritableGlobalData->m_userDataDirW = path;
+		TheWritableGlobalData->m_userDataDir.translate(path);
+	}
+
+	TheWritableGlobalData->applyOptionPreferences();
+}
 
 
 AsciiString GlobalData::rva002360DE() const
 {
-	return m_unk0x1240;
+	return m_userDataDir;
 }
 
 UnicodeString GlobalData::rva002360FC() const
 {
-	return m_unk0x1244;
+	return m_userDataDirW;
 }
