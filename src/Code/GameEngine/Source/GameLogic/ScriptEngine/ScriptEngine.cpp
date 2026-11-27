@@ -273,6 +273,10 @@ void ScriptEngine::setSway(ScriptAction *pAction)
 }
 
 // FUNCTION: BFME2 0x0020391F size=7 name=?get@Rva0020391FLeaGetter@@QBEPAXXZ evidence=?:placeholder tier=A
+const AttackPriorityInfo *ScriptEngine::getDefaultAttackInfo() const
+{
+	return &m_attackInfo[0];
+}
 
 // FUNCTION: BFME2 0x00203926 size=27 name=?getActionTemplate@ScriptEngine@@QAEPBVActionTemplate@@H@Z evidence=N:ledger tier=A
 const ActionTemplate *ScriptEngine::getActionTemplate(Int ndx)

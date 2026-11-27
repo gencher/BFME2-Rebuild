@@ -180,6 +180,7 @@ public:
 	void appendSequentialScript(const SequentialScript *scriptToSequence);	// 0x00207557 (queues a copy behind the script already running on the same object or team)
 	void removeSequentialScriptsOf(Script *script);	// 0x00205140 (when the script's record is flagged, drops every sequential script that was started from it)
 	void notifyOfTeamDestruction(Team *teamDestroyed);	// 0x002051B7 (Zero Hour's name: drops the team's sequential scripts and forgets it as the calling/condition team)
+	const AttackPriorityInfo *getDefaultAttackInfo() const;	// slot 0 of m_attackInfo
 	const AttackPriorityInfo *getAttackInfo(const AsciiString &setName);	// 0x00205DDD (AIUpdateInterface::m_attackInfo takes its result)
 	AttackPriorityInfo *findAttackInfo(const AsciiString &setName, Bool create);	// 0x00205D5D
 	void setPriorityDefault(ScriptAction *action);	// 0x002061D7
