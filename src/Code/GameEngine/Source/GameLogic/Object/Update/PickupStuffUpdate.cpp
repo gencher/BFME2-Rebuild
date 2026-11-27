@@ -29,6 +29,10 @@ static const FieldParse s_pickupStuffUpdateModuleDataFieldParse[] =
 
 
 // FUNCTION: BFME2 0x00491DD3 size=25 name=??1PickupStuffUpdate@@UAE@XZ evidence=N:ledger tier=B hypothesis:mm1-held-object-encloses-unk-file
+PickupStuffUpdate::~PickupStuffUpdate()
+{
+}
+
 // FUNCTION: BFME2 0x00491DEC size=6 name=?GetSnapshotName@PickupStuffUpdate@@MBEPBDXZ evidence=N:ledger
 const char *PickupStuffUpdate::GetSnapshotName() const
 {
