@@ -13,6 +13,7 @@
 #include "WWMath/Vector3.h"
 #include "Common/GameEngine.h"
 #include "GameClient/DrawModule.h"
+#include "GameLogic/Module/ClientBehaviorModule.h"
 #include "Common/ThingTemplate.h"
 #include "GameLogic/GameLogic.h"
 #include "GameClient/BuffManager.h"
@@ -1238,6 +1239,18 @@ void Drawable::changedTeam()
 }
 
 // FUNCTION: BFME2 0x002742E5 size=104 name=?reactToTransformChange@Drawable@@MAEXPBVMatrix3D@@PBVCoord3D@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void Drawable::reactToTransformChange(const Matrix3D *oldMtx, const Coord3D *oldPos, Real oldAngle)
+{
+	m_unk0x244 = -1;
+	Bool &moved = m_unk0x3A8[1];
+	moved = true;
+
+	for (DrawModule **dm = drawModuleList(); *dm; ++dm)
+		(*dm)->reactToTransformChange(oldMtx, oldPos, oldAngle);
+
+	for (Module **m = m_modules[2]; m && *m; ++m)
+		static_cast<ClientBehaviorModule *>(*m)->reactToTransformChange(oldMtx, oldPos, oldAngle);
+}
 
 // FUNCTION: BFME2 0x0027434D size=138 name=?rva0027434D@Drawable@@QAEHH@Z evidence=?:placeholder tier=A
 
