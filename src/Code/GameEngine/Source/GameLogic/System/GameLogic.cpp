@@ -48,6 +48,8 @@
 #include "Common/Team.h"
 #include "Common/TeamFactory.h"
 #include "GameLogic/VictoryConditions.h"
+#include "Common/CommandLine.h"
+#include "Common/GameMemory.h"
 
 extern LivingWorldLogic *TheLivingWorldLogic;
 
@@ -1064,6 +1066,118 @@ void GameLogic::setBuildableStatusOverride(const ThingTemplate *tmpl, BuildableS
 // FUNCTION: BFME2 0x002470AE size=714 name=??0GameLogic@@QAE@XZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00247378 size=1463 name=?bfmePopulateGameReport@GameLogic@@QAEXPAVGameInfo@@PAH@Z evidence=N:ledger tier=A
+void GameLogic::bfmePopulateGameReport(GameInfo *game, Int *localSlot)
+{
+	if (game == NULL || localSlot == NULL)
+		return;
+
+	m_unk0x6C = FALSE;
+	AsciiString line;
+	m_unk0x54.format("---------------------------------------------------------\nGAME REPORT:\n---------------------------------------------------------\n");
+	line.format("  BuildType: RELEASE\n");
+	m_unk0x54.concat(line);
+
+	AsciiString slotList;
+	slotList.format("  Session Game #%d\n    Map Name: %s\n", m_unk0x58.size() + 1, game->getMap().str());
+	line.format("    GameMode: isSkirmish:%d, isMultiplayer:%d, isSandBox:%d\n    Player List:\n",
+		TheGameInfo->isSkirmish(), TheGameInfo->isMultiPlayer(), TheGameInfo->isSandbox());
+	slotList.concat(line);
+
+	*localSlot = 0;
+	for (Int i = 0; i < MAX_SLOTS; ++i)
+	{
+		GameSlot *slot = game->getSlot(i);
+		AsciiString playerName;
+		playerName.translate(slot->getName());
+		if (slot->isHuman() && game->getSlotNum(playerName) == game->getLocalSlotNum())
+			*localSlot = i;
+
+		AsciiString templateName;
+		if (!slot->isHuman() && !slot->isAI())
+		{
+			line.format("      Slot %d: %s\n", i, playerName.str());
+		}
+		else
+		{
+			const PlayerTemplate *pt = ThePlayerTemplateStore->getNthPlayerTemplate(slot->getPlayerTemplate());
+			if (slot->getPlayerTemplate() == -1)
+				templateName = TheGameText->fetch("GUI:Random");
+			else if (slot->getPlayerTemplate() == -2)
+				templateName = TheGameText->fetch("GUI:Observer");
+			else
+				templateName = ThePlayerTemplateStore->getNthPlayerTemplate(slot->getPlayerTemplate())->getDisplayName();
+
+			const char *kind = slot->isHuman() ? "Human" : "AI";
+			line.format("      Slot %d: %s(%s), %s %s, Team:%d, StartPos:%d\n", i, playerName.str(), templateName.str(),
+				pt ? pt->getName().str() : "n/a", kind, slot->getTeamNumber(), slot->getStartPos());
+			setPlayerLeaveStatus(i, playerName, !slot->isHuman());
+		}
+		slotList.concat(line);
+	}
+	m_unk0x58.push_back(slotList);
+
+	m_unk0x64.format("  Important CommandLine Arguments:\n    System:");
+	if (Rva000308D0GetByte())
+		m_unk0x64.concat(" zeroFillMemory:ON");
+	else
+		m_unk0x64.concat(" zeroFillMemory:OFF");
+	if (!TheWritableGlobalData->m_audioOn)
+		m_unk0x64.concat(" -noAudio");
+	if (!TheWritableGlobalData->m_musicOn)
+		m_unk0x64.concat(" -noMusic");
+
+	m_unk0x64.concat("\n    GamePlay:");
+	if (TheWritableGlobalData->m_fastGamePlay)
+		m_unk0x64.concat(" -fastGamePlay");
+	if (TheWritableGlobalData->m_startingMoney)
+	{
+		line.format(" -startingMoney %d", TheWritableGlobalData->m_startingMoney);
+		m_unk0x64.concat(line);
+	}
+
+	m_unk0x64.concat("\n    Network:");
+	if (TheXObjectCRC)
+		m_unk0x64.concat(" -xObjectCRC");
+	if (TheXPartitionCRC)
+		m_unk0x64.concat(" -xPartitionCRC");
+	if (TheXCollisionCRC)
+		m_unk0x64.concat(" -xCollisionCRC");
+	if (TheXShroudCRC)
+		m_unk0x64.concat(" -xShroudCRC");
+	if (TheXTaintCRC)
+		m_unk0x64.concat(" -xTaintCRC");
+	if (TheXTerrainLogicCRC)
+		m_unk0x64.concat(" -xTerrainLogicCRC");
+	if (TheXPlayerCRC)
+		m_unk0x64.concat(" -xPlayerCRC");
+	if (TheXAICRC)
+		m_unk0x64.concat(" -xAICRC");
+	if (TheXLWCRC)
+		m_unk0x64.concat(" -xLWCRC");
+	if (BfmeClientCRCCheckEnabled)
+		m_unk0x64.concat(" -verifyClientCRC");
+	if (TheDeepCRC)
+		m_unk0x64.concat(" -deepCRC");
+	if (TheLiteCRC)
+		m_unk0x64.concat(" -liteCRC");
+	if (TheBinaryDeepCRC)
+		m_unk0x64.concat(" -binaryDeepCRC");
+	if (TheDebugCRCFromFrame != -1)
+	{
+		line.format(" -debugCRCFromFrame %d", TheDebugCRCFromFrame);
+		m_unk0x64.concat(line);
+	}
+	if (TheDebugCRCUntilFrame != -1)
+	{
+		line.format(" -debugCRCUntilFrame %d", TheDebugCRCUntilFrame);
+		m_unk0x64.concat(line);
+	}
+	line.format("\n    NetCRCInterval: %d\n", NET_CRC_INTERVAL);
+	m_unk0x64.concat(line);
+
+	m_unk0x68.format("---------------------------------------------------------\n");
+}
+
 
 // FUNCTION: BFME2 0x0024792F size=79 name=?setControlBarOverride@GameLogic@@QAEXABVAsciiString@@HPBVCommandButton@@@Z evidence=N:ledger tier=A
 

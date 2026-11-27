@@ -24,4 +24,21 @@ typedef char CommandLineCRCSettings_size[(sizeof(CommandLineCRCSettings) == 0x18
 
 extern CommandLineCRCSettings TheCommandLineCRCSettings;
 
+// The CRC debugging switches (the game report lists the ones that are set).
+extern int TheDebugCRCFromFrame;
+extern int TheDebugCRCUntilFrame;
+extern bool TheXObjectCRC;
+extern bool TheXPartitionCRC;
+extern bool TheXCollisionCRC;
+extern bool TheXShroudCRC;
+extern bool TheXTaintCRC;
+extern bool TheXTerrainLogicCRC;
+extern bool TheXPlayerCRC;
+extern bool TheXAICRC;
+extern unsigned char BfmeClientCRCCheckEnabled;
+extern bool TheDeepCRC;
+extern bool TheLiteCRC;
+extern bool TheXLWCRC;
+extern bool TheBinaryDeepCRC;
+
 #endif // _COMMAND_LINE_H_

@@ -495,7 +495,9 @@ public:
 	Real m_handicapBuildSpeed95;                           // +0x10EC HandicapBuildSpeed95; percent
 	Real m_handicapBuildSpeed100;                          // +0x10F0 HandicapBuildSpeed100; percent
 	_STL::vector<AsciiString> m_scriptDebugFilter;	// +0x10F4 message prefixes the script debug window ignores
-	unsigned char m_unk0x1100[0x8];	// +0x1100
+	Bool m_fastGamePlay;			// +0x1100 the game report lists it as -fastGamePlay
+	unsigned char m_pad0x1101[3];	// +0x1101
+	Int m_startingMoney;			// +0x1104 the game report lists it as -startingMoney when set
 	Int m_blockedByWallLeeway;                             // +0x1108 BlockedByWallLeeway
 	Real m_secondsBeforeBaseCheckActive;                   // +0x110C SecondsBeforeBaseCheckActive
 	Bool m_unk0x1110;                                      // +0x1110 cleared by the command-line parser 0x003B9CDF

@@ -214,6 +214,7 @@ public:
 	Int getGameMode() const { return m_gameMode; }
 	Bool isWarOfTheRingGame() const;	// 0x00210C66: +0x114 == 1 || +0x114 == 2 (the two War of the Ring campaign kinds; AptQuitMenu 0x0051AFF9, 0x0051B04A)
 	void enterFPMode();	// 0x000421FD (FPModeScope constructor 0x0004224C)
+	void setPlayerLeaveStatus(Int slot, const AsciiString &name, Int status);	// records a slot's player name and status for the game report
 	void setPlayerQuitStatus(Int slot, Int status);	// 0x0023D201: records why a player slot left and the frame it happened on (Network::vslot98 0x0025E20F)
 	void updateObjectsChangedTriggerAreas() { m_frameObjectsChangedTriggerAreas = m_frame; }
 
@@ -228,10 +229,10 @@ public:
 	Int m_unk0x48;				// +0x48
 	unsigned char m_unk0x4C[4];		// +0x4C not set by the ctor
 	_STL::list<Int> m_unk0x50;		// +0x50 (_List_base<int> ctor, cleared at the end of the ctor)
-	Int m_unk0x54;				// +0x54
+	AsciiString m_unk0x54;			// +0x54 the game report's header text (bfmePopulateGameReport; the destructor releases it)
 	_STL::vector<AsciiString> m_unk0x58;	// +0x58 one name per player slot: rva0023FB58 returns a const AsciiString & into it
-	Int m_unk0x64;				// +0x64
-	Int m_unk0x68;				// +0x68
+	AsciiString m_unk0x64;			// +0x64 the game report's command-line summary (bfmePopulateGameReport)
+	AsciiString m_unk0x68;			// +0x68 the game report's closing line (bfmePopulateGameReport)
 	Bool m_unk0x6C;				// +0x6C
 	Bool m_unk0x6D;				// +0x6D the end flag finishShowPurchaseScience reads
 	Bool m_unk0x6E;				// +0x6E

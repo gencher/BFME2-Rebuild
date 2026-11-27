@@ -241,6 +241,9 @@ extern unsigned long g_heapTlsIndex;		// RVA 0x009B35A4, -1 until _Init
 
 }
 
+// The heaps' clear-allocations switch (the game report prints it as zeroFillMemory).
+unsigned char Rva000308D0GetByte();
+
 // The function pointers InitFunctionPointers fills (one per export). Names are
 // the data ledger's; the allocate and free pointers carry C linkage in retail
 // (___gameMemAllocatePtr, ___gameMemFreePtr).

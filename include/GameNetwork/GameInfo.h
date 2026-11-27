@@ -162,6 +162,7 @@ typedef char GameInfoVersionOffset[(offsetof(GameInfo, m_version) == 0x90) ? 1 :
 typedef char GameInfoTailOffset[(offsetof(GameInfo, m_unk0xCC) == 0xCC) ? 1 : -1];
 
 extern GameInfo *TheGameInfo;
+extern Int NET_CRC_INTERVAL;	// frames between the network CRC checks
 
 AsciiString GameInfoToAsciiString(const GameInfo *game, Bool saveMapName);	// 0x00400AF8
 Bool ParseAsciiStringToGameInfo(GameInfo *game, AsciiString options, Bool saveMapName);	// 0x0040116B
