@@ -34,6 +34,7 @@ public:
 	SidesInfo *findSkirmishSideInfo(AsciiString name, Int *index = 0);
 	Bool validateAllyEnemyList(const AsciiString &teamName, AsciiString &allies);
 	void clear();
+	void discardOverriddenScriptsAndTeams();
 
 private:
 	virtual void loadPostProcess() {}			// Snapshot slot 1: bare ret at 0x000B3FD0.

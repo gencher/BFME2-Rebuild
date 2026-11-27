@@ -454,6 +454,17 @@ SidesInfo::SidesInfo() : m_pBuildList(NULL), m_dict(0)
 // FUNCTION: BFME2 0x0032C88F size=258 name=?rva0032C88F@SidesList@@QAEXH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0032C991 size=53 name=?discardOverriddenScriptsAndTeams@SidesList@@QAEXXZ evidence=N:ledger tier=A
+void SidesList::discardOverriddenScriptsAndTeams()
+{
+	Int numSides = m_numSides;
+	for (Int i = 0; i < numSides; i++)
+	{
+		ScriptList *scripts = &getSideInfo(i)->m_scripts;
+		if (scripts)
+			scripts->commit();
+	}
+	m_teamRec.removeOverriddenTeams();
+}
 
 // FUNCTION: BFME2 0x0032C9C6 size=58 name=?clear@TeamsInfoRec@@QAEXXZ evidence=N:ledger tier=A
 void TeamsInfoRec::clear()
