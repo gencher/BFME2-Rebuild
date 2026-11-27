@@ -117,6 +117,51 @@
       },
       "before": "MISNAMED with the body written (bytes identical)",
       "after": "MATCH"
+    },
+    {
+      "id": "waypointmap-tree-create-node",
+      "rva": "0x003012CE",
+      "op": "add_name",
+      "name": "?_M_create_node@?$_Rb_tree@VAsciiString@@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@U?$_Select1st@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@U?$less@VAsciiString@@@3@V?$allocator@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@@_STL@@IAEPAU?$_Rb_tree_node@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@2@ABU?$pair@$$CBVAsciiString@@VCoord3D@@@2@@Z",
+      "shared_with": [
+        "0x0016D760"
+      ],
+      "change": "add accepted name: 0x003012CE is _Rb_tree<AsciiString, pair<const AsciiString, Coord3D>>::_M_create_node, the node allocator behind WaypointMap::operator[] (WaypointMap derives from map<AsciiString, Coord3D>); the ledger gives it a TreeHintPayload placeholder and binds the real name only to 0x0016D760",
+      "pin": {
+        "size": 34,
+        "role": "comdat",
+        "name": "?_M_create_node@?$_Rb_tree@VAsciiString@@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@U?$_Select1st@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@@3@U?$less@VAsciiString@@@3@V?$allocator@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@@3@@_STL@@IAEPAU?$_Rb_tree_node@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@@2@ABU?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@2@@Z"
+      },
+      "evidence": {
+        "kind": "retail-bytes",
+        "detail": "WaypointMap::update 0x00302B7D -> map operator[] 0x0030251A -> insert 0x00301ED9 -> ... -> 0x003012CE (operator new 0x20 = 16-byte node header + pair<const AsciiString, Coord3D>, then _Construct 0x003008E5). 0x0016D760 and 0x0016DB20 (object O00168F30, meshgeometry.cpp) cannot be this AsciiString-keyed tree: their node constructor 0x0016CC80 copies the 16-byte value as four plain dwords, with no AsciiString copy constructor (0x000365F0) and no EH frame, whereas MapUtil's copy 0x003008E5 calls the pair copy constructor under an EH frame. The compiled WaypointMap::update equals retail byte for byte; judge: 'wrong named target ?_M_create_node...Coord3D...: 0x3012CE expected 0x16d760'.",
+        "verified": "verify_tu --overlay-effect MapUtil.cpp"
+      },
+      "before": "0x00302B7D WRONG_REFERENCE (0x3012CE expected 0x16d760)",
+      "after": "0x00302B7D MATCH"
+    },
+    {
+      "id": "waypointmap-tree-ctor",
+      "rva": "0x00603AE0",
+      "op": "add_name",
+      "name": "??0?$_Rb_tree@VAsciiString@@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@U?$_Select1st@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@U?$less@VAsciiString@@@3@V?$allocator@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@@_STL@@QAE@ABU?$less@VAsciiString@@@1@ABV?$allocator@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@1@@Z",
+      "shared_with": [
+        "0x0016DB20"
+      ],
+      "change": "add accepted name to ICF fold F00603AE0: the shared _Rb_tree(const less &, const allocator &) body (32-byte nodes) is also map<AsciiString, Coord3D>'s tree constructor, reached from MapMetaData's constructor through map<AsciiString, Coord3D>::map()",
+      "pin": {
+        "size": 42,
+        "role": "icf_fold",
+        "name": "??0?$_Rb_tree@HU?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@U?$_Select1st@U?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@@2@U?$less@H@2@V?$allocator@U?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@@2@@_STL@@QAE@ABU?$less@H@1@ABV?$allocator@U?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@@1@@Z",
+        "fold_group": "F00603AE0"
+      },
+      "evidence": {
+        "kind": "identical-copy",
+        "detail": "the compiled ??0_Rb_tree<AsciiString, pair<const AsciiString, Coord3D>> body equals the fold body; MapMetaData::MapMetaData 0x003031D3 compiles byte-identical and is WRONG_REFERENCE only on this target ('0x603AE0 expected 0x16db20'). 0x0016D760 and 0x0016DB20 (object O00168F30, meshgeometry.cpp) cannot be this AsciiString-keyed tree: their node constructor 0x0016CC80 copies the 16-byte value as four plain dwords, with no AsciiString copy constructor (0x000365F0) and no EH frame, whereas MapUtil's copy 0x003008E5 calls the pair copy constructor under an EH frame; 0x0016DB20 itself is compiled with other flags (inlined base constructor).",
+        "verified": "verify_tu --overlay-effect MapUtil.cpp"
+      },
+      "before": "0x003031D3 WRONG_REFERENCE (0x603AE0 expected 0x16db20)",
+      "after": "0x003031D3 MATCH"
     }
   ]
 }
