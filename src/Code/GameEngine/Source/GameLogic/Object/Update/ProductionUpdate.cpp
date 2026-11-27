@@ -146,6 +146,10 @@ UnsignedInt ProductionUpdate::countUnitTypeInQueue(const ThingTemplate *unitType
 }
 
 // FUNCTION: BFME2 0x0049CE63 size=11 name=?rva0049CE63@Rva0049CE63@@UAEXH@Z evidence=?:placeholder tier=B hypothesis:cohesion
+void ProductionUpdate::onDie(const DamageInfo * /*damageInfo*/)
+{
+	rva0049DEC8();
+}
 
 // FUNCTION: BFME2 0x0049CE6E size=64 name=?cancelAndRefundAllProduction@ProductionUpdate@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 void ProductionUpdate::cancelAndRefundAllProduction()
