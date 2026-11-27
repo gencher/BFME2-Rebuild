@@ -586,6 +586,26 @@ void SidesList::emptySides()
 // FUNCTION: BFME2 0x0032D850 size=119 name=?removeSide@SidesList@@QAEXH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0032D8C7 size=221 name=?removeSideAndTeams@SidesList@@QAEXH@Z evidence=N:ledger tier=A
+void SidesList::removeSideAndTeams(Int index)
+{
+	Bool exists;
+	Dict *sideDict = m_sides[index].getDict();
+	AsciiString playerName = sideDict->getAsciiString(TheKey_playerName.key(), &exists);
+	if (exists)
+	{
+		// remove every team the side owns
+		Int next;
+		for (Int i = m_teamRec.m_teams[0].m_next; i != 0; i = next)
+		{
+			next = m_teamRec.m_teams[i].m_next;
+			Dict *teamDict = m_teamRec.m_teams[i].getDict();
+			AsciiString owner = teamDict->getAsciiString(TheKey_teamOwner.key(), &exists);
+			if (exists && owner == playerName)
+				m_teamRec.removeTeam(i);
+		}
+	}
+	removeSide(index);
+}
 
 // FUNCTION: BFME2 0x0032D9A4 size=170 name=??0TeamsInfoRec@@QAE@ABV0@@Z evidence=N:ledger tier=A
 TeamsInfoRec::TeamsInfoRec(const TeamsInfoRec &that)

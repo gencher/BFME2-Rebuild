@@ -37,6 +37,7 @@ public:
 	void addToBuildList(BuildListInfo *info, Int position);
 	Int removeFromBuildList(BuildListInfo *info);
 	void reorderInBuildList(BuildListInfo *info, Int position);
+	Dict *getDict() { return &m_dict; }
 
 	BuildListInfo *m_pBuildList;								// +0x00
 	Dict m_dict;												// +0x04
@@ -67,6 +68,7 @@ class TeamsInfo
 {
 public:
 	TeamsInfo();
+	Dict *getDict() { return &m_dict; }
 	short m_next;					// +0x00
 	short m_prev;					// +0x02
 	short m_overridesID;			// +0x04
