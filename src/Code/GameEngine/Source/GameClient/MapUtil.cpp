@@ -12,6 +12,10 @@
 MapCache *TheMapCache;	// VA 0x00DFF12C
 #include "Common/FileSystem.h"
 #include "Common/DataChunk.h"
+#include "Common/NameKeyGenerator.h"
+#include "Common/StaticNameKey.h"
+
+extern const StaticNameKey TheKey_InitialCameraPosition;
 
 bool __stdcall Rva00600695Get(const char *path);
 
@@ -321,6 +325,35 @@ Bool PlayerPosition::parse(DataChunkInput &file, DataChunkInfo *info)
 // FUNCTION: BFME2 0x00302B06 size=91 name=?ParseObjectsDataChunk@@YA_NAAVDataChunkInput@@PAUDataChunkInfo@@PAX@Z evidence=N:ledger
 
 // FUNCTION: BFME2 0x00302B7D size=260 name=?update@WaypointMap@@QAEXXZ evidence=N:ledger
+void WaypointMap::update()
+{
+	if (!m_waypoints)
+	{
+		m_numStartSpots = 1;
+		return;
+	}
+
+	clear();
+
+	AsciiString startingCamName = TheNameKeyGenerator->keyToName(TheKey_InitialCameraPosition.key());
+	WaypointMap::const_iterator it = m_waypoints->find(startingCamName);
+	if (it != m_waypoints->end())
+		(*this)[startingCamName] = it->second;
+
+	m_numStartSpots = 0;
+	for (Int i = 0; i < MAX_SLOTS; ++i)
+	{
+		// The start position waypoints are numbered from one.
+		startingCamName.format("Player_%d_Start", i + 1);
+		it = m_waypoints->find(startingCamName);
+		if (it == m_waypoints->end())
+			break;
+		(*this)[startingCamName] = it->second;
+		++m_numStartSpots;
+	}
+
+	m_numStartSpots = _STL::max(m_numStartSpots, 1);
+}
 
 // FUNCTION: BFME2 0x00302E87 size=148 name=?ParseSizeOnly@@YA_NAAVDataChunkInput@@PAUDataChunkInfo@@@Z evidence=N:ledger
 
