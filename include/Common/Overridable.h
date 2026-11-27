@@ -74,6 +74,7 @@ public:
 	OVERRIDE(const T *overridable = 0) : m_overridable(overridable) {}
 	OVERRIDE &operator=(const T *overridable) { m_overridable = overridable; return *this; }
 	const T *getNonOverloadedPointer() const { return m_overridable; }
+	const T *operator->() const { return *this; }
 	operator const T *() const
 	{
 		if (!m_overridable)

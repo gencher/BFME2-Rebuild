@@ -7,6 +7,7 @@
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:Z, hypothesis:cohesion, hypothesis:name:Z
 #include <new>
+#include <stdlib.h>
 #include "GameClient/SnowManager.h"
 #include "GameClient/WeatherSetting.h"
 // FUNCTION: BFME2 0x00201064 size=33 name=?init@SnowManager@@UAEXXZ evidence=N:ledger tier=B hypothesis:name:Z
@@ -49,8 +50,8 @@ SnowManager::SnowManager()
 	m_unk0x5C[3] = 0.0f;
 	m_unk0x5C[4] = 0.0f;
 	m_unk0x5C[5] = 0.0f;
-	m_unk0x48 = 0.0f;
-	m_unk0x4C = 0.0f;
+	m_xySpeed.x = 0.0f;
+	m_xySpeed.y = 0.0f;
 }
 
 // FUNCTION: BFME2 0x00201134 size=31 name=?reset@SnowManager@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
@@ -69,6 +70,46 @@ void SnowManager::reset()
 // FUNCTION: BFME2 0x00201153 size=18 name=?rva00201153@WeatherSetting@@UAEPAV1@XZ evidence=?:placeholder tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x00201165 size=685 name=?updateIniSettings@SnowManager@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
+void SnowManager::updateIniSettings()
+{
+	Real *dst = m_startingHeights;
+	// initialize a table of random starting positions for each particle.
+	Int boxDimensions = (Int)TheWeatherSetting->m_snowBoxHeight;
+	for (Int y = 0; y < 64; y++)
+	{
+		for (Int x = 0; x < 64; x++)
+		{
+			*dst = (Real)(rand() % boxDimensions);
+			dst++;
+		}
+	}
+
+	m_unk0x14 = TheWeatherSetting->m_snowSpeed;
+	m_unk0x18[1] = TheWeatherSetting->m_snowFrequencyScaleX;
+	m_unk0x18[2] = TheWeatherSetting->m_snowFrequencyScaleY;
+	m_unk0x18[3] = TheWeatherSetting->m_snowAmplitude;
+	m_unk0x18[4] = TheWeatherSetting->m_snowPointSize;
+	m_unk0x18[7] = TheWeatherSetting->m_snowQuadSize;
+	m_unk0x18[8] = TheWeatherSetting->m_snowBoxHeight;
+	m_unk0x18[9] = TheWeatherSetting->m_snowSpacing;
+	m_unk0x18[5] = TheWeatherSetting->m_snowMaxPointSize;
+	m_unk0x18[6] = TheWeatherSetting->m_snowMinPointSize;
+	m_unk0x44 = TheWeatherSetting->m_numberTiles;
+	m_xySpeed = TheWeatherSetting->m_snowXYSpeed;
+
+	// time for a snow flake to fall from the top to the bottom of the box around the camera.
+	m_unk0x18[0] = m_unk0x18[8] / m_unk0x14;
+
+	m_unk0x41 = TheWeatherSetting->m_isSnowing;
+	m_unk0x54 = TheWeatherSetting->m_lightningDuration;
+	m_unk0x58 = TheWeatherSetting->m_spellDuration;
+	m_unk0x5C[0] = TheWeatherSetting->m_rampControl.x;
+	m_unk0x5C[1] = TheWeatherSetting->m_rampControl.y;
+	m_unk0x5C[2] = TheWeatherSetting->m_rampSpacing.x;
+	m_unk0x5C[3] = TheWeatherSetting->m_rampSpacing.y;
+	m_unk0x5C[4] = TheWeatherSetting->m_rampSpeed.x;
+	m_unk0x5C[5] = TheWeatherSetting->m_rampSpeed.y;
+}
 
 // FUNCTION: BFME2 0x00201618 size=503 name=??0WeatherSetting@@QAE@XZ evidence=N:ledger tier=B hypothesis:Z
 
