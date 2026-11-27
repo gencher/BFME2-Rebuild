@@ -76,11 +76,30 @@ struct PlayerLeaveStatus
 };
 // SIZE 0x1C
 
-// The class the map names DOTManager (0x0043B72D is its only recovered member, taking an object id); GameLogic +0x174 points at one.
-class DOTManager
+// The damage-over-time manager GameLogic +0x174 owns: a Snapshot (its table holds the deleting
+// destructor, an empty loadPostProcess, GetSnapshotName and xfer). Only the members its users need are declared.
+class DOTManager : public Snapshot
 {
 public:
+	virtual ~DOTManager();
+	virtual void loadPostProcess();
 	UnsignedInt rva0043B72D(Int objectID);	// 0x0043B72D
+
+protected:
+	virtual const char *GetSnapshotName() const;
+	virtual void xfer(Xfer *xfer);
+};
+
+// The terrain cell claim manager GameLogic +0x170 owns: a Snapshot. Only the members its users need are declared.
+class TerrainResourceManager : public Snapshot
+{
+public:
+	virtual ~TerrainResourceManager();
+	virtual void loadPostProcess();
+
+protected:
+	virtual const char *GetSnapshotName() const;
+	virtual void xfer(Xfer *xfer);
 };
 
 // One object table-of-contents record: a template name and the short ID a save file uses
@@ -268,8 +287,8 @@ public:
 	Int m_unk0x15C;				// +0x15C
 	Int m_unk0x160;				// +0x160
 	_STL::vector<Object *> m_unk0x164;	// +0x164 (_Vector_base ctor); rva00240EBC 0x00240EBC calls Object::rva00295F05(true) on each, then clears it
-	Int m_unk0x170;				// +0x170
-	Int m_unk0x174;				// +0x174
+	TerrainResourceManager *m_terrainResourceManager;	// +0x170 (init news it; loadPostProcess forwards to it)
+	DOTManager *m_dotManager;		// +0x174 (init news it; loadPostProcess forwards to it)
 	InvisibilityManager *m_manager178;	// +0x178
 	Int m_unk0x17C;				// +0x17C
 	UnsignedInt m_frameObjectsChangedTriggerAreas; // +0x180 Object::initObject 0x002934E7 stores the frame

@@ -359,7 +359,6 @@ AsciiString PlayerTemplate::getName() const
 // FUNCTION: BFME2 0x0023E984 size=17 name=?str@Rva003879F0Str@@QAEPBDXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023E99A size=1217 name=?CreateWOTRMPPlayers@GameLogic@@QAEXXZ evidence=N:ledger tier=A
-
 // FUNCTION: BFME2 0x0023EE5B size=1685 name=?CreateMPPlayers@GameLogic@@QAEX_NH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0023F52C size=864 name=?rva0023F52C@GameLogic@@QAEX_N@Z evidence=?:placeholder tier=A
@@ -762,6 +761,69 @@ void GameLogic::prepareLogicForObjectLoad()
 }
 
 // FUNCTION: BFME2 0x00242D1D size=340 name=?loadPostProcess@Rva00242D1DLoadView@@MAEXXZ evidence=?:placeholder tier=A
+void GameLogic::loadPostProcess()
+{
+	m_terrainResourceManager->loadPostProcess();
+	m_dotManager->loadPostProcess();
+
+	// empty every update queue; the loaded objects' modules are queued again below
+	Int i;
+	_STL::vector<UpdateModule *>::iterator it;
+	for (i = 0; i < 4; ++i)
+	{
+		for (it = m_normalUpdates[i].begin(); it != m_normalUpdates[i].end(); ++it)
+		{
+			UpdateModule *u = *it;
+			u->m_unk0x1C = -1;
+			u->m_indexInLogic = -1;
+		}
+		m_normalUpdates[i].clear();
+	}
+	for (it = m_sleepyUpdates.begin(); it != m_sleepyUpdates.end(); ++it)
+	{
+		UpdateModule *u = *it;
+		u->m_unk0x1C = -1;
+		u->m_indexInLogic = -1;
+	}
+	m_sleepyUpdates.clear();
+
+	// frame 0 counts as frame 1 for scheduling the update modules
+	UnsignedInt firstFrame = TheGameLogic->getFrame();
+	if (firstFrame == 0)
+		firstFrame = 1;
+
+	for (Object *obj = m_objList; obj != NULL; obj = obj->getNextObject())
+	{
+		for (BehaviorModule **module = obj->getBehaviorModules(); *module != NULL; ++module)
+		{
+			UpdateModule *update = static_cast<UpdateModule *>((*module)->getUpdate());
+			if (update == NULL)
+				continue;
+
+			if (update->m_nextCallFrameAndPhase == 0)
+				update->m_nextCallFrameAndPhase = firstFrame > 0x3FFFFFFF ? 0x3FFFFFFF : firstFrame;
+
+			if (update->m_nextCallFrameAndPhase == 0x3FFFFFFF)
+			{
+				// asleep until something wakes it
+				Int slot = m_sleepyUpdates.size();
+				update->m_unk0x1C = -1;
+				update->m_indexInLogic = slot;
+				m_sleepyUpdates.push_back(update);
+			}
+			else
+			{
+				Int phase = update->getUpdatePhase();
+				_STL::vector<UpdateModule *> &queue = m_normalUpdates[phase];
+				Int slot = queue.size();
+				update->m_unk0x1C = phase;
+				update->m_indexInLogic = slot;
+				queue.push_back(update);
+			}
+		}
+	}
+}
+
 
 // FUNCTION: BFME2 0x00242F1A size=68 name=?rva00242F1A@Rva00242F1A@@QAEPAXPBX@Z evidence=?:placeholder tier=A
 

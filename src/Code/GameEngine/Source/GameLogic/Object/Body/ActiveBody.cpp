@@ -711,7 +711,7 @@ void ActiveBody::attemptHealing(DamageInfo *damageInfo)
 			}
 			if (!obj->getTemplate()->isKindOf(KINDOF_STRUCTURE) && data->m_healingBuffFx && !obj->m_status.test(6))
 				FXList::doFXObj(data->m_healingBuffFx, obj, 0);
-			((DOTManager *)TheGameLogic->m_unk0x174)->rva0043B72D((Int)obj->getID());
+			TheGameLogic->m_dotManager->rva0043B72D((Int)obj->getID());
 		}
 		if (m_curDamageState != oldState)
 		{
