@@ -818,7 +818,7 @@ void GameWindow::snapshotCreateView(GameWindowCreationData *data, bool clear)
 
 	if (clear)
 	{
-		m_instData.m_owner = NULL;
+		data->instance->m_owner = NULL;
 		data->instance->m_text = NULL;
 		data->instance->m_tooltip = NULL;
 		data->instance->m_videoBuffer = NULL;
