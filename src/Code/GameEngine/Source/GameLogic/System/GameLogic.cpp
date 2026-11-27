@@ -341,6 +341,66 @@ AsciiString PlayerTemplate::getName() const
 // FUNCTION: BFME2 0x0023F88C size=78 name=?rva0023F88C@Rva0023E7D9@@QAEX_N@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0023F8DA size=484 name=?rva0023F8DA@GameLogic@@QAEXXZ evidence=?:placeholder tier=A
+void GameLogic::rva0023F8DA()
+{
+	if (m_unk0x6C || m_unk0x58.size() == 0)
+		return;
+
+	AsciiString *report = &m_unk0x58[m_unk0x58.size() - 1];
+	if (report == NULL)
+		return;
+
+	m_unk0x6C = TRUE;
+	AsciiString line;
+	report->concat("    Game Over Details:\n");
+
+	for (Int slot = 0; slot < MAX_SLOTS; ++slot)
+	{
+		PlayerLeaveStatus *status = getPlayerLeaveStatus(slot);
+		if (status)
+		{
+			Player *player = ThePlayerList->getNthPlayer(slot);
+			if (player && player->getScoreKeeper() && player->getPlayerTemplate())
+			{
+				static char templateName[256];
+				sprintf(templateName, "%s", player->getPlayerTemplate()->getName().str());
+				player->getScoreKeeper()->m_unk0xF0 = status->m_quitFrame;
+			}
+
+			AsciiString reason;
+			switch (status->m_reason)
+			{
+				case 0:
+					reason.format("n/a");
+					break;
+				case 1:
+					reason.format("graceful");
+					break;
+				case 2:
+					reason.format("voted out");
+					break;
+				default:
+					reason.format("unknown");
+					break;
+			}
+
+			if (status->m_victoryFrame)
+				line.format("      Slot %d: Victory frame: %d, Quit frame: %d(%s)\n", slot, status->m_victoryFrame, status->m_quitFrame, reason.str());
+			else if (status->m_defeatFrame)
+				line.format("      Slot %d: Defeat frame: %d, Quit frame: %d(%s)\n", slot, status->m_defeatFrame, status->m_quitFrame, reason.str());
+			else if (status->m_unk0x10)
+				line.format("      Slot %d: n/a\n", slot);
+			else
+				line.format("      Slot %d: Present at final frame\n", slot);
+		}
+		else
+		{
+			line.format("      Slot %d: PlayerLeaveStatus does not exist.\n", slot);
+		}
+		report->concat(line);
+	}
+}
+
 
 // FUNCTION: BFME2 0x0023FABE size=154 name=?rva0023FABE@GameLogic@@QAEXPAVObject@@@Z evidence=?:placeholder tier=A
 void GameLogic::rva0023FABE(Object *obj)
