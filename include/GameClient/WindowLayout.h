@@ -22,7 +22,7 @@ public:
     virtual void removeWindow(GameWindow *);
     virtual void destroyWindows();
     GameWindow *getFirstWindow() const { return m_windowList; }
-    const AsciiString &getFilename() const { return m_filename; }
+    AsciiString getFilename() { return m_filename; }
     bool isHidden() const { return m_hidden; }
 protected:
     GameWindow *findWindow(GameWindow *);
