@@ -11,6 +11,8 @@
 // FUNCTION: BFME2 0x001F384A size=8 name=?disable@Rva001F384AByteZeroSetter@@QAEXXZ evidence=?:placeholder tier=A
 #include "GameClient/ParticleSys.h"
 #include "GameClient/FXParticleSystem.h"
+#include "GameClient/Drawable.h"
+#include "GameLogic/Object.h"
 
 // The particle system manager singleton (retail VA 0x00DFDD04).
 ParticleSystemManager *TheParticleSystemManager = NULL;
@@ -41,10 +43,21 @@ template const CategoryModuleClass<8> *CategoryModuleClass<8>::getFirst();
 } // namespace FXParticleSystem
 
 // FUNCTION: BFME2 0x001F3852 size=8 name=?enable@Rva001F3852ByteOneSetter@@QAEXXZ evidence=?:placeholder tier=A
+void ParticleSystem::stop()
+{
+	m_isStopped = true;
+}
 
 // FUNCTION: BFME2 0x001F385A size=63 name=?rva001F385A@Rva001F385A@@QAEXPAX@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x001F3899 size=40 name=?set@Rva001F3899Slot@@QAEXABURva001F3899Arg@@@Z evidence=?:placeholder tier=A
+void ParticleSystem::setPosition(const Coord3D *pos)
+{
+	m_localTransform.Set_X_Translation(pos->x);
+	m_localTransform.Set_Y_Translation(pos->y);
+	m_localTransform.Set_Z_Translation(pos->z);
+	m_isLocalIdentity = false;
+}
 
 // FUNCTION: BFME2 0x001F38C1 size=109 name=?set@Rva001F38C1Slot@@QAEXABURva001F38C1Arg@@@Z evidence=?:placeholder tier=A
 
@@ -57,8 +70,22 @@ template const CategoryModuleClass<8> *CategoryModuleClass<8>::getFirst();
 // FUNCTION: BFME2 0x001F3C13 size=13 name=?set@Rva001F3C13ByteSlot@@QAEXE@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x001F3C20 size=35 name=?set@Rva001F3C20Slot@@QAEXPBVRva0055A88BDwordField@@@Z evidence=?:placeholder tier=A
+void ParticleSystem::attachToDrawable(const Drawable *drawable)
+{
+	if (drawable)
+		m_attachedToDrawableID = drawable->getID();
+	else
+		m_attachedToDrawableID = INVALID_DRAWABLE_ID;
+}
 
 // FUNCTION: BFME2 0x001F3C43 size=29 name=?set@Rva001F3C43Slot@@QAEXPBURva001F3C43Arg@@@Z evidence=?:placeholder tier=A
+void ParticleSystem::attachToObject(const Object *object)
+{
+	if (object)
+		m_attachedToObjectID = object->getID();
+	else
+		m_attachedToObjectID = INVALID_ID;
+}
 
 // FUNCTION: BFME2 0x001F3C6B size=47 name=?rva001F3C6B@ParticleSystem@@QAEIXZ evidence=?:placeholder tier=A
 

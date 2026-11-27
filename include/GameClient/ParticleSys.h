@@ -16,6 +16,7 @@
 #include "Common/AsciiString.h"
 #include "Common/SubsystemInterface.h"
 #include "Common/Snapshot.h"
+#include "WWMath/Matrix3D.h"
 
 class Xfer;
 class Drawable;
@@ -39,8 +40,17 @@ public:
 	ParticleSystemHandle *m_lastHandle;					// 0xA0
 	UnsignedByte m_unk0xA4[4];
 	ParticleSystemID m_systemID;						// 0xA8
+	UnsignedByte m_unk0xAC[4];
+	DrawableID m_attachedToDrawableID;					// 0xB0 (attachToDrawable)
+	ObjectID m_attachedToObjectID;						// 0xB4 (attachToObject)
+	UnsignedByte m_unk0xB8[4];
+	Matrix3D m_localTransform;							// 0xBC (setPosition writes its translation column)
+	UnsignedByte m_unk0xEC[0xB4];
+	Bool m_isLocalIdentity;								// 0x1A0 (setPosition clears it)
+	UnsignedByte m_unk0x1A1[2];
+	Bool m_isStopped;									// 0x1A3 (stop sets it)
 };
-// SIZE 0xAC
+// Declared through 0x1A3; the full size is not recovered.
 
 ParticleSystem *Make001FCBD7(); // Default object for an empty particle-system handle.
 
