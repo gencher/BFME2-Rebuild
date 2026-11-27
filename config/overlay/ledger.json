@@ -2,6 +2,26 @@
   "schema": 1,
   "entries": [
     {
+      "id": "null3dobjclass-deleting-dtor",
+      "rva": "0x001811B0",
+      "op": "add_name",
+      "name": "??_GNull3DObjClass@@UAEPAXI@Z",
+      "change": "add accepted name to ICF fold F001811B0: the shared scalar deleting destructor body is also Null3DObjClass's",
+      "pin": {
+        "size": 30,
+        "role": "icf_fold",
+        "name": "??_GBoxRenderObjClass@@UAEPAXI@Z",
+        "fold_group": "F001811B0"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "??_7Null3DObjClass@@6BRefCountClass@@@ at 0x007D50D0 slot 1 -> 0x001811B0 (shared body, 4 vtables); judge at base: 'inconsistent relocation binding for ??_GNull3DObjClass@@UAEPAXI@Z'",
+        "verified": "verify_tu --overlay-effect nullrobj.cpp O001810D0.cpp"
+      },
+      "before": "0x00180EB0, 0x00180EF0, 0x00180F70 WRONG_REFERENCE",
+      "after": "0x00180EB0, 0x00180EF0, 0x00180F70 MATCH"
+    },
+    {
       "id": "objectcreationlist-create-typed",
       "rva": "0x001F081A",
       "op": "add_name",
@@ -21,6 +41,66 @@
       "after": "MATCH"
     },
     {
+      "id": "aiupdateinterface-setemotionstate-nonvirtual",
+      "rva": "0x0026320D",
+      "op": "add_name",
+      "name": "?SetEmotionState@AIUpdateInterface@@QAEXHPAVObject@@@Z",
+      "change": "add accepted name: SetEmotionState is a public non-virtual member (QAE); the ledger spells it protected virtual (MAE)",
+      "pin": {
+        "size": 139,
+        "role": "owned",
+        "name": "?SetEmotionState@AIUpdateInterface@@MAEXHPAVObject@@@Z"
+      },
+      "evidence": {
+        "kind": "retail-bytes",
+        "detail": "no pointer to 0x0066320D exists anywhere in game.dat, so the function is in no vtable and cannot be virtual; it is called directly. The compiled body equals retail byte for byte (s1: 0 non-relocation differences) and is judged MISNAMED only because of the MAE spelling.",
+        "verified": "verify_tu --overlay AIUpdate.cpp: 0x0026320D MISSING -> MATCH with the source body"
+      },
+      "before": "MISNAMED with the body written (bytes identical)",
+      "after": "MATCH"
+    },
+    {
+      "id": "waypointmap-tree-create-node",
+      "rva": "0x003012CE",
+      "op": "add_name",
+      "name": "?_M_create_node@?$_Rb_tree@VAsciiString@@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@U?$_Select1st@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@U?$less@VAsciiString@@@3@V?$allocator@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@@_STL@@IAEPAU?$_Rb_tree_node@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@2@ABU?$pair@$$CBVAsciiString@@VCoord3D@@@2@@Z",
+      "shared_with": [
+        "0x0016D760"
+      ],
+      "change": "add accepted name: 0x003012CE is _Rb_tree<AsciiString, pair<const AsciiString, Coord3D>>::_M_create_node, the node allocator behind WaypointMap::operator[] (WaypointMap derives from map<AsciiString, Coord3D>); the ledger gives it a TreeHintPayload placeholder and binds the real name only to 0x0016D760",
+      "pin": {
+        "size": 34,
+        "role": "comdat",
+        "name": "?_M_create_node@?$_Rb_tree@VAsciiString@@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@U?$_Select1st@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@@3@U?$less@VAsciiString@@@3@V?$allocator@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@@3@@_STL@@IAEPAU?$_Rb_tree_node@U?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@_STL@@@2@ABU?$pair@$$CBVAsciiString@@UTreeHintPayload003012F0@@@2@@Z"
+      },
+      "evidence": {
+        "kind": "retail-bytes",
+        "detail": "WaypointMap::update 0x00302B7D -> map operator[] 0x0030251A -> insert 0x00301ED9 -> ... -> 0x003012CE (operator new 0x20 = 16-byte node header + pair<const AsciiString, Coord3D>, then _Construct 0x003008E5). 0x0016D760 and 0x0016DB20 (object O00168F30, meshgeometry.cpp) cannot be this AsciiString-keyed tree: their node constructor 0x0016CC80 copies the 16-byte value as four plain dwords, with no AsciiString copy constructor (0x000365F0) and no EH frame, whereas MapUtil's copy 0x003008E5 calls the pair copy constructor under an EH frame. The compiled WaypointMap::update equals retail byte for byte; judge: 'wrong named target ?_M_create_node...Coord3D...: 0x3012CE expected 0x16d760'.",
+        "verified": "verify_tu --overlay-effect MapUtil.cpp"
+      },
+      "before": "0x00302B7D WRONG_REFERENCE (0x3012CE expected 0x16d760)",
+      "after": "0x00302B7D MATCH"
+    },
+    {
+      "id": "sideslist-xfer-snapshot-slot",
+      "rva": "0x00329AEA",
+      "op": "add_name",
+      "name": "?xfer@SidesList@@UAEXPAVXfer@@@Z",
+      "change": "add accepted name: the row is Snapshot::xfer (slot 3) overridden by SidesList; the ledger spells it DoXfer, a name no Snapshot subclass uses (BuildListInfo, ScriptList and Player rows are ?xfer@...)",
+      "pin": {
+        "size": 212,
+        "role": "owned",
+        "name": "?DoXfer@SidesList@@UAEXPAVXfer@@@Z"
+      },
+      "evidence": {
+        "kind": "vtable-slot",
+        "detail": "SidesList's Snapshot table at 0x0080DA88 (installed by the constructor 0x0032EE24): slot 0 0x0032ED59 ??_ESidesList@@WM@AEPAXI@Z, slot 1 0x000B3FD0 (loadPostProcess fold), slot 2 0x0032ED53 ?GetSnapshotName@SidesList@@UBEPBDXZ, slot 3 -> 0x00329AEA, its only data reference; Snapshot.h declares slot 3 as virtual void xfer(Xfer *)",
+        "verified": "verify_tu --overlay-effect SidesList.cpp"
+      },
+      "before": "0x00329AEA MISNAMED (compiled ?xfer@SidesList@@UAEXPAVXfer@@@Z, all 212 bytes equal)",
+      "after": "0x00329AEA MATCH"
+    },
+    {
       "id": "detachableriderupdate-update-virtual",
       "rva": "0x004AEC9B",
       "op": "add_name",
@@ -38,6 +118,29 @@
       },
       "before": "0x004AEC9B MISNAMED; 0x004AE883 WRONG_REFERENCE (code target identity at 0x4AEC9B)",
       "after": "0x004AEC9B MATCH; 0x004AE883 MATCH"
+    },
+    {
+      "id": "waypointmap-tree-ctor",
+      "rva": "0x00603AE0",
+      "op": "add_name",
+      "name": "??0?$_Rb_tree@VAsciiString@@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@U?$_Select1st@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@U?$less@VAsciiString@@@3@V?$allocator@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@3@@_STL@@QAE@ABU?$less@VAsciiString@@@1@ABV?$allocator@U?$pair@$$CBVAsciiString@@VCoord3D@@@_STL@@@1@@Z",
+      "shared_with": [
+        "0x0016DB20"
+      ],
+      "change": "add accepted name to ICF fold F00603AE0: the shared _Rb_tree(const less &, const allocator &) body (32-byte nodes) is also map<AsciiString, Coord3D>'s tree constructor, reached from MapMetaData's constructor through map<AsciiString, Coord3D>::map()",
+      "pin": {
+        "size": 42,
+        "role": "icf_fold",
+        "name": "??0?$_Rb_tree@HU?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@U?$_Select1st@U?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@@2@U?$less@H@2@V?$allocator@U?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@@2@@_STL@@QAE@ABU?$less@H@1@ABV?$allocator@U?$pair@$$CBHV?$vector@UBfmePod128@@V?$allocator@UBfmePod128@@@_STL@@@_STL@@@_STL@@@1@@Z",
+        "fold_group": "F00603AE0"
+      },
+      "evidence": {
+        "kind": "identical-copy",
+        "detail": "the compiled ??0_Rb_tree<AsciiString, pair<const AsciiString, Coord3D>> body equals the fold body; MapMetaData::MapMetaData 0x003031D3 compiles byte-identical and is WRONG_REFERENCE only on this target ('0x603AE0 expected 0x16db20'). 0x0016D760 and 0x0016DB20 (object O00168F30, meshgeometry.cpp) cannot be this AsciiString-keyed tree: their node constructor 0x0016CC80 copies the 16-byte value as four plain dwords, with no AsciiString copy constructor (0x000365F0) and no EH frame, whereas MapUtil's copy 0x003008E5 calls the pair copy constructor under an EH frame; 0x0016DB20 itself is compiled with other flags (inlined base constructor).",
+        "verified": "verify_tu --overlay-effect MapUtil.cpp"
+      },
+      "before": "0x003031D3 WRONG_REFERENCE (0x603AE0 expected 0x16db20)",
+      "after": "0x003031D3 MATCH"
     },
     {
       "id": "vector3solidboxrandomizer-class-id",
@@ -78,64 +181,6 @@
       },
       "before": "0x00723230, 0x007235F0 WRONG_REFERENCE",
       "after": "0x00723230, 0x007235F0 MATCH"
-    },
-    {
-      "id": "null3dobjclass-deleting-dtor",
-      "rva": "0x001811B0",
-      "op": "add_name",
-      "name": "??_GNull3DObjClass@@UAEPAXI@Z",
-      "change": "add accepted name to ICF fold F001811B0: the shared scalar deleting destructor body is also Null3DObjClass's",
-      "pin": {
-        "size": 30,
-        "role": "icf_fold",
-        "name": "??_GBoxRenderObjClass@@UAEPAXI@Z",
-        "fold_group": "F001811B0"
-      },
-      "evidence": {
-        "kind": "vtable-slot",
-        "detail": "??_7Null3DObjClass@@6BRefCountClass@@@ at 0x007D50D0 slot 1 -> 0x001811B0 (shared body, 4 vtables); judge at base: 'inconsistent relocation binding for ??_GNull3DObjClass@@UAEPAXI@Z'",
-        "verified": "verify_tu --overlay-effect nullrobj.cpp O001810D0.cpp"
-      },
-      "before": "0x00180EB0, 0x00180EF0, 0x00180F70 WRONG_REFERENCE",
-      "after": "0x00180EB0, 0x00180EF0, 0x00180F70 MATCH"
-    },
-    {
-      "id": "aiupdateinterface-setemotionstate-nonvirtual",
-      "rva": "0x0026320D",
-      "op": "add_name",
-      "name": "?SetEmotionState@AIUpdateInterface@@QAEXHPAVObject@@@Z",
-      "change": "add accepted name: SetEmotionState is a public non-virtual member (QAE); the ledger spells it protected virtual (MAE)",
-      "pin": {
-        "size": 139,
-        "role": "owned",
-        "name": "?SetEmotionState@AIUpdateInterface@@MAEXHPAVObject@@@Z"
-      },
-      "evidence": {
-        "kind": "retail-bytes",
-        "detail": "no pointer to 0x0066320D exists anywhere in game.dat, so the function is in no vtable and cannot be virtual; it is called directly. The compiled body equals retail byte for byte (s1: 0 non-relocation differences) and is judged MISNAMED only because of the MAE spelling.",
-        "verified": "verify_tu --overlay AIUpdate.cpp: 0x0026320D MISSING -> MATCH with the source body"
-      },
-      "before": "MISNAMED with the body written (bytes identical)",
-      "after": "MATCH"
-    },
-    {
-      "id": "sideslist-xfer-snapshot-slot",
-      "rva": "0x00329AEA",
-      "op": "add_name",
-      "name": "?xfer@SidesList@@UAEXPAVXfer@@@Z",
-      "change": "add accepted name: the row is Snapshot::xfer (slot 3) overridden by SidesList; the ledger spells it DoXfer, a name no Snapshot subclass uses (BuildListInfo, ScriptList and Player rows are ?xfer@...)",
-      "pin": {
-        "size": 212,
-        "role": "owned",
-        "name": "?DoXfer@SidesList@@UAEXPAVXfer@@@Z"
-      },
-      "evidence": {
-        "kind": "vtable-slot",
-        "detail": "SidesList's Snapshot table at 0x0080DA88 (installed by the constructor 0x0032EE24): slot 0 0x0032ED59 ??_ESidesList@@WM@AEPAXI@Z, slot 1 0x000B3FD0 (loadPostProcess fold), slot 2 0x0032ED53 ?GetSnapshotName@SidesList@@UBEPBDXZ, slot 3 -> 0x00329AEA, its only data reference; Snapshot.h declares slot 3 as virtual void xfer(Xfer *)",
-        "verified": "verify_tu --overlay-effect SidesList.cpp"
-      },
-      "before": "0x00329AEA MISNAMED (compiled ?xfer@SidesList@@UAEXPAVXfer@@@Z, all 212 bytes equal)",
-      "after": "0x00329AEA MATCH"
     }
   ]
 }
