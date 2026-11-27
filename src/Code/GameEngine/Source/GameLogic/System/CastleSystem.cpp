@@ -91,7 +91,7 @@ CastleMemberBehavior::~CastleMemberBehavior()
 }
 
 // FUNCTION: BFME2 0x003957C0 size=6 name=?name@CastleMemberBehavior@@QBEPBDXZ evidence=N:ledger
-const char *CastleMemberBehavior::name() const
+const char *CastleMemberBehavior::GetSnapshotName() const
 {
 	return "CastleMemberBehavior";
 }
@@ -398,7 +398,7 @@ CastleBehavior::CastleBehavior(Thing *thing, const ModuleData *moduleData)
 }
 
 // FUNCTION: BFME2 0x00398525 size=6 name=?name@CastleBehavior@@QBEPBDXZ evidence=N:ledger
-const char *CastleBehavior::name() const
+const char *CastleBehavior::GetSnapshotName() const
 {
 	return "CastleBehavior";
 }
@@ -413,6 +413,10 @@ NameKeyType CastleBehavior::getModuleNameKey() const
 }
 
 // FUNCTION: BFME2 0x0039857D size=225 name=??1CastleBehavior@@UAE@XZ evidence=N:ledger
+CastleBehavior::~CastleBehavior()
+{
+	clearPackedList();
+}
 
 // FUNCTION: BFME2 0x0039865E size=145 name=?rva0039865E@CastleBehavior@@QAEXPAVPolygonTrigger@@@Z evidence=?:placeholder
 

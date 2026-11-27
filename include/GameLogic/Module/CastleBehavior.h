@@ -36,6 +36,9 @@ class CastleBehavior : public FoundationAIUpdate, public CreateModuleInterface
 {
 public:
 	CastleBehavior(Thing *thing, const ModuleData *moduleData);
+	virtual ~CastleBehavior();
+
+	virtual CreateModuleInterface *getCreate() { return this; }
 
 	// CreateModuleInterface at +0x30 (table 0x0081A680).
 	virtual void onCreate();
@@ -45,7 +48,6 @@ public:
 
 	virtual void onCapture(Player *oldPlayer, Player *newPlayer);
 	virtual NameKeyType getModuleNameKey() const;
-	const char *name() const;
 
 	Real getCampDiameter(const Player *player);
 	// The ledger spells the result void *: the army key of the owner's nearest object that has a living world army ID,
@@ -55,6 +57,9 @@ public:
 	virtual void mapLoadPostProcess(const Dict *properties);
 	// Snapshot slot 1 at 0x003956E8 also removes the owner from the pathfinder when the castle state at +0x34 is nonzero.
 	virtual void loadPostProcess();
+	virtual UpdateSleepTime update();
+	virtual void vslot02(ObjectID objectID);	// FoundationAIUpdateInterface slot 2
+	virtual void slot46(Int);
 
 	void registerOwnedObject(Object *object);
 	Int apply(Int (__cdecl *check)(Object *, Int), Int argument);
@@ -72,6 +77,11 @@ public:
 	Bool rva003977F6(ObjectTypes *types);		// Does any owned or packed object's template belong to the list
 	void rva0039792B();						// Adds the owned and packed objects to the pathfinder map
 
+protected:
+	virtual const char *GetSnapshotName() const;
+	virtual void xfer(Xfer *xfer);
+
+public:
 	Int m_castleState;									// Castle registration assigns this state and post-load pathfinding tests it.
 	Int m_38;									// 0x38
 	Bool m_3C;									// 0x3C
