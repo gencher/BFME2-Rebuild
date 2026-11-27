@@ -193,7 +193,25 @@ Bool W3DView::setViewFilter(Int filter)
 }
 
 // FUNCTION: BFME2 0x00085FA8 size=178 name=?calcDeltaScroll@Rva00085FA8@@QAEXPAM@Z evidence=?:placeholder tier=B hypothesis:cohesion
-
+void W3DView::calcDeltaScroll(Real *screenDelta)
+{
+	screenDelta[0] = 0;
+	screenDelta[1] = 0;
+	Vector3 prevPos(m_unk0x23F4.x, m_unk0x23F4.y, m_groundLevel);
+	Vector3 prevScreen;
+	if (m_3DCamera->Project(prevScreen, prevPos) != CameraClass::INSIDE_FRUSTUM)
+	{
+		return;
+	}
+	Vector3 pos(m_pos.x, m_pos.y, m_groundLevel);
+	Vector3 screen;
+	if (m_3DCamera->Project(screen, pos) != CameraClass::INSIDE_FRUSTUM)
+	{
+		return;
+	}
+	screenDelta[0] = screen.X - prevScreen.X;
+	screenDelta[1] = screen.Y - prevScreen.Y;
+}
 
 // FUNCTION: BFME2 0x0008605A size=11 name=?rva0008605A@Rva0008605AForwarder@@QAEXXZ evidence=?:placeholder tier=B hypothesis:cohesion
 void W3DView::slot94()
