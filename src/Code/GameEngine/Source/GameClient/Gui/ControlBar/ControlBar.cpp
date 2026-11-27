@@ -42,6 +42,7 @@ extern NameKeyGenerator *TheNameKeyGenerator;
 #include "Common/Recorder.h"
 #include "GameLogic/ScriptEngine.h"
 #include "Common/INI.h"
+#include "Common/INIException.h"
 #include "GameLogic/GameLogic.h"
 #include "GameClient/InGameUI.h"
 #include "Common/MessageStream.h"
@@ -711,6 +712,14 @@ const CommandSet *ControlBar::findCommandSet(const AsciiString &name)
 	return NULL;
 }
 
+CommandSet *ControlBar::findNonConstCommandSet(const AsciiString &name)
+{
+	CommandSetMap::iterator it = m_commandSets.find(name);
+	if (it != m_commandSets.end())
+		return it->second;
+	return NULL;
+}
+
 // FUNCTION: BFME2 0x0031D61E size=49 name=?rva0031D61E@ControlBar@@QAEXPBVAsciiString@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0031D64F size=526 name=?rva0031D64F@ControlBar@@QAEXXZ evidence=?:placeholder tier=A
@@ -849,6 +858,38 @@ void ControlBar::forgetStaleCommandSet(const AsciiString &name)
 // FUNCTION: BFME2 0x0031EB96 size=109 name=?rva0031EB96@Rva0031EB96@@QAEPAVRva0031AB1ENode@@PAV2@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0031EC03 size=253 name=?parseCommandSetDefinition@ControlBar@@SAXPAVINI@@@Z evidence=N:ledger tier=A
+void ControlBar::parseCommandSetDefinition(INI *ini)
+{
+	AsciiString name;
+	name.set(ini->getNextToken());
+
+	CommandSet *commandSet = TheControlBar->findNonConstCommandSet(name);
+	if (commandSet == NULL)
+	{
+		commandSet = TheControlBar->newCommandSet(name, 0);
+		if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+			commandSet->markAsOverride();
+	}
+	else if (ini->getLoadType() == INI_LOAD_CREATE_OVERRIDES)
+	{
+		commandSet = TheControlBar->newCommandSetOverride(commandSet);
+	}
+	else if (ini->getLoadType() == INI_LOAD_RELOAD)
+	{
+		// a reload replaces the set: retire the old one, start a fresh one
+		if (commandSet->isOverride())
+			ControlBarReloadNeedsRestart = true;
+		TheControlBar->forgetStaleCommandSet(name);
+		commandSet = TheControlBar->newCommandSet(name, 0);
+		commandSet->setReloadState(0);
+	}
+	else
+	{
+		throw INIException(3, "Duplicate commandset %s found!", name.str());
+	}
+
+	ini->initFromINI(commandSet, CommandSet::m_commandSetFieldParseTable);
+}
 
 
 // Retail's two context-sensitive button entry points (0x0031ABCF, 0x0031ABD4) are five-byte jmp thunks (no row of their own).

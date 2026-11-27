@@ -303,6 +303,7 @@ protected:
     // 0x0031BF1B (unlink and queue the node in the vector at +0x23C). Names follow
     // Zero Hour's ControlBar except removeCommandButton, which is role-inferred.
     CommandButton *findNonConstCommandButton(const AsciiString &name);
+    CommandSet *findNonConstCommandSet(const AsciiString &name);	// Zero Hour's name; retail folds its body into findCommandSet 0x0031D5F8
     CommandButton *newCommandButton(const AsciiString &name);
     CommandButton *newCommandButtonOverride(CommandButton *buttonToOverride);
     void removeCommandButton(CommandButton *button);
