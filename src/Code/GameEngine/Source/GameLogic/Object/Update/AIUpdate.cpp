@@ -1984,6 +1984,23 @@ void AIUpdateInterface::setPathFromWaypoint(const Waypoint *way, const Coord2D *
 // FUNCTION: BFME2 0x002657CE size=385 name=?rva002657CE@AIUpdateInterface@@QAEXXZ evidence=?:placeholder tier=B hypothesis:Z
 
 // FUNCTION: BFME2 0x0026594F size=348 name=?moveThroughPortalWithMicropath@AIUpdateInterface@@QAEXPBVCoord3D@@0HW4PathfindLayerEnum@@00@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=B hypothesis:Z
+void AIUpdateInterface::moveThroughPortalWithMicropath(const Coord3D *start, const Coord3D *portalPos, Int portalID, PathfindLayerEnum portalLayer, const Coord3D *exitPos, const Coord3D *goalPos)
+{
+	destroyPath();
+	m_path = new Path;
+	m_path->prependNode(goalPos, TheTerrainLogic->getLayerForDestination(getObject(), goalPos), portalID);
+	if (!(*exitPos == *goalPos))
+		m_path->prependNode(exitPos, TheTerrainLogic->getLayerForDestination(getObject(), exitPos), portalID);
+	m_path->prependNode(portalPos, portalLayer, portalID);
+	m_path->prependNode(start, TheTerrainLogic->getLayerForDestination(getObject(), start), 0x7FFFFFFF);
+	Coord3D pos = *getObject()->getPosition();
+	m_path->prependNode(&pos, TheTerrainLogic->getLayerForDestination(getObject(), &pos), 0x7FFFFFFF);
+	m_path->markOptimized();
+	if (TheWritableGlobalData->m_debugAI == 1)
+		TheAI->pathfinder()->SetDebugPath(m_path);
+	m_unk0x1FC = 4;
+	m_unk0x200 = *goalPos;
+}
 
 // FUNCTION: BFME2 0x00265AAB size=78 name=?rva00265AAB@Rva00265AAB@@QAEXPAUObject00265AAB@@PAH@Z evidence=?:placeholder tier=A
 
