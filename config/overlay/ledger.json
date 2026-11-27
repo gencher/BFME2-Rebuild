@@ -117,6 +117,46 @@
       },
       "before": "MISNAMED with the body written (bytes identical)",
       "after": "MATCH"
+    },
+    {
+      "id": "quantitymodifier-copy-ctor-fold",
+      "rva": "0x00466EA7",
+      "op": "add_name",
+      "name": "??0QuantityModifier@@QAE@ABU0@@Z",
+      "change": "add fold alias: QuantityModifier's implicit copy constructor (AsciiString copy, then the Int at +4) is folded into this 27-byte body with pair<const AsciiString, NoCaseTreeValue4>'s",
+      "pin": {
+        "size": 27,
+        "role": "icf_fold",
+        "name": "??0?$pair@$$CBVAsciiString@@UNoCaseTreeValue4@@@_STL@@QAE@ABU01@@Z",
+        "fold_group": "F00466EA7"
+      },
+      "evidence": {
+        "kind": "identical-copy",
+        "detail": "retail _Construct<QuantityModifier> 0x0049DD0B (between uninitialized_copy/fill_n<QuantityModifier> 0x0049DD38/0x0049DD5E and push_back<QuantityModifier> 0x0049FDC2, which ProductionUpdateModuleData::parseAppendQuantityModifier 0x0049FDF9 calls on data+0x1C) calls 0x00466EA7: push src; call StringBase copy ctor 0x000365F0; copy dword [src+4] to [this+4]; return this. That is the implicit copy constructor of the 8-byte {AsciiString m_templateName; Int m_quantity;}; the compiled ??0QuantityModifier@@QAE@ABU0@@Z is the same 27 bytes.",
+        "verified": "verify_tu laptop/s9 ProductionUpdate.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect --why"
+      },
+      "before": "0x0049DD0B _Construct<QuantityModifier> WRONG_REFERENCE (hand-written stand-in at 0x466EA7)",
+      "after": "0x0049DD0B MATCH"
+    },
+    {
+      "id": "quantitymodifier-dtor-fold",
+      "rva": "0x0048BA39",
+      "op": "add_name",
+      "name": "??1QuantityModifier@@QAE@XZ",
+      "change": "add fold alias: QuantityModifier's implicit destructor is a jmp to StringBase::releaseBuffer, the 5-byte body every AsciiString-first record destructor folds into here",
+      "pin": {
+        "size": 5,
+        "role": "icf_fold",
+        "name": "??1?$pair@VAsciiString@@VCoord3D@@@_STL@@QAE@XZ",
+        "fold_group": "F0048BA39"
+      },
+      "evidence": {
+        "kind": "identical-copy",
+        "detail": "0x0048BA39 is 'jmp 0x00436410' (StringBase::releaseBuffer); QuantityModifier {AsciiString m_templateName; Int m_quantity;} has only the string to destroy, so its implicit destructor compiles to the same jmp, as ??1AsciiString and the pair/record destructors already listed on this row do.",
+        "verified": "verify_tu laptop/s9 ProductionUpdate.cpp --base dev --overlay=config/overlay/ledger.json --overlay-effect --why"
+      },
+      "before": "0x0049FDF9 parseAppendQuantityModifier and 0x0049FE6A buildFieldParse WRONG_REFERENCE (hand-written stand-in at 0x48BA39)",
+      "after": "0x0049FDF9 MATCH, 0x0049FE6A MATCH"
     }
   ]
 }
