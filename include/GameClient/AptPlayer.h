@@ -2,7 +2,6 @@
 
 #include <stddef.h>
 #include "Apt/AptRef.h"
-#include "Common/RTSEqualTo.h"
 #include "Common/STLTypedefs.h"
 #include "Common/StlHashMap.h"
 #include "Common/SubsystemInterface.h"
@@ -10,12 +9,19 @@
 class AptCommandMap;
 class AptCustomRender;
 class AptExternHandler;
-class AptOverButtonHandler;
 class AptTimer;
 class GameWindow;
 class Image;
 class UnicodeString;
 struct Coord2D;
+
+// The callback HandleOverButtons runs for the button under the cursor: its second slot takes the button's
+// name (or an empty string).
+class AptOverButtonHandler : public AptRefTarget
+{
+public:
+	virtual void operator()(const char *button) = 0;
+};
 
 // 0x224E10 constructs SubsystemInterface and installs the 21-slot table at
 // RVA 0x7E6E80. The renderer factory at 0x41E75 allocates 0x32C bytes for its
@@ -61,6 +67,8 @@ public:
 	int levelIndexOf(const AsciiString *name);
 	void HandleOverButtons();
 	bool RemoveLevel(int level);
+	void RemoveOverButtonHandler(const AsciiString &name);
+	void RemoveOverButtonHandler(int level, const AsciiString &name);
 	void removeBackground();
 	bool HideLevel(int level);
 	void loadBackground();
@@ -75,19 +83,19 @@ private:
 		int m_context;
 	};
 
-	typedef _STL::hash_map<AsciiString, AptRef<AptCommandMap>, rts::hash<AsciiString>, rts::equal_to<AsciiString> > CommandMap;
-	typedef _STL::hash_map<AsciiString, ExternHandlerRegistration, rts::hash<AsciiString>, rts::equal_to<AsciiString> > ExternHandlerMap;
-	typedef _STL::hash_map<AsciiString, AptRef<AptCustomRender>, rts::hash<AsciiString>, rts::equal_to<AsciiString> > CustomRenderMap;
-	typedef _STL::hash_map<AsciiString, AptRef<AptOverButtonHandler>, rts::hash<AsciiString>, rts::equal_to<AsciiString> > OverButtonHandlerMap;
-	typedef _STL::hash_map<AsciiString, int, rts::hash<AsciiString>, rts::equal_to<AsciiString> > MovieLevelMap;
-	typedef _STL::hash_map<AsciiString, const Image *, rts::hash<AsciiString>, rts::equal_to<AsciiString> > RenderImageMap;
-	typedef _STL::hash_map<AsciiString, AptRef<AptTimer>, rts::hash<AsciiString>, rts::equal_to<AsciiString> > TimerMap;
+	typedef _STL::hash_map<AsciiString, AptRef<AptCommandMap>, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > CommandMap;
+	typedef _STL::hash_map<AsciiString, ExternHandlerRegistration, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > ExternHandlerMap;
+	typedef _STL::hash_map<AsciiString, AptRef<AptCustomRender>, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > CustomRenderMap;
+	typedef _STL::hash_map<AsciiString, AptRef<AptOverButtonHandler>, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > OverButtonHandlerMap;
+	typedef _STL::hash_map<AsciiString, int, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > MovieLevelMap;
+	typedef _STL::hash_map<AsciiString, const Image *, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > RenderImageMap;
+	typedef _STL::hash_map<AsciiString, AptRef<AptTimer>, rts::hash<AsciiString>, _STL::equal_to<AsciiString> > TimerMap;
 
 	CommandMap m_commands;                      // +0x0C, AddCommandMap at 0x2243FC
 	ExternHandlerMap m_externalHandlers;        // +0x20, owns handler and context at 0x2244A4
 	CustomRenderMap m_customRenderers;          // +0x34, AddCustomRender at 0x224666
 	unsigned char m_unk0x48[0x14];              // +0x48, hash-map value type unresolved
-	unsigned char m_unk0x5C[0x14];              // +0x5C, see AddLevel at 0x2247CB
+	MovieLevelMap m_levelIndices;               // movie name to level index, filled by AddLevel
 	MovieLevelMap m_reservedLevels;             // +0x70, AddLevel loads the reserved index at 0x22474D
 	unsigned char m_unk0x84[0x0C];              // +0x84, tree constructed at 0x224E81
 	RenderImageMap m_renderImages;              // +0x90, FindRenderImage takes the value at 0x223B23
@@ -115,6 +123,7 @@ private:
 		};
 
 		void assign(int index, const AsciiString &directory, const AsciiString &file, void *window);
+		void reset();
 	};
 	typedef char AptLevel_size[(sizeof(AptLevel) == 0x28) ? 1 : -1];
 
