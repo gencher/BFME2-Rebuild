@@ -157,8 +157,6 @@ bool SimpleSceneIterator::Is_Done(void)
 // FUNCTION: BFME2 0x00141170 size=502 name=?Render@SceneClass@@MAEXAAVRenderInfoClass@@@Z evidence=N:ledger
 void SceneClass::Render(RenderInfoClass &rinfo)
 {
-	enum { EXTRA_PASS_DISABLE, EXTRA_PASS_LINE, EXTRA_PASS_CLEAR_LINE };
-
 	Pre_Render_Processing(rinfo);
 	DXWrapper::Set_Fog(FogEnabled, FogColor, FogStart, FogEnd);
 

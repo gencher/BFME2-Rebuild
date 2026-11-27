@@ -144,8 +144,6 @@ void SphereClass::Re_Center(const Vector3 &center)
 // FUNCTION: BFME2 0x00071E40 size=713 name=?Render@RTS3DScene@@UAEXAAVRenderInfoClass@@@Z evidence=N:ledger tier=B hypothesis:cohesion
 void RTS3DScene::Render(RenderInfoClass &rinfo)
 {
-	enum { EXTRA_PASS_DISABLE };
-
 	if (TheWeatherSetting)
 	{
 		Set_Fog_Enable(TheWeatherSetting->m_hardwareFogEnable && !bfmeCameraProjectionOverride && LODTextureReduction >= 1);
