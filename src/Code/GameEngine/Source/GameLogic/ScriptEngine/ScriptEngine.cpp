@@ -931,7 +931,7 @@ void _appendMessage(const AsciiString &str, Bool isTrueMessage, Bool shouldPause
 		return;
 	if (!st_DebugDLL)
 		return;
-	for (AsciiString *name = TheWritableGlobalData->m_scriptDebugFilterBegin; name != TheWritableGlobalData->m_scriptDebugFilterEnd; ++name)
+	for (_STL::vector<AsciiString>::const_iterator name = TheWritableGlobalData->m_scriptDebugFilter.begin(); name != TheWritableGlobalData->m_scriptDebugFilter.end(); ++name)
 	{
 		if (str.startsWith(*name))
 			return;
@@ -968,7 +968,7 @@ static void _adjustVariable(const AsciiString &str, Int value, Bool shouldPause,
 		return;
 	if (!st_DebugDLL)
 		return;
-	for (AsciiString *name = TheWritableGlobalData->m_scriptDebugFilterBegin; name != TheWritableGlobalData->m_scriptDebugFilterEnd; ++name)
+	for (_STL::vector<AsciiString>::const_iterator name = TheWritableGlobalData->m_scriptDebugFilter.begin(); name != TheWritableGlobalData->m_scriptDebugFilter.end(); ++name)
 	{
 		if (str.startsWith(*name))
 			return;
