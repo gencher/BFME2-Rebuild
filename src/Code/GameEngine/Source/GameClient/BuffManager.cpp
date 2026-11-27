@@ -317,6 +317,15 @@ const char *BuffInstance::GetSnapshotName() const
 }
 
 // FUNCTION: BFME2 0x00362D6C size=81 name=??1BuffInstance@@UAE@XZ evidence=N:ledger tier=A
+BuffInstance::~BuffInstance()
+{
+	if (m_glow)
+	{
+		m_glow->release();
+		m_glow = 0;
+	}
+	m_thing = 0;
+}
 
 // FUNCTION: BFME2 0x00362DBD size=89 name=??0BuffManager@@QAE@H@Z evidence=N:ledger tier=A
 BuffManager::BuffManager(Drawable *drawable)
