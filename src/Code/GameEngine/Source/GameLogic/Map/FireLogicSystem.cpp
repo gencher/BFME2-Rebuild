@@ -7,6 +7,7 @@
 // Hypothesis rules: hypothesis:cohesion, hypothesis:padding
 #include "Draft/FireLogicSystem.h"
 #include "Common/Coord3D.h"
+#include "GameLogic/TerrainLogic.h"
 #include "WWMath/FloatToLong.h"
 #include <math.h>
 
@@ -27,6 +28,28 @@
 // FUNCTION: BFME2 0x0028576D size=11 name=?init@FireLogicSystem@@UAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00285778 size=232 name=?ResetCellToOriginalFlammability@FireLogicSystem@@QAEXHH@Z evidence=N:ledger tier=A
+void FireLogicSystem::ResetCellToOriginalFlammability(Int x, Int y)
+{
+	Cell *cell = &m_cells[x][y];
+	Int type = TheTerrainLogic->rva00062E10((x + 0.5) * 10.0, (y + 0.5) * 10.0);
+	if (type != 0) {
+		Material *material = &m_materials[type];
+		if (material->m_fuel < cell->m_fuel)
+			cell->m_fuel = material->m_fuel;
+		if (material->m_unkBits18 < cell->m_unkBits18)
+			cell->m_unkBits18 = material->m_unkBits18;
+		if (material->m_flammability > cell->m_flammability)
+			cell->m_flammability = material->m_flammability;
+		if (material->m_unkBits10 > cell->m_unkBits10)
+			cell->m_unkBits10 = material->m_unkBits10;
+	} else {
+		cell->m_fuel = 0;
+		cell->m_flammability = 0;
+		cell->m_unkBits10 = 0;
+		cell->m_unkBits18 = 0;
+	}
+	cell->m_unkBit31 = 0;
+}
 
 // FUNCTION: BFME2 0x00285860 size=133 name=?rva00285860@Rva002E6EFFGrid@@QAEIPBURva002E6EFFPosition@@@Z evidence=?:placeholder tier=A
 

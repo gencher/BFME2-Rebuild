@@ -23,14 +23,46 @@ public:
   virtual void vfunc_0x30(); // slot=0x30 target=0x000B3FD0 mangled=??1Region2D@@QAE@XZ
   virtual void vfunc_0x34(); // slot=0x34 target=0x0047A69C mangled=?DoXfer@EmissionVelocityInfo@FXParticleSystem@@UAEXAAVXfer@@@Z
 
+  void ResetCellToOriginalFlammability(Int x, Int y); // 0x00285778
+
+  // One grid cell (an array of these per column; 0x14 bytes).
+  struct Cell {
+    Int m_unk00;                    // +0x00
+    UnsignedShort m_fuel;           // +0x04
+    UnsignedShort m_unk06;          // +0x06
+    UnsignedInt m_flammability : 10; // +0x08 bits 0..9
+    UnsignedInt m_unkBits10 : 8;    // +0x08 bits 10..17
+    UnsignedInt m_unkBits18 : 12;   // +0x08 bits 18..29
+    UnsignedInt m_unkBit30 : 1;     // +0x08 bit 30
+    UnsignedInt m_unkBit31 : 1;     // +0x08 bit 31 (cleared when a cell is reset)
+    Int m_unk0C;                    // +0x0C
+    Int m_unk10;                    // +0x10
+  };
+  // The per-terrain-type values a reset cell is bounded by (0x18 bytes).
+  struct Material {
+    Int m_unk00;                    // +0x00
+    Int m_unk04;                    // +0x04
+    Int m_fuel;                     // +0x08 the cell's fuel is lowered to it
+    UnsignedInt m_unkBits18;        // +0x0C the cell's bits 18..29 are lowered to it
+    UnsignedInt m_flammability;     // +0x10 the cell's flammability is raised to it
+    UnsignedInt m_unkBits10;        // +0x14 the cell's bits 10..17 are raised to it
+  };
+
   // Burn-rate changes over cell rows: the span [left, right] of one row, optionally only the cells facing along dir.
   void ChangeBurnRate(Int left, Int right, Int row, Int delta, Bool onlyBurning); // 0x00286926
   void ChangeBurnRate(const Coord3D *pos, const Coord3D *dir, Real threshold, Int left, Int right, Int row, Int delta, Bool onlyBurning); // 0x00286AB4
   // The same over a disc of cells around pos, walked row pair by row pair with a midpoint circle.
   void ChangeBurnRateInArea(const Coord3D *pos, Real radius, Int delta, Bool onlyBurning); // 0x002871A4
   void ChangeBurnRateInArea(const Coord3D *pos, Real radius, const Coord3D *dir, Real threshold, Int delta, Bool onlyBurning); // 0x002873DF
+
+  unsigned char m_unk04[0xC];       // +0x04 not yet recovered
+  Material m_materials[4];          // +0x10 indexed by the terrain's fire material type (0 = not flammable)
+  Cell **m_cells;                   // +0x70 m_cells[x][y]
 };
 #pragma pack(pop)
+typedef char FireLogicSystemCellSize[(sizeof(FireLogicSystem::Cell) == 0x14) ? 1 : -1];
+typedef char FireLogicSystemMaterialSize[(sizeof(FireLogicSystem::Material) == 0x18) ? 1 : -1];
+typedef char FireLogicSystemCellsOffset[(offsetof(FireLogicSystem, m_cells) == 0x70) ? 1 : -1];
 // DRAFT STILL NEEDS:
 // - binary allocation size unknown
 // - multiple distinct vtables; primary/secondary relationship unresolved
