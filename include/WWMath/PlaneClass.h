@@ -15,6 +15,8 @@ class PlaneClass
 {
 public:
 	PlaneClass(void) : N(0.0f, 0.0f, 1.0f), D(0.0f) {}
+	// The plane with the given normal and distance (Zero Hour's plane.h).
+	PlaneClass(const Vector3 &normal, float dist) { N = normal; D = dist; }
 	// The plane through a point with the given normal (Zero Hour's plane.h: the constructor forwards to Set).
 	PlaneClass(const Vector3 &normal, const Vector3 &point) { Set(normal, point); }
 	// The plane through three points (Zero Hour's plane.h: the constructor forwards to the three-point Set).

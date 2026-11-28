@@ -22,6 +22,7 @@
 #include "WWMath/Vector3.h"
 
 class CameraClass;
+class W3DTerrainLogic;
 class DX8IndexBufferClass;
 class BfmeDynamicNativeVB;
 
@@ -82,6 +83,7 @@ public:
 	W3DBridgeBuffer(void);													// 0x000DE52E
 	~W3DBridgeBuffer(void);
 	void clearAllBridges(void);
+	void loadBridges(W3DTerrainLogic *terrainLogic, Bool saveGame);
 	enum { MAX_BRIDGE_VERTEX = 8000,MAX_BRIDGE_INDEX = 2 * MAX_BRIDGE_VERTEX, MAX_BRIDGES = 200 };
 
 protected:
