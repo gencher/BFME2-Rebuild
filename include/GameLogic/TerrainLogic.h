@@ -28,6 +28,7 @@
 #include <stddef.h>
 #include "Common/GameType.h"
 #include "Common/AsciiString.h"
+#include "Common/Coord3D.h"
 #include "Common/Snapshot.h"
 #include "Common/SubsystemInterface.h"
 #include "GameLogic/Map/AreaSet.h"
@@ -52,6 +53,13 @@ class WaterArea;
 class Coord3D;
 struct Region3D;
 enum PathfindLayerEnum;
+
+// The two points a unit attacks a bridge from (Zero Hour's TBridgeAttackInfo).
+struct TBridgeAttackInfo
+{
+	Coord3D attackPoint1;
+	Coord3D attackPoint2;
+};
 
 class TerrainLogic : public Snapshot, public SubsystemInterface,
 	public AreaSetObserver<StandingWaterArea>, public AreaSetObserver<RiverArea>
@@ -145,6 +153,7 @@ public:
 	PathfindLayerEnum getLayerForDestination(Object *obj, const Coord3D *pos);
 	void deleteBridges();							// 0x0027D5AD (frees the bridge list; Zero Hour's name)
 	Bool isBridgeRepaired(const Object *bridge);	// 0x0027D40B
+	void getBridgeAttackPoints(const Object *bridge, TBridgeAttackInfo *attackInfo);	// 0x0027D483
 	Bool isBridgeBroken(const Object *bridge);	// 0x0027D447
 	void setActiveBoundary(Int boundary);	// 0x0028069E (ScriptActions::doBorderSwitch 0x003BC3A8)
 	// ScriptConditions::evaluateBridgeBroken/Repaired (0x003E3D95, 0x003E3DC6)

@@ -58,7 +58,6 @@ Real TerrainLogic::getLayerHeight(Real x, Real y, PathfindLayerEnum layer, Coord
 // FUNCTION: BFME2 0x0027D098 size=62 name=?rva0027D098@Rva0027D098@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0027D0D6 size=206 name=?getPartitionBucket@TerrainLogic@@QAEHPAM@Z evidence=N:ledger tier=A
-
 // FUNCTION: BFME2 0x0027D1A4 size=34 name=?rva0027D1A4@TerrainLogic@@QAEXPBVCoord3D@@MH@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x0027D1C6 size=41 name=?rva0027D1C6@Rva0027D1C6@@QAEPAV1@XZ evidence=?:placeholder tier=A
@@ -134,6 +133,40 @@ Bool TerrainLogic::isBridgeBroken(const Object *bridge)
 }
 
 // FUNCTION: BFME2 0x0027D483 size=298 name=?getBridgeAttackPoints@TerrainLogic@@QAEXPBVObject@@PAUTBridgeAttackInfo@@@Z evidence=N:ledger tier=A
+void TerrainLogic::getBridgeAttackPoints(const Object *bridge, TBridgeAttackInfo *attackInfo)
+{
+	ObjectID id = bridge->getID();
+	Bridge *pBridge = getFirstBridge();
+	while (pBridge) {
+		const BridgeInfo *info = pBridge->peekBridgeInfo();
+		if (info->bridgeObjectID == id) {
+			// found the right bridge.
+			Coord3D delta;
+			delta.x = info->to.x - info->from.x;
+			delta.y = info->to.y - info->from.y;
+			delta.z = info->to.z - info->from.z;
+			delta.normalize();
+			Coord3D width;
+			width.x = info->fromRight.x - info->fromLeft.x;
+			width.y = info->fromRight.y - info->fromLeft.y;
+			width.z = info->fromRight.z - info->fromLeft.z;
+			Real len = width.length();
+			len /= 2.0f;
+			attackInfo->attackPoint1.x = info->from.x + delta.x * len;
+			attackInfo->attackPoint1.y = info->from.y + delta.y * len;
+			attackInfo->attackPoint1.z = info->from.z + delta.z * len;
+
+			attackInfo->attackPoint2.x = info->to.x - delta.x * len;
+			attackInfo->attackPoint2.y = info->to.y - delta.y * len;
+			attackInfo->attackPoint2.z = info->to.z - delta.z * len;
+
+			return;
+		}
+		pBridge = pBridge->getNext();
+	}
+	attackInfo->attackPoint1 = *bridge->getPosition();
+	attackInfo->attackPoint2 = *bridge->getPosition();
+}
 
 // FUNCTION: BFME2 0x0027D5AD size=51 name=?deleteBridges@TerrainLogic@@IAEXXZ evidence=N:ledger tier=A
 void TerrainLogic::deleteBridges()
