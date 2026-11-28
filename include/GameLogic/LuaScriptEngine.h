@@ -107,6 +107,7 @@ public:
 	virtual const char *GetSnapshotName() const;				// slot 15, 0x00337AA2
 	virtual void DoXfer(Xfer *xfer);							// slot 16, 0x00306A9B
 
+	void InitializeInternalEvents();							// 0x00332B7A
 	void UnRegisterObject(Object *obj);							// 0x00333F37 (Object::setTeam 0x00298AE4 unregisters, then registers again)
 	void *findEvent(NameKeyType key);							// 0x00333918
 	void DispatchEvent(Int *event, Object *object, void *list);	// 0x00334634 (the ledger spells it ?DispatchEvent@LuaScriptEngine@@QAEXPAHPAVObject@@PAX@Z)

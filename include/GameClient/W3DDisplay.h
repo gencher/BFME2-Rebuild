@@ -28,6 +28,7 @@ public:
 	virtual void createLightPulse(const Coord3D *, const RGBColor *, float, float, unsigned int, unsigned int);	// 0x0004423C
 	virtual VideoBuffer *createVideoBuffer(bool);													// 0x00044D7F
 	void rva0004D664(float, float, float, float, float, int);						// 0x0004D664: draws a line (start, end, width, colour); ShellMenuScheme::draw 0x00200506 calls it
+	void rva0008EEF0(float, float, float, float, float, int);						// 0x0008EEF0: outlined rectangle (x, y, w, h, line width, colour)
 	void rva0004D6B3(Image *, float, float, float, float, int, int);								// 0x0004D6B3
 	void takeScreenShot(const char *);																// 0x00049B3A
 	void updateAverageFPS();																		// 0x000437A1

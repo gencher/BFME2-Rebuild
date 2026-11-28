@@ -76,6 +76,7 @@ public:
     virtual void slot53() = 0;
     virtual void slot54() = 0;
     virtual void slot55() = 0;
+    void rva0004263F(float, float, float, float, int); // 0x0004263F: filled rectangle (x, y, w, h, colour)
     virtual void drawOpenRect(float, float, float, float, float, unsigned int) = 0;
     virtual void drawFillRect(float, float, float, float, unsigned int) = 0;
     virtual void slot58() = 0;

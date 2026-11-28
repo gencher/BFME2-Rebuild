@@ -11,6 +11,7 @@
 #include <utility>
 #include <vector>
 #include "Common/AsciiString.h"
+#include "Common/NameKeyGenerator.h"
 #include "Common/File.h"
 #include "Common/FileSystem.h"
 #include "GameLogic/LuaScriptEngine.h"
@@ -52,6 +53,28 @@ extern FileSystem *TheFileSystem;
 	"C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\ScriptEngine\\LuaScriptEngine.cpp"
 
 // FUNCTION: BFME2 0x00332B7A size=256 name=?InitializeInternalEvents@LuaScriptEngine@@QAEXXZ evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
+void LuaScriptEngine::InitializeInternalEvents()
+{
+	m_events[0].setKeyFromName("OnDamaged");
+	m_events[1].setKeyFromName("OnDestroyed");
+	m_unk0xDC = TheNameKeyGenerator->nameToKey("OnDestroyed");
+	m_events[2].setKeyFromName("OnArrived");
+	m_events[3].setKeyFromName("OnUnitEntered");
+	m_events[5].setKeyFromName("OnUnitExited");
+	m_events[4].setKeyFromName("OnTeamEntered");
+	m_events[6].setKeyFromName("OnTeamExited");
+	m_events[7].setKeyFromName("OnTeamDestroyed");
+	m_events[8].setKeyFromName("BeScary");
+	m_events[9].setKeyFromName("DamageIncoming");
+	m_events[10].setKeyFromName("OnAflame");
+	m_events[11].setKeyFromName("OnQuenched");
+	m_events[12].setKeyFromName("OnCreated");
+	m_events[13].setKeyFromName("OnBuildingComplete");
+	m_events[14].setKeyFromName("OnSlaughtered");
+	m_events[15].setKeyFromName("OnGenericEvent");
+	m_events[16].setKeyFromName("OnBuildVariation");
+}
+
 // FUNCTION: BFME2 0x00332C7A size=117 name=?ProcessInternalEvent@LuaScriptEngine@@QAEXPAVXmlNameSlotList@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x00332CFB size=46 name=?GetFrame@@YAHPAUlua_State@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path
 // FUNCTION: BFME2 0x00332D29 size=76 name=?CurDrawableGetCurrentTargetHeight@@YAHPAUlua_State@@@Z evidence=N:ledger tier=B hypothesis:mm1-held-object-same-path

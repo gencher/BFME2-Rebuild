@@ -10,6 +10,8 @@ class GhostObject;
 
 struct DrawableInfo
 {
+	DrawableInfo() : m_shroudStatusObjectID(INVALID_ID), m_drawable(0), m_ghostObject(0), m_flags(0) {}
+
 	ObjectID m_shroudStatusObjectID;
 	Drawable *m_drawable;
 	GhostObject *m_ghostObject;

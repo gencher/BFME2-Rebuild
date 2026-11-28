@@ -142,6 +142,37 @@ protected:
     int m_drawState; //20
 };
 typedef char FadeTransitionSize[sizeof(FadeTransition)==0x24?1:-1];
+// Button flash: frames 0..17, draw state at +20.
+enum ButtonFlashFrame
+{
+    BUTTONFLASHTRANSITION_START = 0,
+    BUTTONFLASHTRANSITION_FADE_IN_1 = 1,
+    BUTTONFLASHTRANSITION_FADE_IN_2 = 2,
+    BUTTONFLASHTRANSITION_FADE_IN_3 = 3,
+    BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_1 = 4,
+    BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_2 = 5,
+    BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_3 = 6,
+    BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_4 = 7,
+    BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_1 = 11,
+    BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_2,
+    BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_1,
+    BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_2,
+    BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_3,
+    BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_4,
+    BUTTONFLASHTRANSITION_END,
+    BUTTONFLASHTRANSITION_SHOW_BACKGROUND
+};
+class ButtonFlashTransition : public Transition {
+public:
+    virtual void init(GameWindow *);
+    virtual void update(int);
+    virtual void reverse();
+    virtual void draw();
+    virtual void skip();
+protected:
+    ICoord2D m_pos,m_size; //10,18
+    int m_drawState; //20
+};
 // Flash: same 24-byte layout as FadeTransition (pos10, size18, drawState20); frames 0..8.
 class FlashTransition : public Transition {
 public:

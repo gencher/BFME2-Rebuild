@@ -16,6 +16,7 @@ public:
 
 	virtual void reset();
 	virtual void setLocalPlayerIndex(Int index);
+	Int getLocalPlayerIndex() const { return m_localPlayer; }
 	virtual void updateOrphanedObjects(Int *playerIndexList, Int numNonLocalPlayers) = 0;
 	virtual GhostObject *addGhostObject(Object *object) = 0;
 	virtual GhostObject *getFirstGhostObject() const = 0;
@@ -29,5 +30,7 @@ protected:
 	Bool m_lockGhostObjects;
 	Bool m_saveLockGhostObjects;
 };
+
+extern GhostObjectManager *TheGhostObjectManager;
 
 typedef char GhostObjectManagerSize[(sizeof(GhostObjectManager) == 0xC) ? 1 : -1];

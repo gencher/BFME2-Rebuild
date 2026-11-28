@@ -500,6 +500,176 @@ void MainMenuSmallScaleDownTransition::skip()
 // FUNCTION: BFME2 0x0035E327 size=81 name=?Rva0035E327Parse@@YAXPAVINI@@PAVRva0035E327Holder@@@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x0035E387 size=564 name=?update@ButtonFlashTransition@@UAEXH@Z evidence=N:ledger
+void ButtonFlashTransition::update(int frame)
+{
+	m_drawState = -1;
+	if (frame < BUTTONFLASHTRANSITION_START || frame > BUTTONFLASHTRANSITION_END)
+		return;
+	switch (frame)
+	{
+	case BUTTONFLASHTRANSITION_START:
+		if (m_isForward || !m_win)
+			break;
+		m_win->winHide(true);
+		m_isFinished = true;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_IN_1:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_4;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_IN_2:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_3;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_IN_3:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_2;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_1:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_1;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_2:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_IN_3;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_3:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_IN_2;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_4:
+		if (!m_win)
+			break;
+		m_win->winHide(true);
+		if (m_isForward)
+			m_drawState = frame;
+		else
+			m_drawState = BUTTONFLASHTRANSITION_FADE_IN_1;
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_1:
+		if (!m_win)
+			break;
+		if (m_isForward)
+		{
+			m_win->winHide(false);
+			m_drawState = frame;
+		}
+		else
+		{
+			m_win->winHide(true);
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_4;
+		}
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_2:
+		if (!m_win)
+			break;
+		if (m_isForward)
+		{
+			m_win->winHide(false);
+			m_drawState = frame;
+		}
+		else
+		{
+			m_win->winHide(true);
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_3;
+		}
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_1:
+		if (!m_win)
+			break;
+		if (m_isForward)
+		{
+			m_win->winHide(false);
+			m_drawState = frame;
+		}
+		else
+		{
+			m_win->winHide(true);
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_2;
+		}
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_2:
+		if (!m_win)
+			break;
+		if (m_isForward)
+		{
+			m_win->winHide(false);
+			m_drawState = frame;
+		}
+		else
+		{
+			m_win->winHide(true);
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_1;
+		}
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_3:
+		if (!m_win)
+			break;
+		if (m_isForward)
+		{
+			m_win->winHide(false);
+			m_drawState = frame;
+		}
+		else
+		{
+			m_win->winHide(false);
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_2;
+		}
+		break;
+	case BUTTONFLASHTRANSITION_FADE_TO_GRADE_OUT_4:
+		if (!m_win)
+			break;
+		if (m_isForward)
+		{
+			m_win->winHide(false);
+			m_drawState = frame;
+		}
+		else
+		{
+			m_win->winHide(false);
+			m_drawState = BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_1;
+		}
+		break;
+	case BUTTONFLASHTRANSITION_END:
+		if (!m_isForward || !m_win)
+			break;
+		m_win->winHide(false);
+		m_isFinished = true;
+		break;
+	}
+	if (frame > BUTTONFLASHTRANSITION_FADE_TO_BACKGROUND_4 && frame < BUTTONFLASHTRANSITION_FADE_TO_GRADE_IN_1)
+		m_drawState = BUTTONFLASHTRANSITION_SHOW_BACKGROUND;
+}
 
 // FUNCTION: BFME2 0x0035E603 size=8 name=?rva0035E603@Rva0035D781Self@@QAEXXZ evidence=?:placeholder
 
@@ -578,6 +748,40 @@ void FlashTransition::skip()
 // FUNCTION: BFME2 0x0035EEA7 size=81 name=?Rva0035EEA7Parse@@YAXPAVINI@@PAVRva0035EEA7Holder@@@Z evidence=?:placeholder
 
 // FUNCTION: BFME2 0x0035EEF8 size=728 name=?draw@FlashTransition@@UAEXXZ evidence=N:ledger
+void FlashTransition::draw()
+{
+	switch (m_drawState)
+	{
+	case 1:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 100));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 33));
+		break;
+	case 2:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 150));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 66));
+		break;
+	case 3:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 200));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 99));
+		break;
+	case 4:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 250));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 75));
+		break;
+	case 5:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 250));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 50));
+		break;
+	case 6:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 250));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 25));
+		break;
+	case 7:
+		((W3DDisplay *)TheDisplay)->rva0008EEF0(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, 1, GameMakeColor(255, 203, 45, 250));
+		TheDisplay->rva0004263F(m_pos.x + 1, m_pos.y + 1, m_size.x - 2, m_size.y, GameMakeColor(255, 203, 45, 10));
+		break;
+	}
+}
 
 // FUNCTION: BFME2 0x0035F1DF size=98 name=?init@FullFadeTransition@@UAEXPAVGameWindow@@@Z evidence=N:ledger
 void FullFadeTransition::init(GameWindow *win)
