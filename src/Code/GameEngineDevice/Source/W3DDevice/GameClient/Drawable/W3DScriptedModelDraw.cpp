@@ -24,6 +24,7 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "GameLogic/Object.h"
 #include "Common/BfmeFixedObject60.h"
 #include "GameClient/AnimConditionInfo.h"
+#include "Common/AsciiStringRef.h"
 #include "GameClient/BfmeStringTailRecord180.h"
 #include "Common/RandomValue.h"
 #include "Lib/trig.h"
@@ -592,6 +593,11 @@ template void BitFlags<591>::parseFromINI(INI *ini, void *instance, void *store,
 // FUNCTION: BFME2 0x000BBBF3 size=38 name=?Rva000BBBF3UninitializedCopy@@YAPAUTreeKey00242F5E@@PBU1@0PAU1@ABU__false_type@_STL@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000BBD1C size=37 name=?write@AsciiStringPlusString@@QAEHPAD@Z evidence=N:ledger tier=A
+int AsciiStringPlusString::write(char *dst)
+{
+	int written = AsciiStringRef::write(dst);
+	return written + m_second.write(dst + written);
+}
 
 // FUNCTION: BFME2 0x000BBD41 size=37 name=?write@AsciiStringPlusText@@QAEHPAD@Z evidence=N:ledger tier=A
 
