@@ -24,6 +24,7 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "GameLogic/Object.h"
 #include "Lib/trig.h"
 #include "WW3D2/RenderObjClass.h"
+#include "WW3D2/HLodClass.h"
 #include <math.h>
 // FUNCTION: BFME2 0x000B2B3B size=7 name=?get@LivingWorldBuildPlotIconSubObject@@UBEHXZ evidence=X:proven (vtable) tier=B hypothesis:mm1-neighbour-pointers-mixed
 // FUNCTION: BFME2 0x000B2B42 size=58 name=?Rva000B2B42Clamp@@YAXPAH0H@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
@@ -132,6 +133,32 @@ void W3DScriptedModelDraw::setTerrainDecalOpacity(Real opacity)
 // FUNCTION: BFME2 0x000B373D size=60 name=?setDuration@Rva000B373D@@QAEXI@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B377E size=114 name=?setPauseAnimation@W3DModelDraw@@UAEX_N@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setPauseAnimation(Bool pauseAnim)
+{
+	if (m_pauseAnimation == pauseAnim)
+		return;
+
+	m_pauseAnimation = pauseAnim;
+	if (m_renderObject && m_renderObject->Class_ID() == RenderObjClass::CLASSID_HLOD)
+	{
+		float framenum, dummy;
+		int mode, numFrames;
+		HLodClass *hlod = static_cast<HLodClass *>(m_renderObject);
+		HAnimClass *anim = hlod->Peek_Animation_And_Info(framenum, numFrames, mode, dummy);
+		if (anim)
+		{
+			if (m_pauseAnimation)
+			{
+				m_animationMode = mode;
+				hlod->Set_Animation(anim, framenum, RenderObjClass::ANIM_MODE_MANUAL);
+			}
+			else
+			{
+				hlod->Set_Animation(anim, framenum, m_animationMode);
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x000B37F0 size=28 name=?isVisible@W3DModelDraw@@UBE_NXZ evidence=N:ledger tier=A
 Bool W3DScriptedModelDraw::isVisible() const

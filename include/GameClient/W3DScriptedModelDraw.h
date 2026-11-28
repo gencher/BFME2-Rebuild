@@ -167,9 +167,7 @@ protected:
 	virtual Int slot66();													// 66: 0x000C124C returns 100000
 	virtual Int slot67(Int count);											// 67: 0x000B3E96, a client random value in [0, count - 1]
 
-	Byte m_unk0x14[0x30];			// 0x14
-	RenderObjClass *m_unk0x44;		// 0x44
-	Byte m_unk0x48[2];				// 0x48
+	Byte m_unk0x14[0x36];			// 0x14
 	Bool m_shadowEnabled;			// 0x4A
 	Bool m_unk0x4B;					// 0x4B
 	Bool m_unk0x4C;					// 0x4C
@@ -179,10 +177,10 @@ protected:
 	Byte m_unk0x54[4];				// 0x54
 	Shadow *m_shadow;				// 0x58
 	Shadow *m_terrainDecal;			// 0x5C
-	Byte m_unk0x60[0x15];			// 0x60
-	Bool m_pauseAnimation;			// 0x75
-	Byte m_unk0x76[2];				// 0x76
-	Int m_animationMode;			// 0x78
+	Byte m_unk0x60[0x21];			// 0x60
+	Bool m_pauseAnimation;			// 0x81
+	Byte m_unk0x82[2];				// 0x82
+	Int m_animationMode;			// 0x84
 };
 
 #endif
