@@ -22,6 +22,7 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "WW3D2/MaterialInfoClass.h"
 #include "WW3D2/VertexMaterialClass.h"
 #include "GameLogic/Object.h"
+#include "Common/BfmeFixedObject60.h"
 #include "Lib/trig.h"
 #include "WW3D2/RenderObjClass.h"
 #include "WW3D2/HLodClass.h"
@@ -232,6 +233,11 @@ Bool ModelConditionFlags::rva000B3EB3() const
 // FUNCTION: BFME2 0x000B40BD size=14 name=?get@Rva000B40BDDivMovField@@QBEHXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B41EF size=122 name=??0BfmeFixedObject60@@QAE@ABU0@@Z evidence=N:ledger tier=A
+BfmeFixedObject60::BfmeFixedObject60(const BfmeFixedObject60 &src)
+	: m_word0(src.m_word0), m_word4(src.m_word4), m_word8(src.m_word8)
+{
+	m_matrix = src.m_matrix;
+}
 
 // FUNCTION: BFME2 0x000B4269 size=9 name=?get@Rva000B4269SarAvgField@@QBEHXZ evidence=?:placeholder tier=A
 
@@ -240,6 +246,14 @@ Bool ModelConditionFlags::rva000B3EB3() const
 // FUNCTION: BFME2 0x000B4299 size=20 name=?rva000B4299@Rva000B4299@@QAEPAV1@ABUGapWords7@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B4384 size=97 name=??4BfmeFixedObject60@@QAEAAU0@ABU0@@Z evidence=N:ledger tier=A
+BfmeFixedObject60 &BfmeFixedObject60::operator=(const BfmeFixedObject60 &src)
+{
+	m_word0 = src.m_word0;
+	m_word4 = src.m_word4;
+	m_word8 = src.m_word8;
+	m_matrix = src.m_matrix;
+	return *this;
+}
 
 // FUNCTION: BFME2 0x000B44F0 size=27 name=?write@Rva000B3F84Pair@@QAEHPAD@Z evidence=?:placeholder tier=A
 
