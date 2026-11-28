@@ -6,6 +6,7 @@
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:padding
 #include "GameLogic/SpawnArmy.h"
+#include "Draft/LivingWorldManager.h"
 
 // FUNCTION: BFME2 0x004E12C4 size=19 name=?parseSpawnArmy@@YAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=B hypothesis:mm1-neighbour-shared-data
 // FUNCTION: BFME2 0x004E12D7 size=24 name=?Rva004E12D7Parse@@YAXPAX0@Z evidence=?:placeholder tier=A
@@ -93,6 +94,28 @@
 // FUNCTION: BFME2 0x004E2ED9 size=78 name=?Rva004E2ED9Construct@@YA?AVAsciiString@@AAURva0020F58E@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x004E2F9F size=295 name=??0SpawnArmy@@QAE@ABV0@@Z evidence=N:ledger tier=A
+SpawnArmy::SpawnArmy(const SpawnArmy &other) :
+	m_icon(other.m_icon),
+	m_banner(other.m_banner),
+	m_constructButtonImage(other.m_constructButtonImage),
+	m_constructButtonTitle(other.m_constructButtonTitle),
+	m_constructButtonHelp(other.m_constructButtonHelp),
+	m_scriptingName(other.m_scriptingName),
+	m_tooltipStringTag(other.m_tooltipStringTag),
+	m_position(other.m_position),
+	m_initialRegion(other.m_initialRegion),
+	m_playerArmy(other.m_playerArmy),
+	m_palantirMovie(other.m_palantirMovie),
+	m_iconSize(other.m_iconSize),
+	m_spawnForTemplates(other.m_spawnForTemplates),
+	m_moveSpeed(other.m_moveSpeed),
+	m_buildTime(other.m_buildTime),
+	m_spawnArmyID(other.m_spawnArmyID),
+	m_heroTemplateName(other.m_heroTemplateName),
+	m_isCity(other.m_isCity),
+	m_spawnAtActStart(other.m_spawnAtActStart)
+{
+}
 
 // FUNCTION: BFME2 0x004E30C6 size=6 name=?GetSnapshotName@SpawnArmy@@UBEPBDXZ evidence=N:ledger tier=A
 const char *SpawnArmy::GetSnapshotName() const
@@ -101,8 +124,24 @@ const char *SpawnArmy::GetSnapshotName() const
 }
 
 // FUNCTION: BFME2 0x004E30D5 size=175 name=??0SpawnArmy@@QAE@H@Z evidence=N:ledger tier=A
+SpawnArmy::SpawnArmy(Int spawnArmyID) :
+	m_position(0.0f, 0.0f),
+	m_playerArmy(AsciiString::TheEmptyString),
+	m_buildTime(1),
+	m_spawnArmyID(spawnArmyID),
+	m_isCity(false),
+	m_spawnAtActStart(true)
+{
+	if (TheLivingWorldManager)
+		m_moveSpeed = TheLivingWorldManager->m_mapInfo.m_defaultArmyMoveSpeed;
+	else
+		m_moveSpeed = 5.0f;
+}
 
 // FUNCTION: BFME2 0x004E3184 size=201 name=??1SpawnArmy@@UAE@XZ evidence=N:ledger tier=A
+SpawnArmy::~SpawnArmy()
+{
+}
 
 // FUNCTION: BFME2 0x004E324D size=135 name=?Rva004E324DParse@@YAXPAVINI@@PAX1PBX@Z evidence=?:placeholder tier=A
 
