@@ -24,6 +24,7 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "GameLogic/Object.h"
 #include "Common/BfmeFixedObject60.h"
 #include "GameClient/AnimConditionInfo.h"
+#include "GameClient/BfmeStringTailRecord180.h"
 #include "Common/RandomValue.h"
 #include "Lib/trig.h"
 #include "WW3D2/RenderObjClass.h"
@@ -685,6 +686,9 @@ template void BitFlags<591>::parseFromINI(INI *ini, void *instance, void *store,
 // FUNCTION: BFME2 0x000C0CE1 size=50 name=?Rva000C0CE1Copy@@YAPAUBfmeVectorRecord000C0BEC@@PAU1@00@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000C0D7A size=41 name=??0BfmeStringTailRecord180@@QAE@XZ evidence=N:ledger tier=A
+BfmeStringTailRecord180::BfmeStringTailRecord180()
+{
+}
 
 // FUNCTION: BFME2 0x000C0DA3 size=53 name=??1BfmeStringTailRecord180@@QAE@XZ evidence=N:ledger tier=A
 
