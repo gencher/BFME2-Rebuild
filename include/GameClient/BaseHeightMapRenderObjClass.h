@@ -8,7 +8,9 @@
 #define BFME2_BASEHEIGHTMAPRENDEROBJCLASS_H
 
 #include <stddef.h>
+#include <vector>
 #include "Common/GameType.h"
+#include "Common/AsciiString.h"
 #include "Common/Coord3D.h"
 #include "Common/IRegion2D.h"
 #include "Common/Snapshot.h"
@@ -19,6 +21,11 @@ class W3DTerrainLogic;
 class WorldHeightMap;
 class W3DShroud;
 class W3DTaint;
+class W3DTreeBuffer;
+class W3DPropBuffer;
+class W3DBibBuffer;
+class W3DRoadBuffer;
+class W3DBridgeBuffer;
 class RefRenderObjListIterator;
 
 class BaseHeightMapRenderObjClass : public RenderObjClass, public DX8_CleanupHook, public Snapshot
@@ -43,7 +50,7 @@ public:
 	virtual void vslot134(const void *bounds, Int mode);
 	virtual void adjustTerrainLOD(Int adj);
 	virtual void doPartialUpdate(const IRegion2D &partialRange, WorldHeightMap *htMap, RefRenderObjListIterator *pLightsIterator) = 0;
-	virtual void vslot137(Int value);
+	virtual void vslot137(Int value); // 0x00068441 ignores its argument
 	virtual void reset();
 	virtual void vslot139(Bool flag);
 	virtual void vslot140(void *quad) = 0;
@@ -56,6 +63,10 @@ public:
 	virtual Int vslot147() = 0;
 
 	Bool isClearLineOfSight(const Coord3D &start, const Coord3D &end) const;
+	void removeAllTerrainBibs();
+	Bool showAsVisibleCliff(Int x, Int y) const;
+	Bool showAsVisibleImpassable(Int x, Int y) const;
+	void addProp(Int id, Coord3D location, Real angle, Real scale, const AsciiString &modelName, Bool distanceFog);
 	Bool isCliffCell(Real x, Real y);
 	UnsignedByte rva0006B187(Real x, Real y);
 	UnsignedByte rva00067225(Real x, Real y);
@@ -73,15 +84,33 @@ protected:
 	virtual void xfer(Xfer *xfer);
 
 public:
-	UnsignedByte m_unk0xCC[0x36F4];
+	UnsignedByte m_unk0xCC[0xC];
+	Int m_curNumScorchVertices;
+	Int m_curNumScorchIndices;
+	UnsignedByte m_unk0xE0[0x36B0];
+	Int m_numScorches;
+	Int m_scorchesInBuffer;
+	UnsignedByte m_unk0x3798[0x28];
 	WorldHeightMap *m_map;
-	UnsignedByte m_unk0x37C4[0x20];
+	UnsignedByte m_unk0x37C4[0x10];
+	Bool m_needFullUpdate;
+	UnsignedByte m_unk0x37D5[0xF];
 	Real m_transparentWaterDepth;
 	Real m_minWaterOpacity;
-	UnsignedByte m_unk0x37EC[0x8C];
+	_STL::vector<bool> m_showAsVisibleCliff;
+	_STL::vector<bool> m_showAsVisibleImpassable;
+	UnsignedByte m_unk0x3814[0x3C];
+	W3DTreeBuffer *m_treeBuffer;
+	UnsignedByte m_unk0x3854[4];
+	W3DPropBuffer *m_propBuffer;
+	W3DBibBuffer *m_bibBuffer;
+	UnsignedByte m_unk0x3860[0xC];
+	W3DRoadBuffer *m_roadBuffer;
+	W3DBridgeBuffer *m_bridgeBuffer;
+	UnsignedByte m_unk0x3874[4];
 	W3DShroud *m_shroud;
 	W3DTaint *m_taint;
-	Bool m_needFullUpdate;
+	UnsignedByte m_unk0x3880;
 };
 
 typedef char BaseHeightMapSize[(sizeof(BaseHeightMapRenderObjClass) == 0x3884) ? 1 : -1];
@@ -89,7 +118,7 @@ typedef char BaseHeightMapMapOffset[(offsetof(BaseHeightMapRenderObjClass, m_map
 typedef char BaseHeightMapWaterDepthOffset[(offsetof(BaseHeightMapRenderObjClass, m_transparentWaterDepth) == 0x37E4) ? 1 : -1];
 typedef char BaseHeightMapWaterOpacityOffset[(offsetof(BaseHeightMapRenderObjClass, m_minWaterOpacity) == 0x37E8) ? 1 : -1];
 typedef char BaseHeightMapShroudOffset[(offsetof(BaseHeightMapRenderObjClass, m_shroud) == 0x3878) ? 1 : -1];
-typedef char BaseHeightMapNeedFullUpdateOffset[(offsetof(BaseHeightMapRenderObjClass, m_needFullUpdate) == 0x3880) ? 1 : -1];
+typedef char BaseHeightMapNeedFullUpdateOffset[(offsetof(BaseHeightMapRenderObjClass, m_needFullUpdate) == 0x37D4) ? 1 : -1];
 
 extern BaseHeightMapRenderObjClass *TheTerrainRenderObject;
 
