@@ -291,6 +291,11 @@ Int ScoreKeeper::rva0039C0F4(const AsciiString &templateName)
 // FUNCTION: BFME2 0x0039C27D size=56 name=?rva0039C27D@Rva0039C1C3@@QAEXPAVRva0039B893@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0039C2B5 size=241 name=??1ScoreKeeper@@UAE@XZ evidence=N:ledger tier=A
+ScoreKeeper::~ScoreKeeper()
+{
+	unhookAllScoredKillTrackers();
+}
+
 // FUNCTION: BFME2 0x0039C3A6 size=6 name=?GetSnapshotName@ScoreKeeper@@UBEPBDXZ evidence=N:ledger tier=A
 const char *ScoreKeeper::GetSnapshotName() const
 {

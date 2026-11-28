@@ -70,17 +70,6 @@ public:
 		unsigned short m_unk0x10;		// +0x10 xfer slot 0x80 (version 3 and up)
 	};
 
-	// The 12-byte record at +0x310: the ctor stores 0 in its text, 0 and 3 in its words in one run
-	// (`and [eax],0; and [eax+4],0; mov [eax+8],3` through one lea), so it has an inline constructor.
-	// 0x0039BD7D returns a copy of the text.
-	struct StringRecord
-	{
-		StringRecord() : m_unk0x04(0), m_unk0x08(3) {}
-		UnicodeString m_text;			// +0x00
-		Int m_unk0x04;				// +0x04
-		Int m_unk0x08;				// +0x08
-	};
-
 	ScoreKeeper();				// 0x0039CAE1
 	virtual ~ScoreKeeper();
 
@@ -186,9 +175,15 @@ public:
 	ScoreCountMap m_objectsLost;		// +0x2EC
 	ScoreCountMap m_objectsCaptured;	// +0x2F8
 	_STL::vector<unsigned int> m_trackedKills;	// +0x304 ScoredKillTracker handles
-	StringRecord m_unk0x310;		// +0x310 a text and two words (0, 3) built by the ctor; the dtor releases the text (releaseBuffer<G> 0x00036E70)
+	// +0x310..+0x31C: a text and two words. The unwind releases the text through the folded
+	// ~UnicodeString body 0x005B804E, so the dtor sees a plain UnicodeString member here; the ctor
+	// stores 0, 0 and 3 through one lea and 0x0039BD7D copies the three through 0x002B4DC1, which
+	// suggests a small record type that is not yet named.
+	UnicodeString m_unk0x310;		// +0x310 the dtor releases it (releaseBuffer<G> 0x00036E70)
+	Int m_unk0x314;				// +0x314 0 after the ctor
+	Int m_unk0x318;				// +0x318 3 after the ctor
 	_STL::vector<PerFrameStats> m_frameStats;	// +0x31C the per-frame records (stride 0x14); reset clears it
-	_STL::vector<void *> m_unk0x328;	// +0x328 addObjectBuilt pushes the frame-stats count; clear() is retail vector<void*>::erase 0x0031BD55 (the pointer-specialised vector, not vector<int>)
+	_STL::vector<Int> m_unk0x328;		// +0x328 addObjectBuilt pushes the frame-stats count; the unwind destroys it with the vector<int> body 0x0007FAB3
 	unsigned char m_unk0x334[0x4];		// +0x334 padding to SIZE
 };
 // SIZE 0x338
