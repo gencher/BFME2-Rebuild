@@ -935,6 +935,21 @@ void TerrainLogic::loadPostProcess()
 // FUNCTION: BFME2 0x00283262 size=221 name=?rva00283262@TerrainLogic@@QAEXPBVCoord3D@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x0028333F size=92 name=?getWaypointByID@TerrainLogic@@UAEPAVWaypoint@@I@Z evidence=N:ledger tier=A
+Waypoint *TerrainLogic::getWaypointByID(UnsignedInt id)
+{
+	_STL::map<UnsignedInt, Waypoint *>::iterator it = m_waypointsByID.find(id);
+	if (it != m_waypointsByID.end())
+		return (*it).second;
+
+	for (Waypoint *way = TheWaypointListHead; way; way = way->m_next)
+		if (way->m_id == id) {
+			m_waypointsByID[id] = way;
+			return way;
+		}
+
+	m_waypointsByID[id] = NULL;
+	return NULL;
+}
 
 // FUNCTION: BFME2 0x002833A3 size=34 name=?vslot3@TerrainLogicListenerA@@UAEXPAX0@Z evidence=N:ledger tier=A
 
