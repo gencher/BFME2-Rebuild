@@ -916,6 +916,76 @@ void WorkOrder::validateFactory(Player *player)
 // FUNCTION: BFME2 0x004F33EC size=441 name=?onStructureProduced@AIPlayer@@UAEXPAVObject@@0@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F35A5 size=523 name=?selectTeamToBuild@AIPlayer@@MAE_NXZ evidence=N:ledger tier=A
+Bool AIPlayer::selectTeamToBuild()
+{
+	PlayerTeamList::const_iterator t;
+	const Int invalidPri = -99999;
+	Int hiPri = invalidPri;
+	PlayerTeamList candidateList1;
+	for (t = m_player->getPlayerTeams()->begin(); t != m_player->getPlayerTeams()->end(); ++t)
+	{
+		if (isAGoodIdeaToBuildTeam(*t))
+		{
+			candidateList1.push_back(*t);
+			Int pri = (*t)->m_teamTemplate.m_productionPriority;
+			if (pri > hiPri)
+				hiPri = pri;
+		}
+	}
+
+	if (selectTeamToReinforce(hiPri))
+		return true;
+
+	if (hiPri == invalidPri)
+		return false;
+
+	if (TheWritableGlobalData->m_debugAI)
+		TheScriptEngine->AppendDebugMessage("**AI** Selecting team to build", false);
+
+	PlayerTeamList candidateList;
+	Int count = 0;
+	for (t = candidateList1.begin(); t != candidateList1.end(); ++t)
+	{
+		if ((*t)->m_teamTemplate.m_productionPriority == hiPri)
+		{
+			candidateList.push_back(*t);
+			count++;
+		}
+	}
+
+	Int which = GetGameLogicRandomValue(0, count - 1, "C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\AI\\AIPlayer.cpp", 1841);
+
+	TeamPrototype *teamProto = NULL;
+	Int i = 0;
+	for (t = candidateList.begin(); t != candidateList.end(); ++t)
+	{
+		if (i == which)
+		{
+			teamProto = *t;
+			break;
+		}
+		i++;
+	}
+	if (teamProto)
+	{
+		if (!teamProto->m_teamTemplate.m_hasHomeLocation && !isSkirmishAI())
+		{
+			AsciiString teamStr = "Error : team '";
+			teamStr.concat(teamProto->m_name);
+			teamStr.concat("' has no Home Position (or Origin).");
+			TheScriptEngine->AppendDebugMessage(teamStr, false);
+		}
+		buildSpecificAITeam(teamProto, false);
+		m_readyToBuildTeam = false;
+		m_teamTimer = m_teamSeconds * BfmeLogicFramesPerSecond;
+		if (m_player->getMoney()->countMoney() < TheAI->getAiData()->m_poor)
+			m_teamTimer = m_teamTimer / TheAI->getAiData()->m_teamsPoorRate;
+		else if (m_player->getMoney()->countMoney() > TheAI->getAiData()->m_wealthy)
+			m_teamTimer = m_teamTimer / TheAI->getAiData()->m_teamsWealthyRate;
+		return true;
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x004F37B0 size=1537 name=?queueSupplyTruck@AIPlayer@@IAEXXZ evidence=N:ledger tier=A
 
