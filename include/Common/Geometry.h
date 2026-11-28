@@ -76,7 +76,6 @@ public:
 	// 0x006BEB80: whether this geometry at thisPos (with its height) overlaps the other at thatPos; the map spells
 	// it ?CollidesWith@GeometryInfo@@QBE_NABVCoord3D@@MABV1@0M@Z. SpecialAbilityUpdate 0x0044F4F7 and 0x0044F28E call it.
 	Bool CollidesWith(const Coord3D &thisPos, Real thisHeight, const GeometryInfo &that, const Coord3D &thatPos, Real thatHeight) const;
-	GeometryInfo &operator=(const GeometryInfo &that);	// 0x00064605 (out of line in W3DGhostObject's unit)
 	Real getMajorRadius() const { return m_majorRadius; }
 	// 0x006BD470: copies m_center (+0x18) to the argument (SpecialAbilityUpdate::initLaser 0x0044FB28; the map still spells it ?get@GeometryInfo@@QAEXPAURva0087DC00Vec@@@Z).
 	void getLocalCenter(Coord3DBase *center);
