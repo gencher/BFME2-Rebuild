@@ -1449,6 +1449,31 @@ void W3DView::setAngleAndPitchToDefault()
 }
 
 // FUNCTION: BFME2 0x0008D2B8 size=265 name=?setHeightAboveGround@W3DView@@UAEXM@Z evidence=N:ledger tier=B hypothesis:cohesion
+void W3DView::setHeightAboveGround(Real z)
+{
+	if (TheGameClient->m_unk0xC0[0] && m_zoomLimited)
+		return;
+	if (m_cameraHeightLocked)
+		return;
+	if (m_cameraMovementMode || m_doingRotateCamera || m_doingPitchCamera || m_doingZoomCamera || m_doingScriptedCameraLock || m_doingScriptedPitch)
+		return;
+	Real delta = z - m_heightAboveGround;
+	m_heightTravelled += fabsf(delta);
+	m_heightAboveGround = z;
+	if (m_zoomLimited) {
+		if (m_cameraSettings.getMinimum() > m_heightAboveGround)
+			m_heightAboveGround = m_cameraSettings.getMinimum();
+		if (m_heightAboveGround > m_cameraSettings.getMaximum())
+			m_heightAboveGround = m_cameraSettings.getMaximum();
+	}
+	m_doingRotateCamera = false;
+	m_doingPitchCamera = false;
+	m_doingZoomCamera = false;
+	m_doingScriptedPitch = false;
+	m_doingScriptedCameraLock = false;
+	m_cameraConstraintValid = false;
+	setCameraTransform();
+}
 
 
 // FUNCTION: BFME2 0x0008D3C1 size=182 name=?setZoom@W3DView@@UAEXM@Z evidence=N:ledger tier=B hypothesis:cohesion
