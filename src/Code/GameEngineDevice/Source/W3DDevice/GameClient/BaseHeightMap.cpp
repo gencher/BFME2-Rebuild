@@ -8,7 +8,9 @@
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "WWMath/PlaneClass.h"
 #include "GameClient/BaseHeightMapRenderObjClass.h"
+#include "GameClient/WorldHeightMap.h"
 #include "WW3D2/SceneClass.h"
+#include <stdlib.h>
 // FUNCTION: BFME2 0x000664BE size=49 name=?Rva006C5BE0@@YANNH@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 // FUNCTION: BFME2 0x000664EF size=5 name=?enable@Rva000664EFOneSetter@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
 // FUNCTION: BFME2 0x000664F4 size=21 name=?rva000664F4@BaseHeightMap@@QAEXPBUGapQuad@@@Z evidence=P:provisional (wb-file) tier=B hypothesis:mm1-contiguity-callers
@@ -46,6 +48,37 @@
 // FUNCTION: BFME2 0x00066E69 size=591 name=?EstimateMaxHeightAlongLine@BaseHeightMapRenderObjClass@@QBEMABVCoord3D@@0@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x000670B8 size=250 name=?getMaxCellHeight@BaseHeightMapRenderObjClass@@UBEMMM@Z evidence=N:ledger tier=A
+Real BaseHeightMapRenderObjClass::getMaxCellHeight(Real x, Real y) const
+{
+	if (m_map == NULL) {
+		return 0.0f;
+	}
+
+	Int offset = 1;
+	Int iX = m_map->getBorderSize() - (Int)(x * -0.1f);
+	Int iY = m_map->getBorderSize() - (Int)(y * -0.1f);
+	if (iX < 0) iX = 0;
+	if (iY < 0) iY = 0;
+	if (iX >= (m_map->getXExtent() - 1)) {
+		iX = m_map->getXExtent() - 2;
+	}
+	if (iY >= (m_map->getYExtent() - 1)) {
+		iY = m_map->getYExtent() - 2;
+	}
+
+	UnsignedShort *data = m_map->getDataPtr();
+	Real p0 = data[iX + iY * m_map->getXExtent()] * 0.0390625f;
+	Real p1 = data[(iX + offset) + iY * m_map->getXExtent()] * 0.0390625f;
+	Real p2 = data[(iX + offset) + (iY + offset) * m_map->getXExtent()] * 0.0390625f;
+	Real p3 = data[iX + (iY + offset) * m_map->getXExtent()] * 0.0390625f;
+
+	Real height = p0;
+	height = __max(height, p1);
+	height = __max(height, p2);
+	height = __max(height, p3);
+
+	return height;
+}
 
 // FUNCTION: BFME2 0x000671B2 size=115 name=?isCliffCell@BaseHeightMapRenderObjClass@@QAE_NMM@Z evidence=N:ledger tier=A
 

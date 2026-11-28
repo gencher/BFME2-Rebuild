@@ -1,10 +1,23 @@
 // cl: /O1
 // stlport46
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
+#include <string.h>
 #include "GameClient/TerrainRoadCollection.h"
 #include "GameClient/TerrainRoadType.h"
 #include "Common/AsciiString.h"
 #include "Common/INI.h"
+#include "Common/INIException.h"
+
+enum { MAX_BRIDGE_BODY_FX = 3 };
+
+static const char *TheBodyDamageTypeNames[] =
+{
+	"PRISTINE",
+	"DAMAGED",
+	"REALLYDAMAGED",
+	"RUBBLE",
+	NULL
+};
 
 // The terrain road collection singleton (retail VA 0x00DFF084).
 TerrainRoadCollection *TheTerrainRoads = NULL;
@@ -147,8 +160,68 @@ void TerrainRoadType::friend_setRepairedToFXString( BodyDamageType state, Int in
 }
 
 // FUNCTION: BFME2 0x002DAFEC size=238 name=?parseTransitionToOCL@TerrainRoadType@@SAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=B hypothesis:Z
+void TerrainRoadType::parseTransitionToOCL(INI *ini, void *instance, void *store, const void *userData)
+{
+	const char *token;
+	TerrainRoadType *theInstance = static_cast<TerrainRoadType *>(instance);
+
+	Bool damageTransition;
+	token = ini->getNextSubToken("Transition");
+	if (_strcmpi(token, "Damage") == 0)
+		damageTransition = TRUE;
+	else if (_strcmpi(token, "Repair") == 0)
+		damageTransition = FALSE;
+	else
+		throw INIException(3, "Expected Damage/Repair transition keyword\n");
+
+	token = ini->getNextSubToken("ToState");
+	Int stateIndex = ini->scanIndexList(token, TheBodyDamageTypeNames);
+	BodyDamageType state = (BodyDamageType)stateIndex;
+
+	token = ini->getNextSubToken("EffectNum");
+	Int effectNum = ini->scanInt(token);
+	--effectNum;
+	if (effectNum < 0 || effectNum >= MAX_BRIDGE_BODY_FX)
+		throw INIException(3, "Effect number max on bridge transitions is '%d'\n", MAX_BRIDGE_BODY_FX);
+
+	token = ini->getNextSubToken("OCL");
+	if (damageTransition)
+		theInstance->friend_setDamageToOCLString(state, effectNum, AsciiString(token));
+	else
+		theInstance->friend_setRepairedToOCLString(state, effectNum, AsciiString(token));
+}
 
 // FUNCTION: BFME2 0x002DB0DB size=238 name=?parseTransitionToFX@TerrainRoadType@@SAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=B hypothesis:Z
+void TerrainRoadType::parseTransitionToFX(INI *ini, void *instance, void *store, const void *userData)
+{
+	const char *token;
+	TerrainRoadType *theInstance = static_cast<TerrainRoadType *>(instance);
+
+	Bool damageTransition;
+	token = ini->getNextSubToken("Transition");
+	if (_strcmpi(token, "Damage") == 0)
+		damageTransition = TRUE;
+	else if (_strcmpi(token, "Repair") == 0)
+		damageTransition = FALSE;
+	else
+		throw INIException(3, "Expected Damage/Repair transition keyword\n");
+
+	token = ini->getNextSubToken("ToState");
+	Int stateIndex = ini->scanIndexList(token, TheBodyDamageTypeNames);
+	BodyDamageType state = (BodyDamageType)stateIndex;
+
+	token = ini->getNextSubToken("EffectNum");
+	Int effectNum = ini->scanInt(token);
+	--effectNum;
+	if (effectNum < 0 || effectNum >= MAX_BRIDGE_BODY_FX)
+		throw INIException(3, "Effect number max on bridge transitions is '%d'\n", MAX_BRIDGE_BODY_FX);
+
+	token = ini->getNextSubToken("FX");
+	if (damageTransition)
+		theInstance->friend_setDamageToFXString(state, effectNum, AsciiString(token));
+	else
+		theInstance->friend_setRepairedToFXString(state, effectNum, AsciiString(token));
+}
 
 // FUNCTION: BFME2 0x002DB1CA size=327 name=??0TerrainRoadType@@QAE@XZ evidence=N:ledger tier=B hypothesis:Z
 

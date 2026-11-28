@@ -47,11 +47,19 @@ class AutoSeedMigrationTest(unittest.TestCase):
         self.assertEqual(pair[1], state_delta.STATE_RUNNER_MIGRATION[0])
 
     def test_state_runner_migration_matches_the_workflow(self):
-        import hashlib
         pair = state_delta.STATE_RUNNER_MIGRATION
         self.assertIn(pair, state_delta.STATE_FLOW_MIGRATIONS)
+        self.assertEqual(pair[1], state_delta.SEED_LIFECYCLE_MIGRATION[0])
+
+    def test_seed_lifecycle_migration_matches_the_workflow(self):
+        import hashlib
+        pair = state_delta.SEED_LIFECYCLE_MIGRATION
+        self.assertIn(pair, state_delta.STATE_FLOW_MIGRATIONS)
+        self.assertEqual(pair[1], state_delta.SEED_YAML_FIX_MIGRATION[0])
+        pair2 = state_delta.SEED_YAML_FIX_MIGRATION
+        self.assertIn(pair2, state_delta.STATE_FLOW_MIGRATIONS)
         text = (Path(__file__).resolve().parents[3] / ".github/workflows/state.yml").read_bytes()
-        self.assertEqual(hashlib.sha256(text).hexdigest(), pair[1])
+        self.assertEqual(hashlib.sha256(text).hexdigest(), pair2[1])
 
 
 class ArtifactFirstLookupTest(unittest.TestCase):
@@ -202,6 +210,139 @@ class ArtifactFirstLookupTest(unittest.TestCase):
         result = state_fetch.select_ancestor_artifact(FakeApi(), [target_sha])
         self.assertIsNotNone(result)
         self.assertEqual(result[0], 555)
+
+
+class MultiStepComposeAndSeedOriginTest(unittest.TestCase):
+    def test_compose_transition_chains_multiple_tu_move_migrations(self):
+        import hashlib, subprocess, tempfile
+        from unittest import mock
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            def git_cmd(*args):
+                subprocess.check_call(["git", "-C", str(repo), *args],
+                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            git_cmd("init", "-q")
+            git_cmd("config", "user.email", "t@example.com")
+            git_cmd("config", "user.name", "t")
+            for p, content in [
+                ("config/map.json", b'{"v":0}\n'),
+                ("src/unk/A.cpp", b"int a() { return 0; }\n"),
+                ("src/unk/B.cpp", b"int b() { return 0; }\n"),
+                ("src/unk/C.cpp", b"int c() { return 0; }\n"),
+            ]:
+                fp = repo / p
+                fp.parent.mkdir(parents=True, exist_ok=True)
+                fp.write_bytes(content)
+            git_cmd("add", "-A"); git_cmd("commit", "-q", "-m", "base")
+            c0 = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+
+            # Step 1: migration 1 edits map.json and removes A.cpp
+            (repo / "config/map.json").write_bytes(b'{"v":1}\n')
+            (repo / "src/unk/A.cpp").unlink()
+            git_cmd("add", "-A"); git_cmd("commit", "-q", "-m", "mig1")
+            c1 = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+
+            # Step 2: ordinary source edit on C.cpp
+            (repo / "src/unk/C.cpp").write_bytes(b"int c() { return 1; }\n")
+            git_cmd("add", "-A"); git_cmd("commit", "-q", "-m", "src")
+            c2 = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+
+            # Step 3: migration 2 edits map.json again and removes B.cpp
+            (repo / "config/map.json").write_bytes(b'{"v":2}\n')
+            (repo / "src/unk/B.cpp").unlink()
+            git_cmd("add", "-A"); git_cmd("commit", "-q", "-m", "mig2")
+            c3 = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
+
+            def bsha(rev, path):
+                r = subprocess.run(["git", "-C", str(repo), "show", f"{rev}:{path}"], capture_output=True)
+                return hashlib.sha256(r.stdout).hexdigest() if r.returncode == 0 else None
+
+            mig1 = {
+                "files": {"config/map.json": (bsha(c0, "config/map.json"), bsha(c1, "config/map.json")),
+                          "src/unk/A.cpp": (bsha(c0, "src/unk/A.cpp"), None)},
+                "old_tus": frozenset({"src/unk/A.cpp"}),
+                "new_tus": frozenset(),
+                "force_changed": frozenset({"src/unk/c.cpp"}),
+            }
+            mig2 = {
+                "files": {"config/map.json": (bsha(c1, "config/map.json"), bsha(c3, "config/map.json")),
+                          "src/unk/B.cpp": (bsha(c1, "src/unk/B.cpp"), None)},
+                "old_tus": frozenset({"src/unk/B.cpp"}),
+                "new_tus": frozenset(),
+                "force_changed": frozenset(),
+            }
+            with mock.patch.object(state_delta, "TU_MOVE_MIGRATIONS", (mig1, mig2)):
+                composed = state_delta.compose_transition(repo, c0, c3)
+                self.assertIsNotNone(composed)
+                changed, old_tus, new_tus, _bundle = composed
+                self.assertEqual(changed, {"src/unk/c.cpp"})
+                self.assertEqual(old_tus, frozenset({"src/unk/A.cpp", "src/unk/B.cpp"}))
+                self.assertEqual(new_tus, frozenset())
+
+    def test_eligible_cancels_obsolete_seed_and_defers_compatible_seed(self):
+        from unittest import mock
+        import state_origin
+        from common import REPO_ID
+
+        old_sha = "1" * 40
+        new_sha = "2" * 40
+        seed_run = {
+            "id": 777,
+            "head_sha": old_sha,
+            "head_branch": "main",
+            "event": "workflow_dispatch",
+            "path": ".github/workflows/state.yml",
+            "status": "in_progress",
+            "repository": {"id": REPO_ID},
+            "display_title": "Seed protected main state " + old_sha,
+        }
+
+        class FakeApi:
+            token = "tok"
+            def call(self, path):
+                if path == "git/ref/heads/main":
+                    return {"object": {"sha": new_sha}}
+                if path.startswith("actions/workflows/state.yml/runs?"):
+                    return {"workflow_runs": [seed_run]}
+                return {"workflow_runs": [], "artifacts": []}
+
+        # Compatible seed -> defers without cancelling
+        with mock.patch.object(state_origin, "select_run", return_value=None), \
+             mock.patch.object(state_origin, "predecessors", return_value=[old_sha]), \
+             mock.patch.object(state_origin, "source_changes", return_value={"src/a.cpp"}), \
+             mock.patch.object(state_origin, "cancel_run") as cancel_mock:
+            self.assertFalse(state_origin.eligible(FakeApi(), new_sha, False, "admit", root=Path(".")))
+            cancel_mock.assert_not_called()
+
+        # Obsolete seed (source_changes is None) -> cancels and returns True
+        with mock.patch.object(state_origin, "select_run", return_value=None), \
+             mock.patch.object(state_origin, "predecessors", return_value=[old_sha]), \
+             mock.patch.object(state_origin, "source_changes", return_value=None), \
+             mock.patch.object(state_origin, "cancel_run", return_value=True) as cancel_mock:
+            self.assertTrue(state_origin.eligible(FakeApi(), new_sha, False, "admit", root=Path(".")))
+            cancel_mock.assert_called_once_with(mock.ANY, 777)
+
+    def test_after_seed_dispatches_only_when_main_moved(self):
+        from unittest import mock
+        import state_origin
+
+        sha1 = "a" * 40
+        sha2 = "b" * 40
+        class FakeApi:
+            def __init__(self, cur): self.cur = cur
+            def call(self, path):
+                return {"object": {"sha": self.cur}}
+
+        with mock.patch.object(state_origin, "_dispatch_refresh") as disp:
+            state_origin.after_seed(FakeApi(sha1), sha1)
+            disp.assert_not_called()
+            state_origin.after_seed(FakeApi(sha2), sha1)
+            disp.assert_called_once()
+
+    def test_wide_deadline_graph_is_registered(self):
+        self.assertIn(state_delta.WIDE_DEADLINE_GRAPH, state_delta.GRAPH_CHANGES)
+        self.assertIn("ci/managed-check/recovery_broker.py", state_delta.GRAPH_PATHS)
 
 
 if __name__ == "__main__":

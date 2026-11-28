@@ -258,7 +258,7 @@ jobs:
       ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) &&
       (always() && !cancelled() && needs.intake.result == 'success' && (vars.BFME_PR_COMPACT == 'yes' || needs.pending.result == 'success') && (needs.intake.outputs.route == 'compile' || (needs.intake.outputs.route == 'automatic' && needs.claim.result == 'success' && needs.claim.outputs.allowed == 'yes')))
     name: Isolated Boat compiler and native comparison
-    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
+    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -510,7 +510,7 @@ jobs:
       ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) &&
       (always() && !cancelled() && needs.intake.result == 'success' && (vars.BFME_PR_COMPACT == 'yes' || needs.pending.result == 'success') && (needs.intake.outputs.route == 'wide' || (needs.intake.outputs.route == 'automatic-wide' && needs.claim.result == 'success' && needs.claim.outputs.allowed == 'yes')))
     name: Plan the paired Boat matrix
-    timeout-minutes: 5
+    timeout-minutes: 10
     outputs:
       shards: '${{ steps.plan.outputs.shards }}'
       matrix_sha: '${{ steps.plan.outputs.matrix_sha }}'
@@ -518,7 +518,7 @@ jobs:
       started: '${{ steps.clock.outputs.started }}'
       primary_cutoff: '${{ steps.clock.outputs.primary_cutoff }}'
       reserve_cutoff: '${{ steps.clock.outputs.reserve_cutoff }}'
-    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
+    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
     permissions:
       contents: read
       actions: read
@@ -610,7 +610,7 @@ jobs:
         id: plan
         env:
           MANAGED_WIDE_SHARDS: "${{ vars.BFME_WIDE_SHARDS || '16' }}"
-          MANAGED_WIDE_TUS_PER_SHARD: "${{ vars.BFME_WIDE_TUS_PER_SHARD || '10' }}"
+          MANAGED_WIDE_TUS_PER_SHARD: "${{ vars.BFME_WIDE_TUS_PER_SHARD || '32' }}"
         run: |
           set -Eeuo pipefail
           trap 'rc=$?; printf "Expected protected workflow step to finish. Found exit %s at shell line %s.\n" "$rc" "$LINENO" >&2' ERR
@@ -634,13 +634,13 @@ jobs:
       (always() && !cancelled() && needs.wide-plan.result == 'success')
     name: Compare wide shard ${{ matrix.index }}
     continue-on-error: true
-    timeout-minutes: 12
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       max-parallel: 32
       matrix:
         index: '${{ fromJSON(needs.wide-plan.outputs.shards) }}'
-    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
+    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
     permissions:
       contents: read
     steps:
@@ -1007,7 +1007,7 @@ jobs:
       (always() && !cancelled() && needs.wide-plan.result == 'success')
     name: Freeze primary wide checkpoints
     continue-on-error: true
-    timeout-minutes: 12
+    timeout-minutes: 25
     outputs:
       lease_sha: '${{ steps.freeze.outputs.lease_sha }}'
       reserve_needed: '${{ steps.freeze.outputs.reserve_needed }}'
@@ -1091,13 +1091,13 @@ jobs:
       (always() && !cancelled() && needs.wide-plan.result == 'success' && needs.wide-freeze.result == 'success' && needs.wide-freeze.outputs.reserve_needed == 'true')
     name: Reassign paired files on reserve ${{ matrix.slot }}
     continue-on-error: true
-    timeout-minutes: 14
+    timeout-minutes: 18
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
         slot: ${{ fromJSON(needs.wide-freeze.outputs.reserve_needed == 'true' && needs.wide-freeze.outputs.reserve_slots || '[0]') }}
-    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
+    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
     permissions:
       contents: read
       actions: read
@@ -1233,13 +1233,13 @@ jobs:
       (always() && !cancelled() && needs.wide-plan.result == 'success' && needs.wide-freeze.result == 'success')
     name: Freeze, recover and verify wide receipts
     continue-on-error: true
-    timeout-minutes: 15
+    timeout-minutes: 25
     outputs:
       complete: "${{ steps.verdict.outcome == 'success' }}"
       h2_artifact: ${{ steps.h2_upload.outputs.artifact-id }}
       h2_digest: ${{ steps.h2_upload.outputs.artifact-digest }}
       h2_attempted: ${{ steps.h2_probe.outputs.attempted }}
-    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
+    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
     permissions:
       contents: read
       actions: read
@@ -1797,13 +1797,13 @@ jobs:
       (always() && !cancelled() && needs.wide-plan.result == 'success' && needs.wide-join.outputs.complete != 'true')
     name: Verify all primary checkpoints after collector failure
     continue-on-error: true
-    timeout-minutes: 15
+    timeout-minutes: 25
     outputs:
       complete: "${{ steps.verdict.outcome == 'success' }}"
       h2_artifact: ${{ steps.h2_upload.outputs.artifact-id }}
       h2_digest: ${{ steps.h2_upload.outputs.artifact-digest }}
       h2_attempted: ${{ steps.h2_probe.outputs.attempted }}
-    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
+    runs-on: ${{ ((github.actor_id == '1760627' || (github.actor_id == '41898282' && github.event_name == 'repository_dispatch')) && (github.triggering_actor == 'Ancalgonn' || github.triggering_actor == 'github-actions[bot]')) && (vars.BFME_PR_RUNS_ON || vars.BFME_PR_RUNNER || 'boat-small/from=bfme2-compiler-v1') || 'ubuntu-24.04' }}
     permissions:
       contents: read
       actions: read

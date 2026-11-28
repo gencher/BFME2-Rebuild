@@ -37,7 +37,7 @@ MAX_FILES = 60
 MAX_ENQUEUE = 16
 MAX_BACKFILL = 18
 MAX_ACTIVE_BOAT = 18
-PIPELINE_WORKFLOWS = ("managed-pr.yml", "rules.yml", "admission.yml")
+PIPELINE_WORKFLOWS = ("managed-pr.yml", "merge-queue-boat.yml", "rules.yml", "admission.yml")
 COOLDOWN_SECONDS = 1800
 SOURCE = "BFME II / source rules"
 BOAT = "BFME II / Boat"
@@ -67,7 +67,7 @@ ACTIONS_TOKEN_RESERVE = 400
 CALLS_PER_BACKFILL = {"refresh": 75, "recheck": 15}
 MAX_WIDE_BACKFILL = 2
 WIDE_STARVATION_SECONDS = 2 * 3600
-INFLIGHT_COST = {"managed-pr.yml": 65, "rules.yml": 15, "admission.yml": 15}
+INFLIGHT_COST = {"managed-pr.yml": 65, "merge-queue-boat.yml": 45, "rules.yml": 15, "admission.yml": 15}
 LIMIT = 4 * 1024**2
 HEX40 = re.compile(r"[0-9a-f]{40}\Z")
 # Smaller pages keep the nested status/file/review query under GitHub's GraphQL timeout (502/504 at 50 a page);

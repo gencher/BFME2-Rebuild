@@ -14,9 +14,9 @@ from wide_recovery import (
     GROUP_LIMIT, RESERVE_SECONDS, checked_lease, freeze, get_matrix, groups, label,
 )
 
-PRIMARY_SECONDS = 520
-MAX_RUN_AGE = 1800
-MAX_PLAN_DELAY = 240
+PRIMARY_SECONDS = 1200
+MAX_RUN_AGE = 3600
+MAX_PLAN_DELAY = 600
 LEASE_LIMIT = 64 * 1024
 POLL = 10
 

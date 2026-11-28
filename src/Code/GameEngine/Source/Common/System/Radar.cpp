@@ -7,6 +7,8 @@
 // Edges: left=unknown-rows right=rests-on:name; proof_first=false
 // Hypothesis rules: hypothesis:Z, hypothesis:cohesion
 #include "Common/Radar.h"
+#include "Common/Color.h"
+#include "Common/Player.h"
 #include "GameLogic/GameLogic.h"
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Object.h"
@@ -641,6 +643,28 @@ void Radar::createEvent(const Coord3D *world, RadarEventType type, Real secondsT
 }
 
 // FUNCTION: BFME2 0x002D893B size=224 name=?createPlayerEvent@Radar@@QAEXPBURva002D893BColorSource@@PBVCoord3D@@W4RadarEventType@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void Radar::createPlayerEvent(const Player *player, const Coord3D *world, RadarEventType type, Real secondsToLive)
+{
+	if (player == NULL || world == NULL)
+		return;
+
+	UnsignedByte r, g, b, a;
+	RGBAColorInt color[2];
+
+	GameGetColorComponents(player->getPlayerColor(), &r, &g, &b, &a);
+	color[0].red = r;
+	color[0].green = g;
+	color[0].blue = b;
+	color[0].alpha = a;
+
+	Real darkScale = -0.75f;
+	color[1] = color[0];
+	color[1].red += (Int)(color[0].red * darkScale);
+	color[1].green += (Int)(color[0].green * darkScale);
+	color[1].blue += (Int)(color[0].blue * darkScale);
+
+	internalCreateEvent(world, type, secondsToLive, &color[0], &color[1]);
+}
 
 // FUNCTION: BFME2 0x002D8A1B size=220 name=?tryInfiltrationEvent@Radar@@QAEXPBVObject@@@Z evidence=N:ledger tier=A
 

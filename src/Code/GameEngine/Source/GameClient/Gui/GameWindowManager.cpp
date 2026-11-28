@@ -13,6 +13,8 @@
 #include "GameClient/GadgetTextEntry.h"
 #include "GameClient/GadgetPushButton.h"
 #include "GameClient/WindowLayout.h"
+#include "GameClient/GameWindowCreationData.h"
+#include "Common/GlobalLanguage.h"
 
 // The window manager singleton (retail VA 0x00DFEF1C).
 GameWindowManager *TheWindowManager = NULL;
@@ -722,6 +724,49 @@ UnicodeString WinInstanceData::getTooltipText()
 // FUNCTION: BFME2 0x002C1FD5 size=1374 name=?winProcessMouseEvent@GameWindowManager@@UAE?AW4WinInputReturnCode@@W4GameWindowMessage@@PAUICoord2D@@PAX@Z evidence=N:ledger
 
 // FUNCTION: BFME2 0x002C2533 size=263 name=?winCreate@GameWindowManager@@QAEPAVGameWindow@@PAURva0047EDE0CreateInfo@@@Z evidence=N:ledger
+GameWindow *GameWindowManager::winCreate(GameWindowCreationData *createInfo)
+{
+	GameWindow *window;
+
+	if (createInfo->allocator)
+	{
+		window = createInfo->allocator(createInfo);
+		if (window->m_positionSink == NULL && window->supportsWindowRenderer())
+			window->m_positionSink = createWindowRenderer();
+	}
+	else
+	{
+		window = allocateNewWindow(createInfo);
+		if (window == NULL)
+		{
+			for (GameWindow *win = m_windowList; win; win = win->m_next)
+				dumpWindow(win);
+			return NULL;
+		}
+	}
+
+	if (createInfo->parent)
+		addWindowToParent(window, createInfo->parent);
+	else
+		linkWindow(window);
+
+	if (createInfo->instance)
+		window->winSetInstanceData(createInfo->instance);
+
+	window->orderPairs();
+	winSendSystemMsg(window, GWM_CREATE, 0, 0);
+
+	if (TheGlobalLanguageData && !TheGlobalLanguageData->m_defaultWindowFont.name.isEmpty())
+	{
+		window->winSetFont(winFindFont(TheGlobalLanguageData->m_defaultWindowFont.name,
+			TheGlobalLanguageData->m_defaultWindowFont.size,
+			TheGlobalLanguageData->m_defaultWindowFont.bold));
+	}
+	else
+		window->winSetFont(winFindFont(AsciiString("Times New Roman"), 14, false));
+
+	return window;
+}
 
 // FUNCTION: BFME2 0x002C263A size=1214 name=?gogoMessageBox@GameWindowManager@@UAEPAVGameWindow@@HHHHGVUnicodeString@@0P6AXXZ111_N@Z evidence=N:ledger
 
@@ -908,7 +953,6 @@ void GameWindowManager::winPrevTab(GameWindow *window)
     winSetLoneWindow(0);
 }
 
-#include "GameClient/GameWindowCreationData.h"
 GameWindow *GameWindowManager::gogoGadgetProgressBar(GameWindowCreationData *info, GameFont *font, bool visual)
 {
     if (!(info->instance->m_style & 0x100)) return 0;

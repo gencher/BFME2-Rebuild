@@ -16,6 +16,42 @@ static ProfileFastCS cs;
 // Edges: left=rests-on:name+veto right=rests-on:name; proof_first=false
 // Hypothesis rules: hypothesis:K, hypothesis:padding
 // FUNCTION: BFME2 0x006C5C60 size=314 name=??0ProfileId@@QAE@PBD00HH@Z evidence=N:ledger tier=A
+ProfileId::ProfileId(const char *name, const char *descr, const char *unit, int precision, int exp10)
+{
+	unsigned int nameLen = strlen(name) + 1;
+	m_name = new (ProfileAllocMemory(nameLen)) char[nameLen];
+	strcpy(m_name, name);
+	if (descr)
+	{
+		unsigned int descrLen = strlen(descr) + 1;
+		m_descr = new (ProfileAllocMemory(descrLen)) char[descrLen];
+		strcpy(m_descr, descr);
+	}
+	else
+		m_descr = NULL;
+	if (unit)
+	{
+		unsigned int unitLen = strlen(unit) + 1;
+		m_unit = new (ProfileAllocMemory(unitLen)) char[unitLen];
+		strcpy(m_unit, unit);
+	}
+	else
+		m_unit = NULL;
+	m_precision = precision;
+	m_exp10 = exp10;
+	m_curVal = m_totalVal = 0.;
+	m_recFrameVal = NULL;
+	m_firstFrame = curFrame;
+	m_valueMode = Unknown;
+
+	// keep the list sorted by name
+	ProfileId **pp;
+	for (pp = &first; *pp; pp = &(*pp)->m_next)
+		if (strcmp(m_name, (*pp)->m_name) > 0)
+			break;
+	m_next = *pp;
+	*pp = this;
+}
 
 // FUNCTION: BFME2 0x006C5DA0 size=85 name=?Increment@ProfileId@@QAEXN@Z evidence=N:ledger tier=A
 void ProfileId::Increment(double add)

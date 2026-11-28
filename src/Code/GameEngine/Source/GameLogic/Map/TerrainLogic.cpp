@@ -473,6 +473,11 @@ Waypoint *TerrainLogic::getWaypointByPath(const AsciiString &label)
 // FUNCTION: BFME2 0x00281AED size=266 name=?isValidUnitType@Waypoint@@QAE_NPAVObject@@@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00281BF7 size=28 name=?getDrawable@Bridge@@QAEPAVDrawable@@XZ evidence=N:ledger tier=A
+Drawable *Bridge::getDrawable()
+{
+	Object *bridgeObject = TheGameLogic->findObjectByID(m_bridgeInfo.bridgeObjectID);
+	return bridgeObject ? bridgeObject->getDrawable() : NULL;
+}
 
 // FUNCTION: BFME2 0x00281C13 size=308 name=?updateDamageState@Bridge@@QAEXXZ evidence=N:ledger tier=A
 

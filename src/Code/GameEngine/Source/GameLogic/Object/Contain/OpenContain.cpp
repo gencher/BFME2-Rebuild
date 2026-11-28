@@ -22,6 +22,7 @@
 #include "Common/ThingTemplate.h"
 #include "GameLogic/Module/OpenContain.h"
 #include "Common/INI.h"
+#include "Common/XferException.h"
 #include "Common/BitFlags.h"
 #include <stddef.h>
 #include "GameLogic/AI.h"
@@ -625,37 +626,33 @@ void OpenContain::loadPostProcess()
 
 	UpdateModule::loadPostProcess();
 
-	// the containment list should be empty at this time
 	if (!m_containList.empty())
 		throw XferException(5, 0);
 
-	// riders are pulled out of the world when this or any outer container encloses them
 	Bool enclosed = false;
-	OpenContain *container = this;
-	do
+	for (OpenContain *cur = this; cur != NULL; )
 	{
-		if (container->getObjectStatusOfContained(0).test(OBJECT_STATUS_ENCLOSED))
+		if (cur->getObjectStatusOfContained(NULL).test(OBJECT_STATUS_ENCLOSED))
 		{
 			enclosed = true;
 			break;
 		}
-		Object *containerObject = container->getObject();
-		if (containerObject == 0)
+		Object *curObj = cur->getObject();
+		if (curObj == NULL)
 			break;
-		Object *outer = containerObject->getContainedBy();
-		if (outer == 0)
+		Object *parent = curObj->getContainedBy();
+		if (parent == NULL)
 			break;
-		ContainModuleInterface *outerContain = outer->getContain();
-		if (outerContain == 0)
+		ContainModuleInterface *parentContain = parent->getContain();
+		if (parentContain == NULL)
 			break;
-		container = outerContain->asOpenContain();
-	} while (container != 0);
+		cur = parentContain->asOpenContain();
+	}
 
-	// turn the contained id list into actual object pointers in the contain list
 	for (XferContainIDList::const_iterator idIt = m_xferContainIDList.begin(); idIt != m_xferContainIDList.end(); ++idIt)
 	{
 		Object *obj = TheGameLogic->findObjectByID(*idIt);
-		if (obj == 0)
+		if (obj == NULL)
 			throw XferException(5, 0);
 
 		m_containList.push_back(obj);
