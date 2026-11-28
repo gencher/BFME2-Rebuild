@@ -14,6 +14,7 @@
 #include "Common/Coord3D.h"
 #include "Common/IRegion2D.h"
 #include "Common/Snapshot.h"
+#include "WWMath/Vector3.h"
 #include "WW3D2/RenderObjClass.h"
 #include "WW3D2/DX8CleanupHook.h"
 
@@ -28,6 +29,26 @@ class W3DBibBuffer;
 class W3DRoadBuffer;
 class W3DBridgeBuffer;
 class RefRenderObjListIterator;
+
+// One scorch mark. The terrain keeps 500 of them (stride 0x1C) and saves each one as its own Snapshot.
+class TScorch : public Snapshot
+{
+public:
+	TScorch() {}
+
+protected:
+	virtual void loadPostProcess() {}
+	virtual const char *GetSnapshotName() const { return "TScorch"; }
+	virtual void xfer(Xfer *xfer);
+
+private:
+	Vector3 m_location;		// +0x04
+	Real m_radius;			// +0x10
+	Int m_scorchType;		// +0x14
+	Bool m_flag;			// +0x18
+};
+
+typedef char TScorchSize[(sizeof(TScorch) == 0x1C) ? 1 : -1];
 
 class BaseHeightMapRenderObjClass : public RenderObjClass, public DX8_CleanupHook, public Snapshot
 {

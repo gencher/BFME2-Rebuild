@@ -16,6 +16,7 @@
 #include "GameClient/W3DRoadBuffer.h"
 #include "GameClient/W3DBridgeBuffer.h"
 #include "Common/DataChunk.h"
+#include "Common/Xfer.h"
 #include "WW3D2/DX8DeviceLock.h"
 #include "WW3D2/dxwrapper.h"
 #include <stdlib.h>
@@ -252,6 +253,21 @@ void BaseHeightMapRenderObjClass::writeEnvironmentData(DataChunkOutput *chunk)
 // FUNCTION: BFME2 0x00068D43 size=16 name=?rva00068D43@Rva00068D43@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x00068D53 size=115 name=?xfer@TScorch@@MAEXPAVXfer@@@Z evidence=N:ledger tier=A
+void TScorch::xfer(Xfer *xfer)
+{
+	if (xfer->IsLightCRC()) {
+		return;
+	}
+
+	Xfer::Version version(1, 1);
+	*xfer == version;
+	*xfer == m_location.X;
+	*xfer == m_location.Y;
+	*xfer == m_location.Z;
+	*xfer == m_radius;
+	*xfer == m_scorchType;
+	*xfer == m_flag;
+}
 
 // FUNCTION: BFME2 0x00068DC6 size=16 name=?get@Rva00068DC6CurrentObject@@QBEPAXXZ evidence=?:placeholder tier=A
 
