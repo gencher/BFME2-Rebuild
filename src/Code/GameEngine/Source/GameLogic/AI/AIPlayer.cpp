@@ -693,6 +693,61 @@ void TeamInQueue::xfer(Xfer *xfer)
 
 
 // FUNCTION: BFME2 0x004F1B8C size=400 name=?getPlayerStructureBounds@AIPlayer@@SAXPAURegion2D@@H@Z evidence=N:ledger tier=A
+void AIPlayer::getPlayerStructureBounds(Region2D *bounds, Int playerNdx)
+{
+	Bool firstObject = true;
+	Bool firstStructure = true;
+	bounds->hi.x = bounds->lo.x = bounds->hi.y = bounds->lo.y = 0;
+	Region2D objBounds;
+	objBounds.hi.x = objBounds.lo.x = objBounds.hi.y = objBounds.lo.y = 0;
+
+	Player *pPlayer = ThePlayerList->getNthPlayer(playerNdx);
+	if (pPlayer == 0)
+		return;
+	for (PlayerTeamList::const_iterator it = pPlayer->getPlayerTeams()->begin(); it != pPlayer->getPlayerTeams()->end(); ++it)
+	{
+		TeamPrototype *proto = *it;
+		for (DLINK_ITERATOR<Team> iter = proto->iterate_TeamInstanceList(); !iter.done(); iter.advance())
+		{
+			Team *team = iter.cur();
+			if (!team)
+				continue;
+			for (DLINK_ITERATOR<Object> members = team->iterate_TeamMemberList(); !members.done(); members.advance())
+			{
+				Object *obj = members.cur();
+				if (obj->isKindOf(KINDOF_STRUCTURE))
+				{
+					Coord3D pos = *obj->getPosition();
+					Real x = pos.x;
+					Real y = pos.y;
+					if (firstObject) {
+						objBounds.lo.x = objBounds.hi.x = x;
+						objBounds.lo.y = objBounds.hi.y = y;
+						firstObject = false;
+					} else {
+						if (objBounds.lo.x > x) objBounds.lo.x = x;
+						if (objBounds.lo.y > y) objBounds.lo.y = y;
+						if (objBounds.hi.x < x) objBounds.hi.x = x;
+						if (objBounds.hi.y < y) objBounds.hi.y = y;
+					}
+					if (firstStructure) {
+						bounds->lo.x = bounds->hi.x = x;
+						bounds->lo.y = bounds->hi.y = y;
+						firstStructure = false;
+					} else {
+						if (bounds->lo.x > x) bounds->lo.x = x;
+						if (bounds->lo.y > y) bounds->lo.y = y;
+						if (bounds->hi.x < x) bounds->hi.x = x;
+						if (bounds->hi.y < y) bounds->hi.y = y;
+					}
+				}
+			}
+		}
+	}
+	if (!firstStructure) {
+		*bounds = objBounds;
+	}
+}
 
 // FUNCTION: BFME2 0x004F1D38 size=811 name=?computeSuperweaponTarget@AIPlayer@@UAEXPBVSpecialPowerTemplate@@PAVCoord3D@@HM@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
