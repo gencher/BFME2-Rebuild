@@ -2,6 +2,10 @@
 // Portions derived from Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "Common/KindOf.h"
 #include "Common/ThingTemplate.h"
+#include "Common/ThingFactory.h"
+#include "Common/PlayerList.h"
+#include "Common/NameKeyGenerator.h"
+#include "Common/ScienceStore.h"
 #include "GameLogic/TeamInQueue.h"
 #include "Common/Team.h"
 #include "Common/TeamFactory.h"
@@ -677,6 +681,89 @@ void AIPlayer::repairStructure(ObjectID structure)
 // FUNCTION: BFME2 0x004F2FC4 size=498 name=?checkReadyTeams@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F31B6 size=519 name=?doUpgradesAndSkills@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
+void AIPlayer::doUpgradesAndSkills()
+{
+	if (TheGameLogic->getFrame() < 2)
+		return;
+
+	Bool checkScience = m_player->getSciencePurchasePoints() > 0;
+	if (!checkScience)
+		return;
+
+	const AISideInfo *sideInfo = TheAI->getAiData()->m_sideInfo;
+	while (sideInfo)
+	{
+		if (sideInfo->m_side.compare(m_player->getSide()) == 0)
+			break;
+		sideInfo = sideInfo->m_next;
+	}
+	if (sideInfo == NULL)
+		return;
+
+	if (m_skillsetSelector == INVALID_SKILLSET_SELECTION)
+	{
+		Int limit = 0;
+		if (sideInfo->m_skillSet2.m_numSkills > 0)
+		{
+			limit = 1;
+			if (sideInfo->m_skillSet3.m_numSkills > 0)
+			{
+				limit = 2;
+				if (sideInfo->m_skillSet4.m_numSkills > 0)
+				{
+					limit = 3;
+					if (sideInfo->m_skillSet5.m_numSkills > 0)
+						limit = 4;
+				}
+			}
+		}
+		if (isSkirmishAI())
+			m_skillsetSelector = GetGameLogicRandomValue(0, limit, "C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\AI\\AIPlayer.cpp", 2961);
+		else
+			m_skillsetSelector = 0;
+	}
+
+	if (m_player->getSciencePurchasePoints() > 0)
+	{
+		const TSkillSet *skillset;
+		switch (m_skillsetSelector)
+		{
+		default:
+		case 0:
+			skillset = &sideInfo->m_skillSet1;
+			break;
+		case 1:
+			skillset = &sideInfo->m_skillSet2;
+			break;
+		case 2:
+			skillset = &sideInfo->m_skillSet3;
+			break;
+		case 3:
+			skillset = &sideInfo->m_skillSet4;
+			break;
+		case 4:
+			skillset = &sideInfo->m_skillSet5;
+			break;
+		}
+		for (Int i = 0; i < skillset->m_numSkills; i++)
+		{
+			ScienceType science = skillset->m_skills[i];
+			if (m_player->isCapableOfPurchasingScience(science))
+			{
+				if (m_player->attemptToPurchaseScience(science))
+				{
+					AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+					msg.concat(" purchases from SkillSet");
+					msg.concat((char)('1' + m_skillsetSelector));
+					msg.concat(' ');
+					msg.concat(TheScienceStore->getInternalNameForScience(science));
+					msg.concat(".");
+					TheScriptEngine->AppendDebugMessage(msg, false);
+				}
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x004F33BD size=47 name=?validateFactory@WorkOrder@@QAEXPAVPlayer@@@Z evidence=N:ledger tier=A
 void WorkOrder::validateFactory(Player *player)

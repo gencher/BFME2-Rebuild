@@ -44,6 +44,22 @@ struct TSkillSet
     ScienceType m_skills[MAX_AI_UPGRADES];
 };
 
+// One side's AI data (the SideInfo block of the AIData INI): the five skill sets a skirmish
+// AI picks its science purchases from, chained through m_next.
+struct AISideInfo
+{
+	UnsignedByte m_unk0x00[4];
+	AsciiString m_side;					// +0x04 the side's name (doUpgradesAndSkills compares it with the player's side)
+	UnsignedByte m_unk0x08[0xC];
+	TSkillSet m_skillSet1;				// +0x14
+	TSkillSet m_skillSet2;				// +0x68
+	TSkillSet m_skillSet3;				// +0xBC
+	TSkillSet m_skillSet4;				// +0x110
+	TSkillSet m_skillSet5;				// +0x164
+	UnsignedByte m_unk0x1B8[4];
+	AISideInfo *m_next;					// +0x1BC
+};
+
 class TAiData : public Snapshot
 {
 public:
@@ -125,7 +141,8 @@ public:
 	Real m_lowLodTreeScale;                                // +0xE8 LowLodTreeScale
 	Bool m_disableTrees;                                   // +0xEC DisableTrees
 	Real m_artilleryMaxFriendlyFire;                       // +0xF0 ArtilleryMaxFriendlyFire; percent
-	unsigned char m_unk0xF4[8];
+	AISideInfo *m_sideInfo;								// +0xF4 head of the per-side AI data chain
+	unsigned char m_unk0xF8[4];
 	AIAttackPrioritySet *m_attackPrioritySets;			// +0xFC head of the attack-priority sets of the AttackPriority INI block (ScriptEngine::getAttackInfo 0x00205DDD walks it)
 	TAiData *m_next;                                      // +0x100, the override chain AI::reset 0x002FEB3A unwinds
 	Int m_buildPhase1PerSecondPriorityModifier;            // +0x104 BuildPhase1_PerSecondPriorityModifier
