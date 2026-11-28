@@ -420,6 +420,14 @@ Bool TerrainLogic::parseWaypointData(DataChunkInput &file, DataChunkInfo *info, 
 // FUNCTION: BFME2 0x00280176 size=286 name=?rva00280176@TerrainLogic@@QAEXPBVThingTemplate@@PBVCoord3D@@PBVMatrix3D@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x00280294 size=106 name=?addBridgeToLogic@TerrainLogic@@UAEXPAVRva0027C36A@@PAVDict@@ABVAsciiString@@@Z evidence=N:ledger tier=A
+void TerrainLogic::addBridgeToLogic(BridgeInfo *info, Dict *props, const AsciiString &bridgeTemplateName)
+{
+	Bridge *pBridge = new Bridge(*info, props, bridgeTemplateName, NULL);
+	pBridge->setNext(m_bridgeListHead);
+	m_bridgeListHead = pBridge;
+	Int layer = TheAI->pathfinder()->AddBridge(pBridge);
+	pBridge->setLayer((PathfindLayerEnum)layer);
+}
 
 // FUNCTION: BFME2 0x002802FE size=251 name=?getLayerForDestination@TerrainLogic@@QAE?AW4PathfindLayerEnum@@PAVObject@@PBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 

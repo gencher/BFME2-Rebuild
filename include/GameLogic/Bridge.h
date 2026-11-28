@@ -47,6 +47,7 @@ typedef char BridgeInfo_off_damageStateChanged[(offsetof(BridgeInfo, damageState
 typedef char BridgeInfo_size[(sizeof(BridgeInfo) == 0xA8) ? 1 : -1];
 
 class Drawable;
+class Dict;
 class Object;
 struct Region2D;
 class PolygonTrigger;
@@ -54,6 +55,7 @@ class Vector3;
 class Bridge
 {
 public:
+	Bridge(BridgeInfo &theInfo, Dict *props, const AsciiString &bridgeTemplateName, PolygonTrigger *outline);	// 0x0027F882
 	Bridge(Object *bridgeObj);					// 0x00280C21 (a landmark bridge: the object is the bridge)
 	virtual ~Bridge();							// slot 0, 0x00280C05 (deleting)
 	Bool isPointOnBridge(const Coord3D *pos);
