@@ -9,6 +9,11 @@
 #include "Common/AsciiString.h"
 #include "Common/Xfer.h"
 #include "Common/INI.h"
+#include "Draft/MilesAudioManager.h"
+#include "Common/ICoord2D.h"
+#include "GameClient/Display.h"
+#include "GameClient/LivingWorld.h"
+#include "GameClient/View.h"
 extern "C" __declspec(dllimport) long __stdcall InterlockedDecrement(volatile long *);
 
 // The reverb room types by name, indexed by their type value.
@@ -393,6 +398,61 @@ const char *getEnvironmentName(int type)
 // FUNCTION: BFME2 0x00052917 size=51 name=?rva00052917@MilesAudioManager@@UAEHXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0005294A size=499 name=?getScreenToTerrainPositions@MilesAudioManager@@UAEXPAVScreenToTerrainSet@@@Z evidence=N:ledger tier=A
+void MilesAudioManager::getScreenToTerrainPositions(ScreenToTerrainSet *set)
+{
+	ICoord2D screen;
+	switch (m_unk0x678)
+	{
+		case 0:
+			if (TheTacticalView)
+			{
+				screen.x = TheTacticalView->getWidth() / 2;
+				screen.y = TheTacticalView->getHeight() / 2;
+				set->m_entries[0].m_valid = TheTacticalView->screenToTerrain(&screen, &set->m_entries[0].m_position, false);
+				screen.x = 0;
+				screen.y = 0;
+				set->m_entries[1].m_valid = TheTacticalView->screenToTerrain(&screen, &set->m_entries[1].m_position, false);
+				screen.y = TheTacticalView->getHeight() - 1;
+				set->m_entries[2].m_valid = TheTacticalView->screenToTerrain(&screen, &set->m_entries[2].m_position, false);
+				screen.x = TheTacticalView->getWidth() - 1;
+				set->m_entries[3].m_valid = TheTacticalView->screenToTerrain(&screen, &set->m_entries[3].m_position, false);
+				screen.y = 0;
+				set->m_entries[4].m_valid = TheTacticalView->screenToTerrain(&screen, &set->m_entries[4].m_position, false);
+				return;
+			}
+			break;
+		case 1:
+			if (TheLivingWorld && TheDisplay)
+			{
+				screen.x = TheDisplay->getWidth() / 2;
+				screen.y = TheDisplay->getHeight() / 2;
+				set->m_entries[0].m_valid = true;
+				TheLivingWorld->screenToTerrain(&screen, &set->m_entries[0].m_position);
+				screen.x = 0;
+				screen.y = 0;
+				set->m_entries[1].m_valid = true;
+				TheLivingWorld->screenToTerrain(&screen, &set->m_entries[1].m_position);
+				screen.y = TheDisplay->getHeight() - 1;
+				set->m_entries[2].m_valid = true;
+				TheLivingWorld->screenToTerrain(&screen, &set->m_entries[2].m_position);
+				screen.x = TheDisplay->getWidth() - 1;
+				set->m_entries[3].m_valid = true;
+				TheLivingWorld->screenToTerrain(&screen, &set->m_entries[3].m_position);
+				screen.y = 0;
+				set->m_entries[4].m_valid = true;
+				TheLivingWorld->screenToTerrain(&screen, &set->m_entries[4].m_position);
+				return;
+			}
+			break;
+	}
+
+	for (Int i = 0; i < 5; ++i)
+	{
+		set->m_entries[i].m_valid = false;
+		set->m_entries[i].m_position.zero();
+	}
+}
+
 
 // FUNCTION: BFME2 0x00052B53 size=971 name=?recalculateMicrophone@MilesAudioManager@@QAEXXZ evidence=N:ledger tier=A
 

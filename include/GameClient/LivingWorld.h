@@ -31,7 +31,7 @@ public:
 	virtual void unknownSlot11(const Vector2 *position, Real factor) = 0;	// leaf 0x0009BD98
 	virtual void unknownSlot12() = 0;	// leaf 0x0009AD42
 	virtual void unknownSlot13(const ICoord2D *screenPoint, Vector3 *origin, Coord3D *direction) = 0;	// leaf 0x0009BF33
-	virtual void screenToTerrain(const ICoord2D *screenPoint, Vector3 *position) = 0;	// slot 14, leaf 0x0009ADA0
+	virtual void screenToTerrain(const ICoord2D *screenPoint, Coord3D *position) = 0;	// slot 14, leaf 0x0009ADA0; MilesAudioManager::getScreenToTerrainPositions 0x0005294A passes a ScreenToTerrainSet entry's Coord3D
 	virtual Bool worldToScreen(const Vector3 *position, ICoord2D *screenPoint) = 0;	// slot 15, leaf 0x0009AE98
 	virtual Real unknownSlot16() { return 0.0f; }	// 0x002BFBF0 loads native +0.0
 	virtual void unknownSlot17(Int value) = 0;	// leaf 0x0009AD06

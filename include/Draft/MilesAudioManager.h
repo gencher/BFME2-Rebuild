@@ -2,14 +2,29 @@
 // DRAFT: X:vptr-store and retail slot targets
 #pragma once
 #include <stddef.h>
+#include "Common/GameType.h"
+#include "Common/Coord3D.h"
 class AsciiString;
 enum AudioAffect;
 struct AudioEventInfo;
 class Drawable;
 struct MilesCtorCoord3D;
-class ScreenToTerrainSet;
 class TeamInQueue;
 class Xfer;
+// Five screen points projected onto the terrain: the screen centre, then the corners
+// (top left, bottom left, bottom right, top right). getScreenToTerrainPositions fills
+// it; the constructor builds the five entries and the destructor runs their empty
+// destructors (vector constructor/destructor iterators, 0x10 bytes each).
+class ScreenToTerrainSet
+{
+public:
+	struct Entry
+	{
+		Coord3D m_position;		// +0x00
+		Bool m_valid;			// +0x0C
+	};
+	Entry m_entries[5];
+};
 #pragma pack(push,1) // DRAFT layout policy; all known offsets asserted below
 class MilesAudioManager {
 public:
@@ -124,7 +139,10 @@ public:
   virtual void vfunc_0x1B0(); // slot=0x1B0 target=0x000527FB mangled=?slot108@MilesAudioManager@@UAEEPAUBfmeAudioEventPrefix136@@@Z
   virtual void vfunc_0x1B4(); // slot=0x1B4 target=0x0005121F mangled=?rva0005121F@MilesAudioManager@@UAEMXZ
   virtual void vfunc_0x1B8(); // slot=0x1B8 target=0x000541DB mangled=?rva000541DB@MilesAudioManager@@UAEXXZ
+  unsigned char m_unk0x004[0x678 - 0x4]; // +0x004 not recovered
+  Int m_unk0x678; // +0x678 the view getScreenToTerrainPositions projects through: 0 the tactical view, 1 the living world
 };
+typedef char MilesAudioManager_off_m_unk0x678[(offsetof(MilesAudioManager, m_unk0x678) == 0x678) ? 1 : -1];
 #pragma pack(pop)
 // DRAFT STILL NEEDS:
 // - binary allocation size unknown
