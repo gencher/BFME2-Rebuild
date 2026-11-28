@@ -29,7 +29,8 @@ public:
 
 	enum FlagsType
 	{
-		TRANSFORM		// transform points with the modelview matrix (world-space points)
+		TRANSFORM,		// transform points with the modelview matrix (world-space points)
+		BILLBOARD		// the particle buffer's copy constructor sets flag bit 1 for its point groups
 	};
 
 	PointGroupClass();									// 0x00178E50
@@ -50,6 +51,8 @@ public:
 	int Get_Polygon_Count();
 
 	void Set_Texture(const TextureAsset &texture);
+	void Set_Shader(ShaderClass shader);
+	void Set_Point_Mode(PointModeEnum mode);
 	TextureAsset Get_Texture() const;
 	ShaderClass Get_Shader();
 
@@ -75,7 +78,7 @@ protected:
 	float VPYMin;										// +0x50
 	float VPXMax;										// +0x54
 	float VPYMax;										// +0x58
-	bool Billboard;										// +0x5C
 };
+// SIZE 0x5C
 
 #endif

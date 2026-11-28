@@ -48,6 +48,7 @@ public:
 	float Get_Line_UCoord();
 	void Set_Flag(FlagsType flag, bool on);
 	int Get_Flag(FlagsType flag);
+	void Set_Texture(const TextureAsset &texture);
 	void Set_Shader(const ShaderClass &shader);
 	void Set_Line_Mode(LineModeType linemode);
 	int Get_Polygon_Count();
