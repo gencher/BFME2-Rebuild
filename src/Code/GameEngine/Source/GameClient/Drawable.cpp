@@ -1104,7 +1104,7 @@ void Drawable::rva00272C5B(const char *a, Int b)
 {
 	DrawModule **dm = drawModuleList();
 	if (*dm)
-		(*dm)->vslot54(a, b);
+		(*dm)->SetRampMeshOverload(a, b);
 }
 
 // FUNCTION: BFME2 0x00272C74 size=21 name=?bfmeGoDDA@BfmeThingDDA@@QAEHXZ evidence=N:ledger tier=A

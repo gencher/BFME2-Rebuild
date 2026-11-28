@@ -354,6 +354,10 @@ VertexMaterialClass *MaterialInfoClass::Get_Vertex_Material(int index)
 // FUNCTION: BFME2 0x000B5D7F size=564 name=?rva000B5D7F@W3DScriptedModelDraw@@QAEXPAVHAnimClass@@EHMMMEM@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B5FBE size=23 name=?SetRampMeshOverload@W3DScriptedModelDraw@@UAEXPBDH@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::SetRampMeshOverload(const char *name, Int index)
+{
+	m_rampNames[index].set(name);
+}
 
 // FUNCTION: BFME2 0x000B5FD5 size=17 name=?rva000B5FD5@W3DScriptedModelDraw@@UAEHXZ evidence=?:placeholder tier=A
 

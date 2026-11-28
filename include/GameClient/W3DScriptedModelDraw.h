@@ -88,7 +88,7 @@ public:
 	virtual const Image *getPortraitImage();								// 51
 	virtual const Image *getButtonImage();									// 52
 	virtual void vslot53(Int a);											// 53
-	virtual void vslot54(const char *a, Int b);								// 54
+	virtual void SetRampMeshOverload(const char *name, Int index);								// 54
 	virtual Bool vslot55();													// 55
 	virtual void vslot56(AsciiString *a, Int b);							// 56
 	virtual void vslot57();													// 57
@@ -181,6 +181,8 @@ protected:
 	Bool m_pauseAnimation;			// 0x81
 	Byte m_unk0x82[2];				// 0x82
 	Int m_animationMode;			// 0x84
+	Byte m_unk0x88[0x1DC];			// 0x88
+	AsciiString m_rampNames[2];		// 0x264
 };
 
 #endif

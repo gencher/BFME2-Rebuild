@@ -172,7 +172,7 @@ public:
 	virtual const Image *getPortraitImage() { return 0; }						// 51 (Drawable 0x00272709; W3DModelDraw's override is the map's GetPortraitImage)
 	virtual const Image *getButtonImage() { return 0; }						// 52 (Drawable 0x0027272B; W3DScriptedModelDraw::getButtonImage)
 	virtual void vslot53(Int a) {}												// 53
-	virtual void vslot54(const char *a, Int b) {}								// 54
+	virtual void SetRampMeshOverload(const char *name, Int index) {}								// 54
 	virtual Bool vslot55() { return false; }									// 55 (Drawable 0x00272C1E)
 	virtual void vslot56(AsciiString *a, Int b) {}								// 56
 	virtual void vslot57() {}													// 57 (Drawable 0x0027366A)
