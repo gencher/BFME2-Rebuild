@@ -61,6 +61,7 @@ private:
 	ShaderClass Peek_Legacy_Shader(int legacy_material_index);
 	Vector2 *Get_Temporary_UV_Array(int elementcount);				// 0x00189400 (grows TempUVArray and returns its data)
 	VertexMaterialClass *Peek_Legacy_Vertex_Material(int legacy_material_index);
+	TextureAsset Peek_Legacy_Texture(int legacy_material_index);			// 0x001893C0
 
 	struct LegacyMaterialClass
 	{

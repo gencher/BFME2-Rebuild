@@ -433,6 +433,54 @@ bool MeshModelClass::read_texcoords(ChunkLoadClass &cload, MeshLoadContextClass 
 }
 
 // FUNCTION: BFME2 0x00189790 size=655 name=?read_per_tri_materials@MeshModelClass@@IAE_NAAVChunkLoadClass@@PAVMeshLoadContextClass@@@Z evidence=N:ledger tier=A
+bool MeshModelClass::read_per_tri_materials(ChunkLoadClass &cload, MeshLoadContextClass *context)
+{
+	if (context->Header.NumMaterials == 1) return true;
+
+	TriIndex *polys = Poly->Get_Array();
+
+	bool multi_mtl = (context->Vertex_Material_Count() > 1);
+	bool multi_tex = (context->Texture_Count() > 1);
+	bool multi_shad = (context->Shader_Count() > 1);
+
+	if (!multi_mtl) {
+		Set_Single_Material(context->Peek_Legacy_Vertex_Material(0));
+	}
+	if (!multi_tex) {
+		Set_Single_Texture(context->Peek_Legacy_Texture(0));
+	}
+	if (!multi_shad) {
+		Set_Single_Shader(context->Peek_Legacy_Shader(0));
+	}
+
+	/*
+	** Read in each polygon's material id and assign pointer to the
+	** shader, texture, and vertex material as needed.
+	*/
+	for (int i = 0; i < Get_Polygon_Count(); i++) {
+
+		// read in the mat id for this poly
+		unsigned short matid;
+
+		if (cload.Read(&matid, sizeof(unsigned short)) != sizeof(unsigned short)) {
+			return false;
+		}
+
+		if (multi_shad) {
+			Set_Shader(i, context->Peek_Legacy_Shader(matid));
+		}
+		if (multi_tex) {
+			Set_Texture(i, context->Peek_Legacy_Texture(matid));
+		}
+		if (multi_mtl) {
+			Set_Material(polys[i].I, context->Peek_Legacy_Vertex_Material(matid));
+			Set_Material(polys[i].J, context->Peek_Legacy_Vertex_Material(matid));
+			Set_Material(polys[i].K, context->Peek_Legacy_Vertex_Material(matid));
+		}
+	}
+
+	return true;
+}
 // FUNCTION: BFME2 0x00189A20 size=293 name=?read_stage_texcoords@MeshModelClass@@IAE_NAAVChunkLoadClass@@PAVMeshLoadContextClass@@@Z evidence=N:ledger tier=A
 bool MeshModelClass::read_stage_texcoords(ChunkLoadClass &cload, MeshLoadContextClass *context)
 {
