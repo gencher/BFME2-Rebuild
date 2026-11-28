@@ -5,7 +5,27 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:K, hypothesis:cohesion
+#include "Draft/W3DShrubBuffer.h"
+#include "WWMath/FloatToLong.h"
+#include <math.h>
+
 // FUNCTION: BFME2 0x000E6EF0 size=216 name=?getPartitionBucket@W3DShrubBuffer@@QAEHPBUFloatPair@@@Z evidence=N:ledger tier=B hypothesis:K
+int W3DShrubBuffer::getPartitionBucket(const FloatPair *pos)
+{
+	Real x = pos->x;
+	Real y = pos->y;
+	if (m_partitionRegion.lo.x > x)
+		x = m_partitionRegion.lo.x;
+	if (m_partitionRegion.lo.y > y)
+		y = m_partitionRegion.lo.y;
+	if (x > m_partitionRegion.hi.x)
+		x = m_partitionRegion.hi.x;
+	if (y > m_partitionRegion.hi.y)
+		y = m_partitionRegion.hi.y;
+	Int column = Float_To_Long((float)floor(x / (m_partitionRegion.hi.x - m_partitionRegion.lo.x) * 49.9f));
+	Int row = Float_To_Long((float)floor(y / (m_partitionRegion.hi.y - m_partitionRegion.lo.y) * 49.9f));
+	return row * 50 + column;
+}
 
 // FUNCTION: BFME2 0x000E6FC8 size=27 name=?rva000E6FC8@Rva000E6FC8@@QAEXXZ evidence=?:placeholder tier=B hypothesis:K
 
