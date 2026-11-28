@@ -454,6 +454,29 @@ AIPlayer::~AIPlayer()
 
 
 // FUNCTION: BFME2 0x004F0819 size=143 name=?aiPreTeamDestroy@AIPlayer@@QAEXPBVTeam@@@Z evidence=N:ledger tier=A
+void AIPlayer::aiPreTeamDestroy(const Team *deletedTeam)
+{
+	for (DLINK_ITERATOR<TeamInQueue> iter = iterate_TeamBuildQueue(); !iter.done(); iter.advance())
+	{
+		TeamInQueue *team = iter.cur();
+		if (team->m_team == deletedTeam)
+		{
+			removeFrom_TeamBuildQueue(team);
+			::delete team;
+			iter = iterate_TeamBuildQueue();
+		}
+	}
+	for (DLINK_ITERATOR<TeamInQueue> iter = iterate_TeamReadyQueue(); !iter.done(); iter.advance())
+	{
+		TeamInQueue *team = iter.cur();
+		if (team->m_team == deletedTeam)
+		{
+			removeFrom_TeamReadyQueue(team);
+			::delete team;
+			iter = iterate_TeamReadyQueue();
+		}
+	}
+}
 
 
 // FUNCTION: BFME2 0x004F08A8 size=295 name=?isLocationSafe@AIPlayer@@QAE_NPBVCoord3D@@PBVThingTemplate@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
