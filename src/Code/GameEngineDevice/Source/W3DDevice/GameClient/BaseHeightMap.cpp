@@ -15,6 +15,7 @@
 #include "GameClient/W3DPropBuffer.h"
 #include "GameClient/W3DRoadBuffer.h"
 #include "GameClient/W3DBridgeBuffer.h"
+#include "Common/DataChunk.h"
 #include "WW3D2/DX8DeviceLock.h"
 #include "WW3D2/dxwrapper.h"
 #include <stdlib.h>
@@ -225,6 +226,16 @@ void BaseHeightMapRenderObjClass::Notify_Added(SceneClass *scene)
 }
 
 // FUNCTION: BFME2 0x00068494 size=114 name=?writeEnvironmentData@BaseHeightMapRenderObjClass@@QAEXPAVDataChunkOutput@@@Z evidence=N:ledger tier=A
+void BaseHeightMapRenderObjClass::writeEnvironmentData(DataChunkOutput *chunk)
+{
+	chunk->openDataChunk("EnvironmentData", 3);
+	chunk->writeReal(m_transparentWaterDepth);
+	chunk->writeReal(m_minWaterOpacity);
+	chunk->writeByte(m_environmentFlag != 0);
+	chunk->writeAsciiString(m_environmentName1);
+	chunk->writeAsciiString(m_environmentName0);
+	chunk->closeDataChunk();
+}
 
 // FUNCTION: BFME2 0x00068506 size=212 name=?xfer@BaseHeightMapRenderObjClass@@MAEXPAVXfer@@@Z evidence=N:ledger tier=A
 

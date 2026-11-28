@@ -18,6 +18,7 @@
 #include "WW3D2/DX8CleanupHook.h"
 
 class W3DTerrainLogic;
+class DataChunkOutput;
 class WorldHeightMap;
 class W3DShroud;
 class W3DTaint;
@@ -64,6 +65,7 @@ public:
 
 	Bool isClearLineOfSight(const Coord3D &start, const Coord3D &end) const;
 	void removeAllTerrainBibs();
+	void writeEnvironmentData(DataChunkOutput *chunk);
 	Bool showAsVisibleCliff(Int x, Int y) const;
 	Bool showAsVisibleImpassable(Int x, Int y) const;
 	void addProp(Int id, Coord3D location, Real angle, Real scale, const AsciiString &modelName, Bool distanceFog);
@@ -99,7 +101,13 @@ public:
 	Real m_minWaterOpacity;
 	_STL::vector<bool> m_showAsVisibleCliff;
 	_STL::vector<bool> m_showAsVisibleImpassable;
-	UnsignedByte m_unk0x3814[0x3C];
+	UnsignedByte m_unk0x3814[0xC];
+	AsciiString m_environmentName0;
+	UnsignedByte m_unk0x3824[8];
+	AsciiString m_environmentName1;
+	UnsignedByte m_unk0x3830[4];
+	Bool m_environmentFlag;
+	UnsignedByte m_unk0x3835[0x1B];
 	W3DTreeBuffer *m_treeBuffer;
 	UnsignedByte m_unk0x3854[4];
 	W3DPropBuffer *m_propBuffer;
@@ -113,6 +121,8 @@ public:
 	UnsignedByte m_unk0x3880;
 };
 
+typedef char BaseHeightMapEnvName0Offset[(offsetof(BaseHeightMapRenderObjClass, m_environmentName0) == 0x3820) ? 1 : -1];
+typedef char BaseHeightMapEnvName1Offset[(offsetof(BaseHeightMapRenderObjClass, m_environmentName1) == 0x382C) ? 1 : -1];
 typedef char BaseHeightMapSize[(sizeof(BaseHeightMapRenderObjClass) == 0x3884) ? 1 : -1];
 typedef char BaseHeightMapMapOffset[(offsetof(BaseHeightMapRenderObjClass, m_map) == 0x37C0) ? 1 : -1];
 typedef char BaseHeightMapWaterDepthOffset[(offsetof(BaseHeightMapRenderObjClass, m_transparentWaterDepth) == 0x37E4) ? 1 : -1];
