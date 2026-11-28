@@ -925,6 +925,378 @@ ParticleBufferClass::TailDiffuseTypeEnum ParticleBufferClass::Determine_Tail_Dif
 }
 
 // FUNCTION: BFME2 0x001AD1B0 size=4768 name=??0ParticleBufferClass@@QAE@ABV0@@Z evidence=N:ledger tier=A
+ParticleBufferClass::ParticleBufferClass(const ParticleBufferClass & src) :
+	RenderObjClass(src),
+	NewParticleQueue(NULL),
+	NewParticleQueueStart(0U),
+	NewParticleQueueEnd(0U),
+	NewParticleQueueCount(0U),
+	RenderMode(src.RenderMode),
+	FrameMode(src.FrameMode),
+	MaxAge(src.MaxAge),
+	FutureStartTime(src.FutureStartTime),
+	LastUpdateTime(WW3D::Get_Sync_Time()),
+	IsEmitterDead(false),
+	MaxSize(src.MaxSize),
+	MaxNum(src.MaxNum),
+	Start(0U),
+	End(0U),
+	NewEnd(0U),
+	NonNewNum(0),
+	NewNum(0),
+	BoundingBox(Vector3(0,0,0),Vector3(0,0,0)),
+	BoundingBoxDirty(true),
+	NumColorKeyFrames(src.NumColorKeyFrames),
+	ColorKeyFrameTimes(NULL),
+	ColorKeyFrameValues(NULL),
+	ColorKeyFrameDeltas(NULL),
+	NumAlphaKeyFrames(src.NumAlphaKeyFrames),
+	AlphaKeyFrameTimes(NULL),
+	AlphaKeyFrameValues(NULL),
+	AlphaKeyFrameDeltas(NULL),
+	NumSizeKeyFrames(src.NumSizeKeyFrames),
+	SizeKeyFrameTimes(NULL),
+	SizeKeyFrameValues(NULL),
+	SizeKeyFrameDeltas(NULL),
+	NumRotationKeyFrames(src.NumRotationKeyFrames),
+	RotationKeyFrameTimes(NULL),
+	RotationKeyFrameValues(NULL),
+	HalfRotationKeyFrameDeltas(NULL),
+	OrientationKeyFrameValues(NULL),
+	NumFrameKeyFrames(src.NumFrameKeyFrames),
+	FrameKeyFrameTimes(NULL),
+	FrameKeyFrameValues(NULL),
+	FrameKeyFrameDeltas(NULL),
+	NumBlurTimeKeyFrames(src.NumBlurTimeKeyFrames),
+	BlurTimeKeyFrameTimes(NULL),
+	BlurTimeKeyFrameValues(NULL),
+	BlurTimeKeyFrameDeltas(NULL),
+	RandomColorEntries(NULL),
+	RandomAlphaEntries(NULL),
+	RandomSizeEntries(NULL),
+	ColorRandom(src.ColorRandom),
+	OpacityRandom(src.OpacityRandom),
+	SizeRandom(src.SizeRandom),
+	RotationRandom(src.RotationRandom),
+	FrameRandom(src.FrameRandom),
+	InitialOrientationRandom(src.InitialOrientationRandom),
+	NumRandomRotationEntriesMinus1(0),
+	RandomRotationEntries(NULL),
+	NumRandomOrientationEntriesMinus1(0),
+	RandomOrientationEntries(NULL),
+	NumRandomFrameEntriesMinus1(0),
+	RandomFrameEntries(NULL),
+	NumRandomBlurTimeEntriesMinus1(0),
+	RandomBlurTimeEntries(NULL),
+	PointGroup(NULL),
+	LineRenderer(NULL),
+	LineGroup(NULL),
+	Diffuse(NULL),
+	TailDiffuse(NULL),
+	Color(NULL),
+	Alpha(NULL),
+	Size(NULL),
+	Orientation(NULL),
+	Frame(NULL),
+	UCoord(NULL),
+	TailPosition(NULL),
+	APT(NULL),
+	GroupID(NULL),
+	PingPongPosition(src.PingPongPosition),
+	Velocity(NULL),
+	TimeStamp(NULL),
+	Emitter(src.Emitter),
+	DecimationThreshold(src.DecimationThreshold),
+	ProjectedArea(0.0f),
+	DefaultTailDiffuse(src.DefaultTailDiffuse)
+{
+	Position[0] = NULL;
+	Position[1] = NULL;
+
+	unsigned int i;
+
+	LodCount = MIN(MaxNum, 17);
+	LodBias = src.LodBias;
+
+	/*
+	** Create visual state arrays, copy keyframes and randomizer tables.
+	*/
+
+	NumRandomColorEntriesMinus1 = src.NumRandomColorEntriesMinus1;
+	if (src.Color) {
+		// Create color array
+		Color = new ShareBufferClass<Vector3>(MaxNum, "ParticleBufferClass::Color", 0);
+
+		// Copy color keyframes
+		ColorKeyFrameTimes = new unsigned int [NumColorKeyFrames];
+		ColorKeyFrameValues = new Vector3 [NumColorKeyFrames];
+		ColorKeyFrameDeltas = new Vector3 [NumColorKeyFrames];
+		for (i = 0; i < NumColorKeyFrames; i++) {
+			ColorKeyFrameTimes[i] = src.ColorKeyFrameTimes[i];
+			ColorKeyFrameValues[i] = src.ColorKeyFrameValues[i];
+			ColorKeyFrameDeltas[i] = src.ColorKeyFrameDeltas[i];
+		}
+
+		// Copy color randomizer table
+		if (src.RandomColorEntries) {
+			RandomColorEntries = new Vector3 [NumRandomColorEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomColorEntriesMinus1; j++) {
+				RandomColorEntries[j] = src.RandomColorEntries[j];
+			}
+		}
+	} else {
+		ColorKeyFrameValues = new Vector3 [1];
+		ColorKeyFrameValues[0] = src.ColorKeyFrameValues[0];
+	}
+
+	NumRandomAlphaEntriesMinus1 = src.NumRandomAlphaEntriesMinus1;
+	if (src.Alpha) {
+		// Create alpha array
+		Alpha = new ShareBufferClass<float>(MaxNum, "ParticleBufferClass::Alpha", 0);
+
+		// Copy alpha keyframes
+		AlphaKeyFrameTimes = new unsigned int [NumAlphaKeyFrames];
+		AlphaKeyFrameValues = new float [NumAlphaKeyFrames];
+		AlphaKeyFrameDeltas = new float [NumAlphaKeyFrames];
+		for (i = 0; i < NumAlphaKeyFrames; i++) {
+			AlphaKeyFrameTimes[i] = src.AlphaKeyFrameTimes[i];
+			AlphaKeyFrameValues[i] = src.AlphaKeyFrameValues[i];
+			AlphaKeyFrameDeltas[i] = src.AlphaKeyFrameDeltas[i];
+		}
+
+		// Copy alpha randomizer table
+		if (src.RandomAlphaEntries) {
+			RandomAlphaEntries = new float [NumRandomAlphaEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomAlphaEntriesMinus1; j++) {
+				RandomAlphaEntries[j] = src.RandomAlphaEntries[j];
+			}
+		}
+	} else {
+		AlphaKeyFrameValues = new float [1];
+		AlphaKeyFrameValues[0] = src.AlphaKeyFrameValues[0];
+	}
+
+	NumRandomSizeEntriesMinus1 = src.NumRandomSizeEntriesMinus1;
+	if (src.Size) {
+		// Create size array
+		Size = new ShareBufferClass<float>(MaxNum, "ParticleBufferClass::Size", 0);
+
+		// Copy size keyframes
+		SizeKeyFrameTimes = new unsigned int [NumSizeKeyFrames];
+		SizeKeyFrameValues = new float [NumSizeKeyFrames];
+		SizeKeyFrameDeltas = new float [NumSizeKeyFrames];
+		for (i = 0; i < NumSizeKeyFrames; i++) {
+			SizeKeyFrameTimes[i] = src.SizeKeyFrameTimes[i];
+			SizeKeyFrameValues[i] = src.SizeKeyFrameValues[i];
+			SizeKeyFrameDeltas[i] = src.SizeKeyFrameDeltas[i];
+		}
+
+		// Copy size randomizer table
+		if (src.RandomSizeEntries) {
+			RandomSizeEntries = new float [NumRandomSizeEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomSizeEntriesMinus1; j++) {
+				RandomSizeEntries[j] = src.RandomSizeEntries[j];
+			}
+		}
+	} else {
+		SizeKeyFrameValues = new float [1];
+		SizeKeyFrameValues[0] = src.SizeKeyFrameValues[0];
+	}
+
+	// Set up the rotation / orientation keyframes
+	NumRandomRotationEntriesMinus1 = src.NumRandomRotationEntriesMinus1;
+	NumRandomOrientationEntriesMinus1 = src.NumRandomOrientationEntriesMinus1;
+	if (src.Orientation) {
+		// Create orientation array
+		Orientation = new ShareBufferClass<unsigned char>(MaxNum, "ParticleBufferClass::Orientation", 0);
+
+		// Copy rotation / orientation keyframes
+		RotationKeyFrameTimes = new unsigned int [NumRotationKeyFrames];
+		RotationKeyFrameValues = new float [NumRotationKeyFrames];
+		HalfRotationKeyFrameDeltas = new float [NumRotationKeyFrames];
+		OrientationKeyFrameValues = new float [NumRotationKeyFrames];
+		for (i = 0; i < NumRotationKeyFrames; i++) {
+			RotationKeyFrameTimes[i] = src.RotationKeyFrameTimes[i];
+			RotationKeyFrameValues[i] = src.RotationKeyFrameValues[i];
+			HalfRotationKeyFrameDeltas[i] = src.HalfRotationKeyFrameDeltas[i];
+			OrientationKeyFrameValues[i] = src.OrientationKeyFrameValues[i];
+		}
+
+		// Copy rotation randomizer table
+		if (src.RandomRotationEntries) {
+			RandomRotationEntries = new float [NumRandomRotationEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomRotationEntriesMinus1; j++) {
+				RandomRotationEntries[j] = src.RandomRotationEntries[j];
+			}
+		}
+
+		// Copy starting orientation randomizer table
+		if (src.RandomOrientationEntries) {
+			RandomOrientationEntries = new float [NumRandomOrientationEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomOrientationEntriesMinus1; j++) {
+				RandomOrientationEntries[j] = src.RandomOrientationEntries[j];
+			}
+		}
+
+	} else {
+		// Unlike other properties, if there is no Orientation array then all the arrays are NULL
+		// (including the Values array) - there is an implicit starting value of 0.
+	}
+
+
+	// Set up the frame keyframes
+	// Frame and UCoord both use Frame Key Frames for the source data
+	NumRandomFrameEntriesMinus1 = src.NumRandomFrameEntriesMinus1;
+	if (src.Frame || src.UCoord) {
+		// Create frame array
+		if (src.Frame) {
+			Frame = new ShareBufferClass<unsigned char>(MaxNum, "ParticleBufferClass::Frame", 0);
+		} else {
+			UCoord = new ShareBufferClass<float>(MaxNum, "ParticleBufferClass::UCoord", 0);
+		}
+
+		// Copy frame keyframes
+		FrameKeyFrameTimes = new unsigned int [NumFrameKeyFrames];
+		FrameKeyFrameValues = new float [NumFrameKeyFrames];
+		FrameKeyFrameDeltas = new float [NumFrameKeyFrames];
+		for (i = 0; i < NumFrameKeyFrames; i++) {
+			FrameKeyFrameTimes[i] = src.FrameKeyFrameTimes[i];
+			FrameKeyFrameValues[i] = src.FrameKeyFrameValues[i];
+			FrameKeyFrameDeltas[i] = src.FrameKeyFrameDeltas[i];
+		}
+
+		// Copy frame randomizer table
+		if (src.RandomFrameEntries) {
+			RandomFrameEntries = new float [NumRandomFrameEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomFrameEntriesMinus1; j++) {
+				RandomFrameEntries[j] = src.RandomFrameEntries[j];
+			}
+		}
+	} else {
+		FrameKeyFrameValues = new float [1];
+		FrameKeyFrameValues[0] = src.FrameKeyFrameValues[0];
+	}
+
+	// Set up the blur times keyframes
+	NumRandomBlurTimeEntriesMinus1 = src.NumRandomBlurTimeEntriesMinus1;
+	if (NumBlurTimeKeyFrames > 0) {
+		// Copy blur time keyframes
+		BlurTimeKeyFrameTimes = new unsigned int [NumBlurTimeKeyFrames];
+		BlurTimeKeyFrameValues = new float [NumBlurTimeKeyFrames];
+		BlurTimeKeyFrameDeltas = new float [NumBlurTimeKeyFrames];
+		for (i = 0; i < NumBlurTimeKeyFrames; i++) {
+			BlurTimeKeyFrameTimes[i] = src.BlurTimeKeyFrameTimes[i];
+			BlurTimeKeyFrameValues[i] = src.BlurTimeKeyFrameValues[i];
+			BlurTimeKeyFrameDeltas[i] = src.BlurTimeKeyFrameDeltas[i];
+		}
+
+		// Copy blur time randomizer table
+		if (src.RandomBlurTimeEntries) {
+			RandomBlurTimeEntries = new float [NumRandomBlurTimeEntriesMinus1 + 1];
+			for (unsigned int j = 0; j <= NumRandomBlurTimeEntriesMinus1; j++) {
+				RandomBlurTimeEntries[j] = src.RandomBlurTimeEntries[j];
+			}
+		}
+	} else {
+		BlurTimeKeyFrameValues = new float [1];
+		BlurTimeKeyFrameValues[0] = src.BlurTimeKeyFrameValues[0];
+	}
+
+
+	// We do not add a ref for the emitter (see DTor for detailed explanation)
+	// if (Emitter) Emitter->Add_Ref();
+
+	// Set up new particle queue:
+	NewParticleQueue = new NewParticleStruct[MaxNum];
+
+	// Inputs don't need to be range-checked (emitter did that).
+	Accel = src.Accel;
+	HasAccel = src.HasAccel;
+
+	switch (RenderMode)
+	{
+	case W3D_EMITTER_RENDER_MODE_TRI_PARTICLES:
+		{
+			// Set up worldspace point group
+			PointGroup = new PointGroupClass();
+			PointGroup->Set_Flag(PointGroupClass::TRANSFORM, true);
+			PointGroup->Set_Flag(PointGroupClass::BILLBOARD, true);
+			PointGroup->Set_Texture(src.PointGroup->Get_Texture());
+			PointGroup->Set_Shader(src.PointGroup->Get_Shader());
+			PointGroup->Set_Point_Mode(PointGroupClass::TRIS);
+			PointGroup->Set_Frame_Row_Column_Count_Log2(src.PointGroup->Get_Frame_Row_Column_Count_Log2());
+		}
+		break;
+	case W3D_EMITTER_RENDER_MODE_QUAD_PARTICLES:
+		{
+			// Set up worldspace point group
+			PointGroup = new PointGroupClass();
+			PointGroup->Set_Flag(PointGroupClass::TRANSFORM, true);
+			PointGroup->Set_Flag(PointGroupClass::BILLBOARD, true);
+			PointGroup->Set_Texture(src.PointGroup->Get_Texture());
+			PointGroup->Set_Shader(src.PointGroup->Get_Shader());
+			PointGroup->Set_Point_Mode(PointGroupClass::QUADS);
+			PointGroup->Set_Frame_Row_Column_Count_Log2(src.PointGroup->Get_Frame_Row_Column_Count_Log2());
+		}
+		break;
+	case W3D_EMITTER_RENDER_MODE_LINE:
+		{
+			LineRenderer = new SegLineRendererClass(*src.LineRenderer);
+		}
+		break;
+	case W3D_EMITTER_RENDER_MODE_LINEGRP_TETRA:
+		{
+			LineGroup = new LineGroupClass();
+			LineGroup->Set_Flag(LineGroupClass::TRANSFORM, true);
+			LineGroup->Set_Texture(src.LineGroup->Get_Texture());
+			LineGroup->Set_Shader(src.LineGroup->Get_Shader());
+			LineGroup->Set_Line_Mode(LineGroupClass::TETRAHEDRON);
+			TailPosition = new ShareBufferClass<Vector3>(MaxNum, "ParticleBufferClass::TailPosition", 0);
+			// TODO: Change TailPosition to Kinematic state and add
+			// tail positions to bounding box
+			Set_Force_Visible(1);
+		}
+		break;
+	case W3D_EMITTER_RENDER_MODE_LINEGRP_PRISM:
+		{
+			LineGroup = new LineGroupClass();
+			LineGroup->Set_Flag(LineGroupClass::TRANSFORM, true);
+			LineGroup->Set_Texture(src.LineGroup->Get_Texture());
+			LineGroup->Set_Shader(src.LineGroup->Get_Shader());
+			LineGroup->Set_Line_Mode(LineGroupClass::PRISM);
+			TailPosition = new ShareBufferClass<Vector3>(MaxNum, "ParticleBufferClass::TailPosition", 0);
+			// TODO: Change TailPosition to Kinematic state and add
+			// tail positions to bounding box
+			Set_Force_Visible(1);
+		}
+		break;
+	default:
+		break;
+	}
+
+	// Set up circular buffer. Contents are not initialized because the
+	// start/end indices currently indicate the buffer is empty.
+	Position[0] = new ShareBufferClass<Vector3>(MaxNum, "ParticleBufferClass::Position", 0);
+	if (PingPongPosition) {
+		Position[1] = new ShareBufferClass<Vector3>(MaxNum, "ParticleBufferClass::Position", 0);
+	}
+	APT = new ShareBufferClass<unsigned int>(MaxNum, "ParticleBufferClass::APT", 0);
+	GroupID = new ShareBufferClass<unsigned char>(MaxNum, "ParticleBufferClass::GroupID", 0);
+	Velocity = new Vector3[MaxNum];
+	TimeStamp = new unsigned int[MaxNum];
+
+	// So that the object is ready for use after construction, we will
+	// complete its initialization by initializing its cost and value arrays
+	// according to a screen area of 1.
+	int minlod = Calculate_Cost_Value_Arrays(1.0f, Value, Cost);
+
+	// Ensure lod is no less than minimum allowed
+	if (Get_LOD_Level() < minlod) Set_LOD_Level(minlod);
+
+	// Update Global Count
+	TotalActiveCount++;
+}
+
 
 // FUNCTION: BFME2 0x001AE470 size=96 name=?Clone@ParticleBufferClass@@UBEPAVRenderObjClass@@XZ evidence=N:ledger tier=A
 RenderObjClass *ParticleBufferClass::Clone() const
