@@ -117,7 +117,10 @@ public:
 	WorldHeightMap *m_map;
 	UnsignedByte m_unk0x37C4[0x10];
 	Bool m_needFullUpdate;
-	UnsignedByte m_unk0x37D5[0xF];
+	UnsignedByte m_unk0x37D5[3];
+	Real m_minHeight;
+	Real m_maxHeight;
+	UnsignedByte m_unk0x37E0[4];
 	Real m_transparentWaterDepth;
 	Real m_minWaterOpacity;
 	_STL::vector<bool> m_showAsVisibleCliff;

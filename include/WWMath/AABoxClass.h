@@ -53,6 +53,7 @@ class MinMaxAABoxClass
 {
 public:
 	MinMaxAABoxClass(void) {}
+	__forceinline MinMaxAABoxClass(const Vector3 &min_corner, const Vector3 &max_corner) : MinCorner(min_corner), MaxCorner(max_corner) {}
 	void Init(const AABoxClass &box)
 	{
 		MinCorner = box.Center - box.Extent;

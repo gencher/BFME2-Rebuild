@@ -10,6 +10,9 @@
 #include "Common/ICoord2D.h"
 #include "WWLib/RefCountClass.h"
 
+// World units per height-map cell.
+#define MAP_XY_FACTOR (10.0f)
+
 struct DataChunkInfo;
 class DataChunkInput;
 

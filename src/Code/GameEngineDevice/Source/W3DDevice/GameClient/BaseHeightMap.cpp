@@ -325,6 +325,19 @@ bool PlaneClass::Compute_Intersection(const Vector3 &p0, const Vector3 &p1, floa
 // FUNCTION: BFME2 0x00069AF5 size=215 name=?Get_Obj_Space_Bounding_Sphere@BaseHeightMapRenderObjClass@@UBEXAAVSphereClass@@@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00069BCC size=147 name=?Get_Obj_Space_Bounding_Box@BaseHeightMapRenderObjClass@@UBEXAAVAABoxClass@@@Z evidence=N:ledger tier=A
+void BaseHeightMapRenderObjClass::Get_Obj_Space_Bounding_Box(AABoxClass &box) const
+{
+	Int x = 0;
+	Int y = 0;
+	if (m_map) {
+		x = m_map->getXExtent();
+		y = m_map->getYExtent();
+	}
+	Vector3 minPt(0, 0, m_minHeight);
+	Vector3 maxPt(x * MAP_XY_FACTOR, y * MAP_XY_FACTOR, m_maxHeight);
+	MinMaxAABoxClass bounds(minPt, maxPt);
+	box.Init(bounds);
+}
 
 // FUNCTION: BFME2 0x00069C5F size=135 name=?rva00069C5F@BaseHeightMapRenderObjClass@@QAEXVVector3@@M@Z evidence=?:placeholder tier=A
 
