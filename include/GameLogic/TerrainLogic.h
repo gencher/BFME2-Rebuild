@@ -153,6 +153,7 @@ public:
 	PathfindLayerEnum getLayerForDestination(Object *obj, const Coord3D *pos);
 	void deleteBridges();							// 0x0027D5AD (frees the bridge list; Zero Hour's name)
 	Bool isBridgeRepaired(const Object *bridge);	// 0x0027D40B
+	Int getPartitionBucket(Real *pos);	// 0x0027D0D6 (the 50 by 50 grid cell of an x, y pair, clamped to the map extent)
 	void getBridgeAttackPoints(const Object *bridge, TBridgeAttackInfo *attackInfo);	// 0x0027D483
 	Bool isBridgeBroken(const Object *bridge);	// 0x0027D447
 	void setActiveBoundary(Int boundary);	// 0x0028069E (ScriptActions::doBorderSwitch 0x003BC3A8)
