@@ -21,6 +21,9 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "Common/BitFlagsIO.h"
 #include "WW3D2/MaterialInfoClass.h"
 #include "WW3D2/VertexMaterialClass.h"
+#include "GameLogic/Object.h"
+#include "Lib/trig.h"
+#include <math.h>
 // FUNCTION: BFME2 0x000B2B3B size=7 name=?get@LivingWorldBuildPlotIconSubObject@@UBEHXZ evidence=X:proven (vtable) tier=B hypothesis:mm1-neighbour-pointers-mixed
 // FUNCTION: BFME2 0x000B2B42 size=58 name=?Rva000B2B42Clamp@@YAXPAH0H@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 // FUNCTION: BFME2 0x000B2B7C size=11 name=?millisecondsToSeconds@@YAMM@Z evidence=N:ledger tier=B hypothesis:mm1-contiguity-callers
@@ -185,6 +188,29 @@ Bool ModelConditionFlags::rva000B3EB3() const
 // FUNCTION: BFME2 0x000B4536 size=12 name=?get@Rva000B4536CmpBoolField@@QBE_NXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B4542 size=273 name=?GetRelativeAngle@Object@@QBEMPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+Real Object::GetRelativeAngle(const Coord3D *pos) const
+{
+	Coord3D delta;
+	delta.x = pos->x - m_cachedPos.x;
+	delta.y = pos->y - m_cachedPos.y;
+	Real distance = (Real)sqrt(delta.x * delta.x + delta.y * delta.y);
+	if (distance == 0.0f)
+		return 0.0f;
+	Real scale = 1.0f / distance;
+	delta.x *= scale;
+	delta.y *= scale;
+	const Coord3D *facing = getUnitDirectionVector2D();
+	Real cosine = delta.x * facing->x;
+	cosine += delta.y * facing->y;
+	if (cosine < -1.0)
+		cosine = -1.0f;
+	else if (cosine > 1.0)
+		cosine = 1.0f;
+	Real angle = ACos(cosine);
+	if (delta.y * facing->x - delta.x * facing->y < 0.0f)
+		angle = -angle;
+	return angle;
+}
 
 // FUNCTION: BFME2 0x000B4653 size=29 name=?rva000B4653@Rva000B4653@@QAEPAXH@Z evidence=?:placeholder tier=A
 
