@@ -23,7 +23,7 @@ class TeamInQueue : public Snapshot
 public:
 	// Zero Hour's constructor, out of line in BFME 2: AIPlayer::xfer 0x004F0DDE calls it at
 	// 0x004EF5CE (table 0x00C62B78, every member cleared in declaration order; no row yet).
-	TeamInQueue();
+	TeamInQueue() throw();
 	virtual ~TeamInQueue();							// slot 0, 0x004F05F0 (deleting 0x004EF606)
 	Bool isAllBuilt();								// 0x004F0656
 	Bool isBuildTimeExpired();						// 0x004F0681

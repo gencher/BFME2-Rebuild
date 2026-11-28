@@ -10,6 +10,7 @@
 #include "Common/Team.h"
 #include "Common/TeamFactory.h"
 #include "GameLogic/AIPlayer.h"
+#include "GameLogic/AISkirmishPlayer.h"
 #include "GameLogic/BuildListInfo.h"
 #include "GameLogic/AI.h"
 #include "Common/GlobalData.h"
@@ -59,6 +60,101 @@ void AIPlayer::selectSkillset(Int skillset)
 }
 
 // FUNCTION: BFME2 0x004EFFC9 size=830 name=?recruitSpecificAITeam@AISkirmishPlayer@@UAEXPAVTeamPrototype@@MPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void AISkirmishPlayer::recruitSpecificAITeam(TeamPrototype *teamProto, Real recruitRadius, const Coord3D *pos)
+{
+	if (recruitRadius < 1)
+		recruitRadius = 99999.0f;
+	if (teamProto)
+	{
+		if (teamProto->getIsSingleton())
+		{
+			Team *singletonTeam = TheTeamFactory->findTeam(teamProto->m_ownerName, teamProto->m_name);
+			if (singletonTeam && singletonTeam->hasAnyObjects(false))
+			{
+				AsciiString teamStr = "Unable to recruit singleton team '";
+				teamStr.concat("' because team already exists.");
+				TheScriptEngine->AppendDebugMessage(teamStr, false);
+				return;
+			}
+		}
+		if (!teamProto->m_teamTemplate.m_hasHomeLocation)
+		{
+			AsciiString teamStr = "Error : team '";
+			teamStr.concat(teamProto->m_name);
+			teamStr.concat("' has no Home Position (or Origin).");
+			TheScriptEngine->AppendDebugMessage(teamStr, false);
+		}
+		Team *theTeam = TheTeamFactory->createInactiveTeam(teamProto->m_ownerName, teamProto->m_name);
+		AsciiString teamName = teamProto->m_name;
+		teamName.concat(" - Recruiting.");
+		TheScriptEngine->AppendDebugMessage(teamName, false);
+		const TCreateUnitsInfo *unitInfo = teamProto->m_teamTemplate.m_unitsInfo;
+		Int unitsRecruited = 0;
+		for (Int i = 0; i < teamProto->m_teamTemplate.m_numUnitsInfo; i++)
+		{
+			const ThingTemplate *thing = TheThingFactory->findTemplate(unitInfo[i].m_unitThingName);
+			if (thing)
+			{
+				Int count = unitInfo[i].m_maxUnits;
+				while (count > 0)
+				{
+					Object *unit;
+					if (pos)
+						unit = theTeam->tryToRecruit(thing, pos, recruitRadius, unitInfo[i].m_unk0x14, 0, 0);
+					else
+						unit = theTeam->tryToRecruit(thing, &teamProto->m_teamTemplate.m_homeLocation, recruitRadius, unitInfo[i].m_unk0x14, 0, 0);
+					if (unit)
+					{
+						unitsRecruited++;
+
+						AsciiString teamStr = "Team '";
+						teamStr.concat(theTeam->getPrototype()->m_name);
+						teamStr.concat("' recruits ");
+						teamStr.concat(thing->getName());
+						teamStr.concat(" from team '");
+						teamStr.concat(unit->getTeam()->getPrototype()->m_name);
+						teamStr.concat("'");
+						TheScriptEngine->AppendDebugMessage(teamStr, false);
+
+						unit->setTeam(theTeam);
+
+						AIUpdateInterface *ai = unit->getAI();
+						if (ai)
+							ai->aiMoveToPosition(&teamProto->m_teamTemplate.m_homeLocation, CMD_FROM_AI);
+					}
+					else
+					{
+						break;
+					}
+					count--;
+				}
+			}
+		}
+		if (unitsRecruited > 0)
+		{
+			TeamInQueue *team = new TeamInQueue;
+			prependTo_TeamReadyQueue(team);
+			team->m_priorityBuild = false;
+			team->m_workOrders = NULL;
+			team->m_frameStarted = TheGameLogic->getFrame();
+			team->m_team = theTeam;
+			teamName = teamProto->m_name;
+			teamName.concat(" - Finished recruiting.");
+			TheScriptEngine->AppendDebugMessage(teamName, false);
+		}
+		else
+		{
+			if (!theTeam->getPrototype()->getIsSingleton())
+			{
+				::delete theTeam;
+				theTeam = NULL;
+			}
+			teamName = teamProto->m_name;
+			teamName.concat(" - Recruited 0 units, disbanding.");
+			TheScriptEngine->AppendDebugMessage(teamName, false);
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x004F0307 size=7 name=?get@Rva004F0307ByteField@@QBEEXZ evidence=?:placeholder tier=A
 
@@ -603,6 +699,47 @@ void TeamInQueue::xfer(Xfer *xfer)
 // FUNCTION: BFME2 0x004F2464 size=1064 name=?buildSpecificAITeam@AIPlayer@@UAEXPAVTeamPrototype@@_N@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F288C size=349 name=?queueDozer@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
+void AIPlayer::queueDozer()
+{
+	if (dozerInQueue())
+		return;
+
+	Bool canBuildUnits = m_player->getCanBuildUnits();
+	m_player->setCanBuildUnits(true);
+	for (const ThingTemplate *tTemplate = TheThingFactory->firstTemplate(); tTemplate; tTemplate = tTemplate->friend_getNextTemplate())
+	{
+		if (tTemplate->isKindOf(KINDOF_DOZER))
+		{
+			Object *factory = findFactory(tTemplate, true, NULL);
+			if (factory)
+			{
+				WorkOrder *order = new WorkOrder;
+				order->m_thing = tTemplate;
+				order->m_factoryID = INVALID_ID;
+				order->m_numRequired = 1;
+				order->m_required = true;
+				order->m_isResourceGatherer = false;
+				order->m_next = NULL;
+
+				TeamInQueue *team = new TeamInQueue;
+				prependTo_TeamBuildQueue(team);
+				team->m_priorityBuild = true;
+				team->m_workOrders = order;
+				team->m_frameStarted = TheGameLogic->getFrame();
+				team->m_team = m_player->m_defaultTeam;
+
+				AsciiString teamName = "DOZER - building one at the ";
+				teamName.concat(factory->getTemplate()->getName());
+				TheScriptEngine->AppendDebugMessage(teamName, false);
+
+				m_teamDelay = 0;
+				startTraining(order, team->m_priorityBuild, team->m_team->getName());
+				break;
+			}
+		}
+	}
+	m_player->setCanBuildUnits(canBuildUnits);
+}
 
 // FUNCTION: BFME2 0x004F29E9 size=211 name=?checkForSupplyCenter@AIPlayer@@IAEXPAVBuildListInfo@@PAVObject@@@Z evidence=N:ledger tier=A
 

@@ -52,6 +52,7 @@ class Team : public Snapshot, public AIBuildable
 {
 	friend void deleteTeamCallback(Team *team);	// 0x003A33A7 deletes through the protected dtor
 	friend class TeamPrototype;			// updateState 0x003A34AC deletes retired instances
+	friend class AISkirmishPlayer;		// recruitSpecificAITeam 0x004EFFC9 deletes a recruiting team that took no unit
 public:
 	Team(TeamPrototype *proto, Int id);	// 0x003A39A7
 protected:
@@ -174,6 +175,7 @@ public:
 	Team * dlink_next_TeamInstanceList() const;	// 0x005C4AF5
 
 	TeamPrototype *getPrototype() const { return m_proto; }
+	const AsciiString &getName() const;		// the prototype's name, the empty string without a prototype (AIPlayer::queueDozer 0x004F288C expands it)
 	Int getID() const { return m_id; }
 	Bool isCreated() const { return m_created; }
 	void setActive() { if (!m_unk0x5C[1]) { m_unk0x5C[2] = true; m_unk0x5C[1] = true; } }	// Zero Hour's setActive (TeamInQueue::~TeamInQueue 0x004F05F0)
@@ -444,6 +446,13 @@ public:
 	Team *m_dlinkhead_TeamInstanceList;		// +0x334
 };
 // SIZE 0x338
+
+inline const AsciiString &Team::getName() const
+{
+	if (m_proto == 0)
+		return AsciiString::TheEmptyString;
+	return m_proto->getName();
+}
 typedef char TeamPrototypeSize[(sizeof(TeamPrototype) == 0x338) ? 1 : -1];
 typedef char TeamPrototypeTemplateOffset[(offsetof(TeamPrototype, m_teamTemplate) == 0x12C) ? 1 : -1];
 typedef char TeamPrototypeHeadOffset[(offsetof(TeamPrototype, m_dlinkhead_TeamInstanceList) == 0x334) ? 1 : -1];
