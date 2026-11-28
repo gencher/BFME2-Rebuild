@@ -23,6 +23,7 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "WW3D2/VertexMaterialClass.h"
 #include "GameLogic/Object.h"
 #include "Common/BfmeFixedObject60.h"
+#include "Common/BfmeThingVKE.h"
 #include "GameClient/AnimConditionInfo.h"
 #include "Common/AsciiStringRef.h"
 #include "GameClient/BfmeStringTailRecord180.h"
@@ -468,6 +469,16 @@ AsciiString ModuleData::getBestModelNameForWB(const ModelConditionFlags &) const
 // FUNCTION: BFME2 0x000B6BF0 size=257 name=?findSingleSubObj@@YA_NPAVRenderObjClass@@ABVAsciiString@@AAVMatrix3D@@AAH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x000B6D4B size=64 name=?bfmeInitVKE@BfmeThingVKE@@QAEPAV1@ABV1@@Z evidence=N:ledger tier=A
+BfmeThingVKE::BfmeThingVKE(const BfmeThingVKE &other)
+	: m_name(other.m_name)
+{
+	m_flag = other.m_flag;
+	m_word08 = other.m_word08;
+	m_word0C = other.m_word0C;
+	m_word10 = other.m_word10;
+	m_word14 = other.m_word14;
+	m_block = other.m_block;
+}
 
 // FUNCTION: BFME2 0x000B6D8B size=65 name=??0DelayedLuaEventList@@QAE@XZ evidence=N:ledger tier=A
 DelayedLuaEventList::DelayedLuaEventList()
