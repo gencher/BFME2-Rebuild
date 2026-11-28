@@ -268,7 +268,7 @@ public:
 	void RemoveObjectFromPathfindMap(Object *);	// 0x002e718a N:ledger
 	void RemoveObjectGoalFromPathfindMap(Object *);	// 0x002e719b N:ledger
 	void RemoveObjectFromPathfindMapKeepingGateFlags(Object *);	// 0x002e71ad N:ledger
-	Int AddBridge(Int);	// 0x002e71bf N:ledger
+	Int AddBridge(Bridge *bridge);	// 0x002e71bf (the ledger spells the argument Int)
 	void SetBridgeStateRepaired(Int, Bool);	// 0x002e7205 N:ledger
 	Bool IsValidMovementTerrain(PathfindLayerEnum, const Locomotor *, const Coord3D *);	// 0x002e7296 N:ledger
 	void SetDebugPathPosition(const Coord3D *);	// 0x002e74b5 N:ledger

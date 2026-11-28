@@ -47,12 +47,14 @@ typedef char BridgeInfo_off_damageStateChanged[(offsetof(BridgeInfo, damageState
 typedef char BridgeInfo_size[(sizeof(BridgeInfo) == 0xA8) ? 1 : -1];
 
 class Drawable;
+class Object;
 struct Region2D;
 class PolygonTrigger;
 class Vector3;
 class Bridge
 {
 public:
+	Bridge(Object *bridgeObj);					// 0x00280C21 (a landmark bridge: the object is the bridge)
 	virtual ~Bridge();							// slot 0, 0x00280C05 (deleting)
 	Bool isPointOnBridge(const Coord3D *pos);
 	Drawable *getDrawable();
@@ -64,6 +66,7 @@ public:
 	void setNext(Bridge *next) { m_next = next; }
 	const BridgeInfo *peekBridgeInfo() const { return &m_bridgeInfo; }
 	PathfindLayerEnum getLayer() const { return m_layer; }
+	void setLayer(PathfindLayerEnum layer) { m_layer = layer; }
 	AsciiString getBridgeTemplateName() const;	// 0x000AF1DD (27 B: the template name at +0x08; the map spells it Anim2DTemplate::getName)
 	void setBridgeObjectID(ObjectID id) { m_bridgeInfo.bridgeObjectID = id; }
 	void setTowerObjectID(ObjectID id, Int which) { m_bridgeInfo.towerObjectID[which] = id; }

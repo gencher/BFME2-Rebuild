@@ -561,6 +561,14 @@ Bool TerrainLogic::parseWaypointDataChunk(DataChunkInput &file, DataChunkInfo *i
 // FUNCTION: BFME2 0x002811DD size=127 name=?Rva002811DD@W3DTerrainLogic@@UAE?AW4PathfindLayerEnum@@MABVCoord3D@@_NAAVMatrix3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x0028125C size=99 name=?addLandmarkBridgeToLogic@TerrainLogic@@UAEXPAVObject@@@Z evidence=N:ledger tier=A
+void TerrainLogic::addLandmarkBridgeToLogic(Object *bridgeObj)
+{
+	Bridge *pBridge = new Bridge(bridgeObj);
+	pBridge->setNext(m_bridgeListHead);
+	m_bridgeListHead = pBridge;
+	Int layer = TheAI->pathfinder()->AddBridge(pBridge);
+	pBridge->setLayer((PathfindLayerEnum)layer);
+}
 
 // FUNCTION: BFME2 0x002812BF size=299 name=?getClosestWaypointOnPath@TerrainLogic@@UAEPAVWaypoint@@PBVCoord3D@@ABVAsciiString@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 Waypoint *TerrainLogic::getClosestWaypointOnPath(const Coord3D *pos, const AsciiString &label)
