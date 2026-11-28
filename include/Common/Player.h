@@ -340,6 +340,10 @@ public:
 	NameKeyType getPlayerNameKey() const { return m_playerNameKey; }
 	Int getPlayerIndex() const { return m_playerIndex; }
 	UnsignedInt getAttackedFrame() const { return m_attackedFrame; }	// inline (AIPlayer::isSupplySourceAttacked 0x004F1138 reads +0x354)
+	Bool getCanBuildUnits() const { return m_canBuildUnits; }
+	void setCanBuildUnits(Bool canBuild) { m_canBuildUnits = canBuild; }
+	BuildListInfo *getBuildList() const { return m_buildList; }
+	const PlayerTeamList *getPlayerTeams() const { return &m_playerTeamPrototypes; }	// inline (AIPlayer::isSupplySourceAttacked walks it)
 	Int getNumBattlePlansActive() const { return m_bombardBattlePlans + m_holdTheLineBattlePlans + m_searchAndDestroyBattlePlans; }	// Zero Hour's
 	UnsignedInt getPlayerMask() const { return 1 << m_playerIndex; }	// Zero Hour's (processSelectTeamGameMessage 0x002ACAFB: 1 << +0x54)
 	Int getLightPoints() const;	// 0x002A9ED2 (ScriptConditions evaluatePlayerCompareLightPoints 0x003E4F79)

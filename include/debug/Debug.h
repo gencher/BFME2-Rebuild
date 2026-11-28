@@ -299,4 +299,8 @@ extern Debug *theDebug;								// RVA 0x009E0880
 template <class CharT> class StringBase;
 template <class CharT> Debug &operator<<(Debug &debug, const StringBase<CharT> &text) { return debug << text.str(); }
 
+// Streams a position: retail's 0x000050BA (the pathfinder's path dump calls it for each node).
+class Coord3D;
+Debug &operator<<(Debug &debug, const Coord3D &pos);
+
 #endif

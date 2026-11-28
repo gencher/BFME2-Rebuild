@@ -5,7 +5,7 @@
 
 // FUNCTION: BFME2 0x004EF5BE size=16 name=?go@Rva000C9EF0@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-gap-unit
 // FUNCTION: BFME2 0x004EF5CE size=50 name=??0TeamInQueue@@QAE@XZ evidence=N:ledger tier=B hypothesis:mm1-gap-unit
-TeamInQueue::TeamInQueue() :
+TeamInQueue::TeamInQueue() throw() :
 	m_buildPrev(0),
 	m_buildNext(0),
 	m_readyPrev(0),

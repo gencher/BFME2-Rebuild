@@ -2,10 +2,20 @@
 // Portions derived from Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "Common/KindOf.h"
 #include "Common/ThingTemplate.h"
+#include "Common/ThingFactory.h"
+#include "Common/PlayerList.h"
+#include "Common/NameKeyGenerator.h"
+#include "Common/ScienceStore.h"
+#include "Common/Upgrade.h"
+#include "GameClient/ControlBar.h"
+#include "GameClient/CommandSet.h"
+#include "GameClient/CommandButton.h"
+#include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/TeamInQueue.h"
 #include "Common/Team.h"
 #include "Common/TeamFactory.h"
 #include "GameLogic/AIPlayer.h"
+#include "GameLogic/AISkirmishPlayer.h"
 #include "GameLogic/BuildListInfo.h"
 #include "GameLogic/AI.h"
 #include "Common/GlobalData.h"
@@ -55,6 +65,101 @@ void AIPlayer::selectSkillset(Int skillset)
 }
 
 // FUNCTION: BFME2 0x004EFFC9 size=830 name=?recruitSpecificAITeam@AISkirmishPlayer@@UAEXPAVTeamPrototype@@MPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void AISkirmishPlayer::recruitSpecificAITeam(TeamPrototype *teamProto, Real recruitRadius, const Coord3D *pos)
+{
+	if (recruitRadius < 1)
+		recruitRadius = 99999.0f;
+	if (teamProto)
+	{
+		if (teamProto->getIsSingleton())
+		{
+			Team *singletonTeam = TheTeamFactory->findTeam(teamProto->m_ownerName, teamProto->m_name);
+			if (singletonTeam && singletonTeam->hasAnyObjects(false))
+			{
+				AsciiString teamStr = "Unable to recruit singleton team '";
+				teamStr.concat("' because team already exists.");
+				TheScriptEngine->AppendDebugMessage(teamStr, false);
+				return;
+			}
+		}
+		if (!teamProto->m_teamTemplate.m_hasHomeLocation)
+		{
+			AsciiString teamStr = "Error : team '";
+			teamStr.concat(teamProto->m_name);
+			teamStr.concat("' has no Home Position (or Origin).");
+			TheScriptEngine->AppendDebugMessage(teamStr, false);
+		}
+		Team *theTeam = TheTeamFactory->createInactiveTeam(teamProto->m_ownerName, teamProto->m_name);
+		AsciiString teamName = teamProto->m_name;
+		teamName.concat(" - Recruiting.");
+		TheScriptEngine->AppendDebugMessage(teamName, false);
+		const TCreateUnitsInfo *unitInfo = teamProto->m_teamTemplate.m_unitsInfo;
+		Int unitsRecruited = 0;
+		for (Int i = 0; i < teamProto->m_teamTemplate.m_numUnitsInfo; i++)
+		{
+			const ThingTemplate *thing = TheThingFactory->findTemplate(unitInfo[i].m_unitThingName);
+			if (thing)
+			{
+				Int count = unitInfo[i].m_maxUnits;
+				while (count > 0)
+				{
+					Object *unit;
+					if (pos)
+						unit = theTeam->tryToRecruit(thing, pos, recruitRadius, unitInfo[i].m_unk0x14, 0, 0);
+					else
+						unit = theTeam->tryToRecruit(thing, &teamProto->m_teamTemplate.m_homeLocation, recruitRadius, unitInfo[i].m_unk0x14, 0, 0);
+					if (unit)
+					{
+						unitsRecruited++;
+
+						AsciiString teamStr = "Team '";
+						teamStr.concat(theTeam->getPrototype()->m_name);
+						teamStr.concat("' recruits ");
+						teamStr.concat(thing->getName());
+						teamStr.concat(" from team '");
+						teamStr.concat(unit->getTeam()->getPrototype()->m_name);
+						teamStr.concat("'");
+						TheScriptEngine->AppendDebugMessage(teamStr, false);
+
+						unit->setTeam(theTeam);
+
+						AIUpdateInterface *ai = unit->getAI();
+						if (ai)
+							ai->aiMoveToPosition(&teamProto->m_teamTemplate.m_homeLocation, CMD_FROM_AI);
+					}
+					else
+					{
+						break;
+					}
+					count--;
+				}
+			}
+		}
+		if (unitsRecruited > 0)
+		{
+			TeamInQueue *team = new TeamInQueue;
+			prependTo_TeamReadyQueue(team);
+			team->m_priorityBuild = false;
+			team->m_workOrders = NULL;
+			team->m_frameStarted = TheGameLogic->getFrame();
+			team->m_team = theTeam;
+			teamName = teamProto->m_name;
+			teamName.concat(" - Finished recruiting.");
+			TheScriptEngine->AppendDebugMessage(teamName, false);
+		}
+		else
+		{
+			if (!theTeam->getPrototype()->getIsSingleton())
+			{
+				::delete theTeam;
+				theTeam = NULL;
+			}
+			teamName = teamProto->m_name;
+			teamName.concat(" - Recruited 0 units, disbanding.");
+			TheScriptEngine->AppendDebugMessage(teamName, false);
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x004F0307 size=7 name=?get@Rva004F0307ByteField@@QBEEXZ evidence=?:placeholder tier=A
 
@@ -349,6 +454,29 @@ AIPlayer::~AIPlayer()
 
 
 // FUNCTION: BFME2 0x004F0819 size=143 name=?aiPreTeamDestroy@AIPlayer@@QAEXPBVTeam@@@Z evidence=N:ledger tier=A
+void AIPlayer::aiPreTeamDestroy(const Team *deletedTeam)
+{
+	for (DLINK_ITERATOR<TeamInQueue> iter = iterate_TeamBuildQueue(); !iter.done(); iter.advance())
+	{
+		TeamInQueue *team = iter.cur();
+		if (team->m_team == deletedTeam)
+		{
+			removeFrom_TeamBuildQueue(team);
+			::delete team;
+			iter = iterate_TeamBuildQueue();
+		}
+	}
+	for (DLINK_ITERATOR<TeamInQueue> iter = iterate_TeamReadyQueue(); !iter.done(); iter.advance())
+	{
+		TeamInQueue *team = iter.cur();
+		if (team->m_team == deletedTeam)
+		{
+			removeFrom_TeamReadyQueue(team);
+			::delete team;
+			iter = iterate_TeamReadyQueue();
+		}
+	}
+}
 
 
 // FUNCTION: BFME2 0x004F08A8 size=295 name=?isLocationSafe@AIPlayer@@QAE_NPBVCoord3D@@PBVThingTemplate@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
@@ -514,6 +642,63 @@ Bool AIPlayer::isAGoodIdeaToBuildTeam(TeamPrototype *proto)
 // FUNCTION: BFME2 0x004F1653 size=430 name=?checkQueuedTeams@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F1801 size=466 name=?computeCenterAndRadiusOfBase@AIPlayer@@IAEXPAVCoord3D@@PAM@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void AIPlayer::computeCenterAndRadiusOfBase(Coord3D *center, Real *radius)
+{
+	BuildListInfo *info;
+	Coord2D totalPos;
+	totalPos.x = 0;
+	totalPos.y = 0;
+	Int numBldg = 0;
+	for (info = m_player->getBuildList(); info; info = info->m_next)
+	{
+		AsciiString name = info->getTemplateName();
+		if (name.isEmpty())
+			continue;
+		const ThingTemplate *bldgPlan = TheThingFactory->findTemplate(name);
+		if (!bldgPlan)
+			continue;
+		Real px = info->m_location.x;
+		Real py = info->m_location.y;
+		totalPos.x += px;
+		totalPos.y += py;
+		numBldg++;
+	}
+	if (numBldg > 0)
+	{
+		totalPos.x /= numBldg;
+		totalPos.y /= numBldg;
+	}
+
+	m_baseCenterSet = numBldg > 0;
+	center->x = totalPos.x;
+	center->y = totalPos.y;
+
+	Real maxRadSqr = 0;
+	for (info = m_player->getBuildList(); info; info = info->m_next)
+	{
+		AsciiString name = info->getTemplateName();
+		if (name.isEmpty())
+			continue;
+		const ThingTemplate *bldgPlan = TheThingFactory->findTemplate(name);
+		if (!bldgPlan)
+			continue;
+		Real px = info->m_location.x;
+		Real py = info->m_location.y;
+		Real dx = px - center->x;
+		Real dy = py - center->y;
+		if (dx < 0)
+			dx = -dx;
+		if (dy < 0)
+			dy = -dy;
+		Real bldgRadius = bldgPlan->m_geometryInfo.m_majorRadius * 0.4f;
+		dx += bldgRadius;
+		dy += bldgRadius;
+		Real radSqr = dx * dx + dy * dy;
+		if (radSqr > maxRadSqr)
+			maxRadSqr = radSqr;
+	}
+	*radius = sqrt(maxRadSqr);
+}
 
 // FUNCTION: BFME2 0x004F19D3 size=35 name=?dozerInQueue@AIPlayer@@IAE_NXZ evidence=N:ledger tier=A
 Bool AIPlayer::dozerInQueue()
@@ -588,6 +773,61 @@ void TeamInQueue::xfer(Xfer *xfer)
 
 
 // FUNCTION: BFME2 0x004F1B8C size=400 name=?getPlayerStructureBounds@AIPlayer@@SAXPAURegion2D@@H@Z evidence=N:ledger tier=A
+void AIPlayer::getPlayerStructureBounds(Region2D *bounds, Int playerNdx)
+{
+	Bool firstObject = true;
+	Bool firstStructure = true;
+	bounds->hi.x = bounds->lo.x = bounds->hi.y = bounds->lo.y = 0;
+	Region2D objBounds;
+	objBounds.hi.x = objBounds.lo.x = objBounds.hi.y = objBounds.lo.y = 0;
+
+	Player *pPlayer = ThePlayerList->getNthPlayer(playerNdx);
+	if (pPlayer == 0)
+		return;
+	for (PlayerTeamList::const_iterator it = pPlayer->getPlayerTeams()->begin(); it != pPlayer->getPlayerTeams()->end(); ++it)
+	{
+		TeamPrototype *proto = *it;
+		for (DLINK_ITERATOR<Team> iter = proto->iterate_TeamInstanceList(); !iter.done(); iter.advance())
+		{
+			Team *team = iter.cur();
+			if (!team)
+				continue;
+			for (DLINK_ITERATOR<Object> members = team->iterate_TeamMemberList(); !members.done(); members.advance())
+			{
+				Object *obj = members.cur();
+				if (obj->isKindOf(KINDOF_STRUCTURE))
+				{
+					Coord3D pos = *obj->getPosition();
+					Real x = pos.x;
+					Real y = pos.y;
+					if (firstObject) {
+						objBounds.lo.x = objBounds.hi.x = x;
+						objBounds.lo.y = objBounds.hi.y = y;
+						firstObject = false;
+					} else {
+						if (objBounds.lo.x > x) objBounds.lo.x = x;
+						if (objBounds.lo.y > y) objBounds.lo.y = y;
+						if (objBounds.hi.x < x) objBounds.hi.x = x;
+						if (objBounds.hi.y < y) objBounds.hi.y = y;
+					}
+					if (firstStructure) {
+						bounds->lo.x = bounds->hi.x = x;
+						bounds->lo.y = bounds->hi.y = y;
+						firstStructure = false;
+					} else {
+						if (bounds->lo.x > x) bounds->lo.x = x;
+						if (bounds->lo.y > y) bounds->lo.y = y;
+						if (bounds->hi.x < x) bounds->hi.x = x;
+						if (bounds->hi.y < y) bounds->hi.y = y;
+					}
+				}
+			}
+		}
+	}
+	if (!firstStructure) {
+		*bounds = objBounds;
+	}
+}
 
 // FUNCTION: BFME2 0x004F1D38 size=811 name=?computeSuperweaponTarget@AIPlayer@@UAEXPBVSpecialPowerTemplate@@PAVCoord3D@@HM@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
@@ -599,6 +839,47 @@ void TeamInQueue::xfer(Xfer *xfer)
 // FUNCTION: BFME2 0x004F2464 size=1064 name=?buildSpecificAITeam@AIPlayer@@UAEXPAVTeamPrototype@@_N@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F288C size=349 name=?queueDozer@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
+void AIPlayer::queueDozer()
+{
+	if (dozerInQueue())
+		return;
+
+	Bool canBuildUnits = m_player->getCanBuildUnits();
+	m_player->setCanBuildUnits(true);
+	for (const ThingTemplate *tTemplate = TheThingFactory->firstTemplate(); tTemplate; tTemplate = tTemplate->friend_getNextTemplate())
+	{
+		if (tTemplate->isKindOf(KINDOF_DOZER))
+		{
+			Object *factory = findFactory(tTemplate, true, NULL);
+			if (factory)
+			{
+				WorkOrder *order = new WorkOrder;
+				order->m_thing = tTemplate;
+				order->m_factoryID = INVALID_ID;
+				order->m_numRequired = 1;
+				order->m_required = true;
+				order->m_isResourceGatherer = false;
+				order->m_next = NULL;
+
+				TeamInQueue *team = new TeamInQueue;
+				prependTo_TeamBuildQueue(team);
+				team->m_priorityBuild = true;
+				team->m_workOrders = order;
+				team->m_frameStarted = TheGameLogic->getFrame();
+				team->m_team = m_player->m_defaultTeam;
+
+				AsciiString teamName = "DOZER - building one at the ";
+				teamName.concat(factory->getTemplate()->getName());
+				TheScriptEngine->AppendDebugMessage(teamName, false);
+
+				m_teamDelay = 0;
+				startTraining(order, team->m_priorityBuild, team->m_team->getName());
+				break;
+			}
+		}
+	}
+	m_player->setCanBuildUnits(canBuildUnits);
+}
 
 // FUNCTION: BFME2 0x004F29E9 size=211 name=?checkForSupplyCenter@AIPlayer@@IAEXPAVBuildListInfo@@PAVObject@@@Z evidence=N:ledger tier=A
 
@@ -648,6 +929,97 @@ Bool AIPlayer::isSupplySourceSafe(Int minSupplies)
 
 
 // FUNCTION: BFME2 0x004F2C14 size=850 name=?buildUpgrade@AIPlayer@@QAEXABVAsciiString@@@Z evidence=N:ledger tier=A
+void AIPlayer::buildUpgrade(const AsciiString &upgrade)
+{
+	const UpgradeTemplate *theUpgrade = TheUpgradeCenter->findUpgrade(upgrade);
+	if (theUpgrade == NULL)
+	{
+		AsciiString msg = "Upgrade ";
+		msg.concat(upgrade);
+		msg.concat(" does not exist.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (theUpgrade->getUpgradeType() == UPGRADE_TYPE_OBJECT)
+	{
+		AsciiString msg = "Player build upgrade: Upgrade ";
+		msg.concat(upgrade);
+		msg.concat(" is an object, not a player upgrade.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (m_player->hasUpgradeInProduction(theUpgrade))
+	{
+		AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+		msg.concat(" already has upgrade ");
+		msg.concat(upgrade);
+		msg.concat(" queued.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (m_player->rva002AB87D(theUpgrade))
+	{
+		AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+		msg.concat(" already has upgrade ");
+		msg.concat(upgrade);
+		msg.concat(" completed.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (!TheUpgradeCenter->canAffordUpgrade(m_player, theUpgrade, 0, false))
+	{
+		AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+		msg.concat(" lacks money to build upgrade ");
+		msg.concat(upgrade);
+		msg.concat(" at this time.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+
+	for (Object *obj = TheGameLogic->getFirstObject(); obj != NULL; obj = obj->getNextObject())
+	{
+		if (obj->getControllingPlayer() != m_player)
+			continue;
+		if (obj->testStatus(OBJECT_STATUS_UNDER_CONSTRUCTION) || obj->testStatus(OBJECT_STATUS_SOLD))
+			continue;
+		Bool canBuild = false;
+		const CommandSet *commandSet = TheControlBar->findCommandSet(*obj->rva00290E67());
+		if (commandSet != NULL)
+		{
+			for (Int i = 0; i < 32; i++)
+			{
+				const CommandButton *button = commandSet->getCommandButton(i);
+				if (button != NULL && !button->getName().isEmpty())
+				{
+					const UpgradeTemplate *buttonUpgrade = button->getUpgradeTemplate();
+					if (buttonUpgrade != NULL && buttonUpgrade->getUpgradeName().compare(theUpgrade->getUpgradeName()) == 0)
+						canBuild = true;
+				}
+			}
+		}
+		if (!canBuild)
+			continue;
+		ProductionUpdateInterface *production = obj->getProductionUpdateInterface(false);
+		if (production == NULL)
+			continue;
+		if (production->queueUpgrade(theUpgrade))
+		{
+			AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+			msg.concat(" queues ");
+			msg.concat(theUpgrade->getUpgradeName());
+			msg.concat(" at ");
+			msg.concat(obj->getTemplate()->getName());
+			TheScriptEngine->AppendDebugMessage(msg, false);
+			return;
+		}
+	}
+
+	AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+	msg.concat(" lacks factory to build upgrade ");
+	msg.concat(upgrade);
+	msg.concat(" at this time.  Ignoring request.");
+	TheScriptEngine->AppendDebugMessage(msg, false);
+}
 
 // FUNCTION: BFME2 0x004F2F66 size=94 name=?repairStructure@AIPlayer@@UAEXW4ObjectID@@@Z evidence=N:ledger tier=A
 void AIPlayer::repairStructure(ObjectID structure)
@@ -677,6 +1049,89 @@ void AIPlayer::repairStructure(ObjectID structure)
 // FUNCTION: BFME2 0x004F2FC4 size=498 name=?checkReadyTeams@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F31B6 size=519 name=?doUpgradesAndSkills@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
+void AIPlayer::doUpgradesAndSkills()
+{
+	if (TheGameLogic->getFrame() < 2)
+		return;
+
+	Bool checkScience = m_player->getSciencePurchasePoints() > 0;
+	if (!checkScience)
+		return;
+
+	const AISideInfo *sideInfo = TheAI->getAiData()->m_sideInfo;
+	while (sideInfo)
+	{
+		if (sideInfo->m_side.compare(m_player->getSide()) == 0)
+			break;
+		sideInfo = sideInfo->m_next;
+	}
+	if (sideInfo == NULL)
+		return;
+
+	if (m_skillsetSelector == INVALID_SKILLSET_SELECTION)
+	{
+		Int limit = 0;
+		if (sideInfo->m_skillSet2.m_numSkills > 0)
+		{
+			limit = 1;
+			if (sideInfo->m_skillSet3.m_numSkills > 0)
+			{
+				limit = 2;
+				if (sideInfo->m_skillSet4.m_numSkills > 0)
+				{
+					limit = 3;
+					if (sideInfo->m_skillSet5.m_numSkills > 0)
+						limit = 4;
+				}
+			}
+		}
+		if (isSkirmishAI())
+			m_skillsetSelector = GetGameLogicRandomValue(0, limit, "C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\AI\\AIPlayer.cpp", 2961);
+		else
+			m_skillsetSelector = 0;
+	}
+
+	if (m_player->getSciencePurchasePoints() > 0)
+	{
+		const TSkillSet *skillset;
+		switch (m_skillsetSelector)
+		{
+		default:
+		case 0:
+			skillset = &sideInfo->m_skillSet1;
+			break;
+		case 1:
+			skillset = &sideInfo->m_skillSet2;
+			break;
+		case 2:
+			skillset = &sideInfo->m_skillSet3;
+			break;
+		case 3:
+			skillset = &sideInfo->m_skillSet4;
+			break;
+		case 4:
+			skillset = &sideInfo->m_skillSet5;
+			break;
+		}
+		for (Int i = 0; i < skillset->m_numSkills; i++)
+		{
+			ScienceType science = skillset->m_skills[i];
+			if (m_player->isCapableOfPurchasingScience(science))
+			{
+				if (m_player->attemptToPurchaseScience(science))
+				{
+					AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+					msg.concat(" purchases from SkillSet");
+					msg.concat((char)('1' + m_skillsetSelector));
+					msg.concat(' ');
+					msg.concat(TheScienceStore->getInternalNameForScience(science));
+					msg.concat(".");
+					TheScriptEngine->AppendDebugMessage(msg, false);
+				}
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x004F33BD size=47 name=?validateFactory@WorkOrder@@QAEXPAVPlayer@@@Z evidence=N:ledger tier=A
 void WorkOrder::validateFactory(Player *player)
@@ -692,6 +1147,76 @@ void WorkOrder::validateFactory(Player *player)
 // FUNCTION: BFME2 0x004F33EC size=441 name=?onStructureProduced@AIPlayer@@UAEXPAVObject@@0@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F35A5 size=523 name=?selectTeamToBuild@AIPlayer@@MAE_NXZ evidence=N:ledger tier=A
+Bool AIPlayer::selectTeamToBuild()
+{
+	PlayerTeamList::const_iterator t;
+	const Int invalidPri = -99999;
+	Int hiPri = invalidPri;
+	PlayerTeamList candidateList1;
+	for (t = m_player->getPlayerTeams()->begin(); t != m_player->getPlayerTeams()->end(); ++t)
+	{
+		if (isAGoodIdeaToBuildTeam(*t))
+		{
+			candidateList1.push_back(*t);
+			Int pri = (*t)->m_teamTemplate.m_productionPriority;
+			if (pri > hiPri)
+				hiPri = pri;
+		}
+	}
+
+	if (selectTeamToReinforce(hiPri))
+		return true;
+
+	if (hiPri == invalidPri)
+		return false;
+
+	if (TheWritableGlobalData->m_debugAI)
+		TheScriptEngine->AppendDebugMessage("**AI** Selecting team to build", false);
+
+	PlayerTeamList candidateList;
+	Int count = 0;
+	for (t = candidateList1.begin(); t != candidateList1.end(); ++t)
+	{
+		if ((*t)->m_teamTemplate.m_productionPriority == hiPri)
+		{
+			candidateList.push_back(*t);
+			count++;
+		}
+	}
+
+	Int which = GetGameLogicRandomValue(0, count - 1, "C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngine\\Source\\GameLogic\\AI\\AIPlayer.cpp", 1841);
+
+	TeamPrototype *teamProto = NULL;
+	Int i = 0;
+	for (t = candidateList.begin(); t != candidateList.end(); ++t)
+	{
+		if (i == which)
+		{
+			teamProto = *t;
+			break;
+		}
+		i++;
+	}
+	if (teamProto)
+	{
+		if (!teamProto->m_teamTemplate.m_hasHomeLocation && !isSkirmishAI())
+		{
+			AsciiString teamStr = "Error : team '";
+			teamStr.concat(teamProto->m_name);
+			teamStr.concat("' has no Home Position (or Origin).");
+			TheScriptEngine->AppendDebugMessage(teamStr, false);
+		}
+		buildSpecificAITeam(teamProto, false);
+		m_readyToBuildTeam = false;
+		m_teamTimer = m_teamSeconds * BfmeLogicFramesPerSecond;
+		if (m_player->getMoney()->countMoney() < TheAI->getAiData()->m_poor)
+			m_teamTimer = m_teamTimer / TheAI->getAiData()->m_teamsPoorRate;
+		else if (m_player->getMoney()->countMoney() > TheAI->getAiData()->m_wealthy)
+			m_teamTimer = m_teamTimer / TheAI->getAiData()->m_teamsWealthyRate;
+		return true;
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x004F37B0 size=1537 name=?queueSupplyTruck@AIPlayer@@IAEXXZ evidence=N:ledger tier=A
 

@@ -11,6 +11,7 @@
 
 #include "Common/GameType.h"
 #include "Common/Snapshot.h"
+#include "Common/DLinkIterator.h"
 
 class AIPlayer;
 class Team;
@@ -23,7 +24,7 @@ class TeamInQueue : public Snapshot
 public:
 	// Zero Hour's constructor, out of line in BFME 2: AIPlayer::xfer 0x004F0DDE calls it at
 	// 0x004EF5CE (table 0x00C62B78, every member cleared in declaration order; no row yet).
-	TeamInQueue();
+	TeamInQueue() throw();
 	virtual ~TeamInQueue();							// slot 0, 0x004F05F0 (deleting 0x004EF606)
 	Bool isAllBuilt();								// 0x004F0656
 	Bool isBuildTimeExpired();						// 0x004F0681
@@ -93,4 +94,29 @@ public:
 };
 // SIZE 0x30
 typedef char TeamInQueueSize[(sizeof(TeamInQueue) == 0x30) ? 1 : -1];
+
+// TeamInQueue has one base, so its member function pointer is a single word and its list iterator
+// is just the current entry and that pointer (AIPlayer::aiPreTeamDestroy keeps both in registers
+// and rebuilds them after each deletion); the +0x04 pad of the primary template belongs to the
+// wider member function pointers of Object and Team.
+template <>
+class DLINK_ITERATOR<TeamInQueue>
+{
+public:
+	typedef TeamInQueue *(TeamInQueue::*GetNextFunc)() const;
+
+	DLINK_ITERATOR() {}
+	DLINK_ITERATOR(TeamInQueue *cur, GetNextFunc getNextFunc) : m_cur(cur), m_getNextFunc(getNextFunc) {}
+	void advance()
+	{
+		if (m_cur)
+			m_cur = (m_cur->*m_getNextFunc)();
+	}
+	Bool done() const { return m_cur == 0; }
+	TeamInQueue *cur() const { return m_cur; }
+
+private:
+	TeamInQueue *m_cur;
+	GetNextFunc m_getNextFunc;
+};
 #endif

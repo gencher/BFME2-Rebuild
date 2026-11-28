@@ -112,6 +112,8 @@ public:
     const UpgradeTemplate *findVeterancyUpgrade(VeterancyLevel) const;
     UpgradeTemplate *newUpgrade(const AsciiString &,bool);
     void linkUpgrade(UpgradeTemplate *);
+    // 0x0026F11A: ignores this (a shared body: the money test and, when asked, the message); the third argument is 0 at its caller.
+    bool canAffordUpgrade(Player *player, const UpgradeTemplate *upgrade, unsigned int unused, bool displayReason);
     const UpgradeTemplate *findFirstUpgradeInMask(const UpgradeMaskType *mask) const; // 0x0026F0F0 (first template whose m_maskIndex bit is set in the mask)
     void rva0026F93C(); // native post-load sub-upgrade resolution walk; reset26FBBC
     static void parseUpgradeDefinition(INI *);

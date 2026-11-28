@@ -7,6 +7,9 @@
 #include "GameLogic/Bridge.h"
 #include "GameLogic/PathfindCell.h"
 #include "GameLogic/Object.h"
+#include "GameLogic/Path.h"
+#include "GameLogic/PathNode.h"
+#include "debug/Debug.h"
 #include "Common/Coord3D.h"
 #include "Common/Xfer.h"
 #include "Common/XferException.h"
@@ -382,6 +385,23 @@ Real Rva002E7BB8Get()
 // FUNCTION: BFME2 0x002E7C99 size=50 name=?rva002E7C99@Rva002E7C99@@QAEPAXHHHEHEH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x002E7CCB size=93 name=??6@YAAAVDebug@@AAV0@ABVPath@@@Z evidence=N:ledger tier=A
+Debug &operator<<(Debug &debug, const Path &path)
+{
+	debug << "[path:";
+	PathNode *optimized = path.m_path;
+	for (PathNode *node = path.m_path; node != NULL; node = node->m_nextOpti)
+	{
+		debug << "\n  ";
+		if (node == optimized)
+		{
+			debug << "(opt)";
+			optimized = optimized->m_next;
+		}
+		debug << node->m_pos;
+	}
+	debug << "]\n";
+	return debug;
+}
 
 // FUNCTION: BFME2 0x002E7D28 size=23 name=?parsePathfinderDefinition@@YAXPAVBfmeSub939E@@@Z evidence=N:ledger tier=A
 
