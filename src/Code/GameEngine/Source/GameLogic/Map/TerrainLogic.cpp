@@ -6,6 +6,7 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: none; hard membership, hypothetical extent
+#include <math.h>
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Waypoint.h"
 #include "Common/DataChunk.h"
@@ -367,6 +368,27 @@ Bool TerrainLogic::parseWaypointData(DataChunkInput &file, DataChunkInfo *info, 
 // FUNCTION: BFME2 0x002802FE size=251 name=?getLayerForDestination@TerrainLogic@@QAE?AW4PathfindLayerEnum@@PAVObject@@PBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x002803F9 size=185 name=?getHighestLayerForDestination@TerrainLogic@@QAE?AW4PathfindLayerEnum@@PBVCoord3D@@_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+PathfindLayerEnum TerrainLogic::getHighestLayerForDestination(const Coord3D *pos, Bool onlyHealthyBridges)
+{
+	PathfindLayerEnum bestLayer = LAYER_GROUND;
+	Real bestDistance = pos->z - getGroundHeight(pos->x, pos->y);	// NOT fabs in this case.
+
+	for (Bridge *pBridge = getFirstBridge(); pBridge != NULL; pBridge = pBridge->getNext()) {
+
+		if (onlyHealthyBridges && pBridge->peekBridgeInfo()->curDamageState == BODY_RUBBLE)
+			continue;
+
+		if (pBridge->isPointOnBridge(pos)) {
+			Real delta = pos->z - pBridge->getBridgeHeight(pos, NULL);
+			// must be ABOVE (or on) the bridge for this call.
+			if (delta >= 0 && fabs(delta) < fabs(bestDistance)) {
+				bestLayer = pBridge->getLayer();
+				bestDistance = delta;
+			}
+		}
+	}
+	return bestLayer;
+}
 
 // FUNCTION: BFME2 0x002804B2 size=271 name=?objectInteractsWithBridgeLayer@TerrainLogic@@UBE_NPAVObject@@H_N@Z evidence=N:ledger tier=A
 

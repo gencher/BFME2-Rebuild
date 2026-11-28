@@ -56,6 +56,7 @@ public:
 	Bool isPointOnBridge(const Coord3D *pos);
 	Drawable *getDrawable();
 	void updateDamageState();
+	Real getBridgeHeight(const Coord3D *pos, Coord3D *normal);	// 0x0027FD2A
 
 	Bridge *getNext() const { return m_next; }
 	void setNext(Bridge *next) { m_next = next; }
