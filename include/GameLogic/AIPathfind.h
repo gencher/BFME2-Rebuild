@@ -32,10 +32,6 @@ class Xfer;
 #include "GameLogic/PathfindZoneManager.h"
 #include "GameLogic/PathfindCell.h"
 
-#define PATHFIND_CELL_SIZE		10
-#define PATHFIND_CELL_SIZE_F	10.0f
-#define LAYER_Z_CLOSE_ENOUGH_F	10.0f
-
 // Layers: getCell 0x002E6D62 indexes m_layers only for 1 < layer <= 15 and
 // otherwise reads the ground grid.
 enum PathfindLayerEnum
@@ -268,7 +264,7 @@ public:
 	void RemoveObjectFromPathfindMap(Object *);	// 0x002e718a N:ledger
 	void RemoveObjectGoalFromPathfindMap(Object *);	// 0x002e719b N:ledger
 	void RemoveObjectFromPathfindMapKeepingGateFlags(Object *);	// 0x002e71ad N:ledger
-	Int AddBridge(Bridge *bridge);	// 0x002e71bf (the ledger spells the argument Int)
+	Int AddBridge(Int);	// 0x002e71bf N:ledger
 	void SetBridgeStateRepaired(Int, Bool);	// 0x002e7205 N:ledger
 	Bool IsValidMovementTerrain(PathfindLayerEnum, const Locomotor *, const Coord3D *);	// 0x002e7296 N:ledger
 	void SetDebugPathPosition(const Coord3D *);	// 0x002e74b5 N:ledger

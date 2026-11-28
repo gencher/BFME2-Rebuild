@@ -566,7 +566,7 @@ void TerrainLogic::addBridgeToLogic(BridgeInfo *info, Dict *props, const AsciiSt
 	Bridge *pBridge = new Bridge(*info, props, bridgeTemplateName, NULL);
 	pBridge->setNext(m_bridgeListHead);
 	m_bridgeListHead = pBridge;
-	Int layer = TheAI->pathfinder()->AddBridge(pBridge);
+	Int layer = TheAI->pathfinder()->AddBridge((Int)pBridge);
 	pBridge->setLayer((PathfindLayerEnum)layer);
 }
 
@@ -715,7 +715,7 @@ void TerrainLogic::addLandmarkBridgeToLogic(Object *bridgeObj)
 	Bridge *pBridge = new Bridge(bridgeObj);
 	pBridge->setNext(m_bridgeListHead);
 	m_bridgeListHead = pBridge;
-	Int layer = TheAI->pathfinder()->AddBridge(pBridge);
+	Int layer = TheAI->pathfinder()->AddBridge((Int)pBridge);
 	pBridge->setLayer((PathfindLayerEnum)layer);
 }
 

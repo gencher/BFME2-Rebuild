@@ -50,6 +50,11 @@ typedef char BridgeInfo_off_bridgeObjectID[(offsetof(BridgeInfo, bridgeObjectID)
 typedef char BridgeInfo_off_damageStateChanged[(offsetof(BridgeInfo, damageStateChanged) == 0x68) ? 1 : -1];
 typedef char BridgeInfo_size[(sizeof(BridgeInfo) == 0xA8) ? 1 : -1];
 
+// Pathfinder cell size and the height window within which an object counts as on a layer.
+#define PATHFIND_CELL_SIZE		10
+#define PATHFIND_CELL_SIZE_F	10.0f
+#define LAYER_Z_CLOSE_ENOUGH_F	10.0f
+
 class Drawable;
 class Dict;
 class Object;
