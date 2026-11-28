@@ -1534,6 +1534,33 @@ void W3DView::setZoom(Real zoom)
 }
 
 // FUNCTION: BFME2 0x0008D477 size=230 name=?setZoomToDefault@W3DView@@QAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
+void W3DView::setZoomToDefault()
+{
+	if (m_cameraMovementMode || m_doingRotateCamera || m_doingPitchCamera || m_doingZoomCamera || m_doingScriptedCameraLock || m_doingScriptedPitch)
+		return;
+
+	// default zoom has to be max, otherwise players will just zoom to max always
+
+	// terrain height + desired height offset == cameraOffset * actual zoom
+	// find best approximation of max terrain height we can see
+	Real terrainHeightMax = getHeightAroundPos(m_pos.x, m_pos.y);
+	if (m_smoothCameraHeightField.m_initialized)
+		terrainHeightMax = m_smoothCameraHeightField.getHeight(m_pos.x, m_pos.y);
+
+	Real desiredHeight = (terrainHeightMax + m_cameraSettings.getMaximum());
+	Real desiredZoom = desiredHeight / m_cameraOffset.z;
+
+	m_zoom = desiredZoom;
+	m_heightAboveGround = m_cameraSettings.getMaximum();
+
+	m_doingRotateCamera = false;
+	m_doingPitchCamera = false;
+	m_doingScriptedPitch = false;
+	m_doingZoomCamera = false;
+	m_doingScriptedCameraLock = false;
+	m_cameraConstraintValid = false; // recalc it.
+	setCameraTransform();
+}
 
 // FUNCTION: BFME2 0x0008D55D size=682 name=?lookAt@W3DView@@UAEXPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=B hypothesis:cohesion
 
