@@ -7,6 +7,11 @@
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: none; hard membership, hypothetical extent
 #include <math.h>
+#include <string.h>
+#include <algorithm>
+#include "Common/CreateMask.h"
+#include "Common/ThingFactory.h"
+#include "GameClient/TerrainRoadCollection.h"
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Waypoint.h"
 #include "Common/DataChunk.h"
@@ -250,10 +255,10 @@ Real TerrainLogic::getWaterDepth(Real x, Real y)
 // FUNCTION: BFME2 0x0027EEAD size=348 name=?isPointOnBridge@Bridge@@QAE_NPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 Bool Bridge::isPointOnBridge(const Coord3D *pLoc)
 {
-	if (pLoc->x < m_boundsLoX) return false;
-	if (pLoc->x > m_boundsHiX) return false;
-	if (pLoc->y < m_boundsLoY) return false;
-	if (pLoc->y > m_boundsHiY) return false;
+	if (pLoc->x < m_bounds.lo.x) return false;
+	if (pLoc->x > m_bounds.hi.x) return false;
+	if (pLoc->y < m_bounds.lo.y) return false;
+	if (pLoc->y > m_bounds.hi.y) return false;
 
 	if (m_polygonTrigger)
 	{
@@ -394,6 +399,83 @@ AsciiString Waypoint::getPathLabel3() const
 // FUNCTION: BFME2 0x0027F5F7 size=651 name=?xfer@Waypoint@@QAEXPAVXfer@@@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0027F882 size=810 name=??0Bridge@@QAE@AAVRva0027C36A@@PAVDict@@ABVAsciiString@@PAVPolygonTrigger@@@Z evidence=N:ledger tier=A
+Bridge::Bridge(BridgeInfo &theInfo, Dict *props, const AsciiString &bridgeTemplateName, PolygonTrigger *outline) :
+m_next(NULL),
+m_bridgeInfo(theInfo),
+m_layer(LAYER_INVALID),
+m_polygonTrigger(outline)
+{
+	// save the template name
+	m_templateName = bridgeTemplateName;
+
+	m_bounds.lo.x = m_bridgeInfo.fromLeft.x;
+	m_bounds.lo.y = m_bridgeInfo.fromLeft.y;
+	m_bounds.hi = m_bounds.lo;
+	if (m_bounds.lo.x > m_bridgeInfo.fromRight.x) m_bounds.lo.x = m_bridgeInfo.fromRight.x;
+	if (m_bounds.lo.y > m_bridgeInfo.fromRight.y) m_bounds.lo.y = m_bridgeInfo.fromRight.y;
+	if (m_bounds.hi.x < m_bridgeInfo.fromRight.x) m_bounds.hi.x = m_bridgeInfo.fromRight.x;
+	if (m_bounds.hi.y < m_bridgeInfo.fromRight.y) m_bounds.hi.y = m_bridgeInfo.fromRight.y;
+	if (m_bounds.lo.x > m_bridgeInfo.toLeft.x) m_bounds.lo.x = m_bridgeInfo.toLeft.x;
+	if (m_bounds.lo.y > m_bridgeInfo.toLeft.y) m_bounds.lo.y = m_bridgeInfo.toLeft.y;
+	if (m_bounds.hi.x < m_bridgeInfo.toLeft.x) m_bounds.hi.x = m_bridgeInfo.toLeft.x;
+	if (m_bounds.hi.y < m_bridgeInfo.toLeft.y) m_bounds.hi.y = m_bridgeInfo.toLeft.y;
+	if (m_bounds.lo.x > m_bridgeInfo.toRight.x) m_bounds.lo.x = m_bridgeInfo.toRight.x;
+	if (m_bounds.lo.y > m_bridgeInfo.toRight.y) m_bounds.lo.y = m_bridgeInfo.toRight.y;
+	if (m_bounds.hi.x < m_bridgeInfo.toRight.x) m_bounds.hi.x = m_bridgeInfo.toRight.x;
+	if (m_bounds.hi.y < m_bridgeInfo.toRight.y) m_bounds.hi.y = m_bridgeInfo.toRight.y;
+
+	if (m_polygonTrigger)
+	{
+		IRegion2D outlineBounds;
+		outline->getBounds(&outlineBounds);
+		m_bounds.lo.x = _STL::min((Real)outlineBounds.lo.x, m_bounds.lo.x);
+		m_bounds.lo.y = _STL::min((Real)outlineBounds.lo.y, m_bounds.lo.y);
+		m_bounds.hi.x = _STL::max((Real)outlineBounds.hi.x, m_bounds.hi.x);
+		m_bounds.hi.y = _STL::max((Real)outlineBounds.hi.y, m_bounds.hi.y);
+	}
+
+	m_bridgeInfo.curDamageState = BODY_PRISTINE;
+	m_bridgeInfo.bridgeObjectID = INVALID_ID;
+
+	if (props)
+	{
+		static const ThingTemplate* genericBridgeTemplate = TheThingFactory->findTemplate("GenericBridge");
+		if (genericBridgeTemplate)
+		{
+			Object *bridge;
+			{
+				CreateMask mask;
+				memset(&mask, 0, sizeof(mask));
+				bridge = TheThingFactory->newObject(genericBridgeTemplate, NULL, &mask, (ObjectID)0);
+			}
+			Coord3D center;
+			center.x = (m_bridgeInfo.fromLeft.x + m_bridgeInfo.toRight.x)/2.0f;
+			center.y = (m_bridgeInfo.fromLeft.y + m_bridgeInfo.toRight.y)/2.0f;
+			center.z = (m_bridgeInfo.fromLeft.z + m_bridgeInfo.toRight.z)/2.0f;
+			bridge->setPosition(&center);
+			m_bridgeInfo.bridgeObjectID = bridge->getID();
+			bridge->updateObjValuesFromMapProperties(props);
+
+			//
+			// we'll say the angle of this object representing the bridge is from the 'from' side
+			// to the 'to' side.
+			//
+			{
+				Coord2D v;
+				v.x = m_bridgeInfo.toLeft.x - m_bridgeInfo.fromLeft.x;
+				v.y = m_bridgeInfo.toLeft.y - m_bridgeInfo.fromLeft.y;
+				bridge->setOrientation( v.toAngle() );
+
+				v.x = m_bridgeInfo.toLeft.x - m_bridgeInfo.toRight.x;
+				v.y = m_bridgeInfo.toLeft.y - m_bridgeInfo.toRight.y;
+				v.normalize();
+			}
+
+			// get the template of the bridge
+			TheTerrainRoads->findBridge(bridgeTemplateName);
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x0027FBAC size=82 name=??1Bridge@@UAE@XZ evidence=N:ledger tier=A
 

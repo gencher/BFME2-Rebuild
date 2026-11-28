@@ -45,6 +45,7 @@
 #include "GameLogic/Damage.h"
 
 class AIGroup;
+class Dict;
 struct CreateMask;
 class Xfer;
 class UpgradeTemplate;
@@ -129,6 +130,7 @@ public:
 
 	// Snapshot (table 0x00BFC2F0 at +0x60).
 	virtual void loadPostProcess();											// 0x00293EFF
+	void updateObjValuesFromMapProperties(Dict *properties);					// 0x002951AB (applies a map object's dictionary: Bridge::Bridge hands it the bridge's)
 	virtual const char *GetSnapshotName() const;							// 0x00299C6E
 
 	// ShroudClient, the virtual base (table 0x00BFC27C, vtordisp thunks).

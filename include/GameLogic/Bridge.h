@@ -17,6 +17,7 @@
 #include "Common/GameType.h"
 #include "Common/Coord3D.h"
 #include "Common/AsciiString.h"
+#include "Common/Region2D.h"
 
 enum PathfindLayerEnum;
 
@@ -24,6 +25,7 @@ class BridgeInfo
 {
 public:
 	BridgeInfo();	// 0x0027C36A (the map spells the class Rva0027C36A)
+	BridgeInfo(const BridgeInfo &that);	// 0x0027C410 (out of line; the map spells the class Rva0027C36A)
 	BridgeInfo &operator=(const BridgeInfo &that);	// 0x00085420
 	Coord3D from;						// +0x00 (Bridge +0x0C)
 	Coord3D to;							// +0x0C
@@ -74,18 +76,15 @@ public:
 	void setTowerObjectID(ObjectID id, Int which) { m_bridgeInfo.towerObjectID[which] = id; }
 
 	Bridge *m_next;								// +0x04
-	unsigned char m_unk0x08[4];					// +0x08
+	AsciiString m_templateName;					// +0x08 the bridge template's name (getBridgeTemplateName 0x000AF1DD returns it)
 	BridgeInfo m_bridgeInfo;					// +0x0C
-	Real m_boundsLoX;							// +0xB4 the 2D bounds isPointOnBridge tests first (lo x, lo y, hi x, hi y)
-	Real m_boundsLoY;							// +0xB8
-	Real m_boundsHiX;							// +0xBC
-	Real m_boundsHiY;							// +0xC0
+	Region2D m_bounds;							// +0xB4 the 2D bounds isPointOnBridge tests first
 	PathfindLayerEnum m_layer;					// +0xC4
 	PolygonTrigger *m_polygonTrigger;			// +0xC8 isPointOnBridge 0x0027EEAD asks it first when it is set (a bridge placed by a polygon trigger)
 };
 typedef char Bridge_off_m_next[(offsetof(Bridge, m_next) == 0x04) ? 1 : -1];
 typedef char Bridge_off_m_bridgeInfo[(offsetof(Bridge, m_bridgeInfo) == 0x0C) ? 1 : -1];
-typedef char Bridge_off_m_boundsLoX[(offsetof(Bridge, m_boundsLoX) == 0xB4) ? 1 : -1];
+typedef char Bridge_off_m_bounds[(offsetof(Bridge, m_bounds) == 0xB4) ? 1 : -1];
 typedef char Bridge_off_m_layer[(offsetof(Bridge, m_layer) == 0xC4) ? 1 : -1];
 typedef char Bridge_off_m_polygonTrigger[(offsetof(Bridge, m_polygonTrigger) == 0xC8) ? 1 : -1];
 // 0x0027EAFC: the 2D point-in-triangle test (Zero Hour's Point_In_Triangle_2D); the last argument receives the edge flags.
