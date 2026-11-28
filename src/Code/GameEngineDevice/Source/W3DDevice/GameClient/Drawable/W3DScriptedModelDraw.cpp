@@ -23,6 +23,7 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "WW3D2/VertexMaterialClass.h"
 #include "GameLogic/Object.h"
 #include "Lib/trig.h"
+#include "WW3D2/RenderObjClass.h"
 #include <math.h>
 // FUNCTION: BFME2 0x000B2B3B size=7 name=?get@LivingWorldBuildPlotIconSubObject@@UBEHXZ evidence=X:proven (vtable) tier=B hypothesis:mm1-neighbour-pointers-mixed
 // FUNCTION: BFME2 0x000B2B42 size=58 name=?Rva000B2B42Clamp@@YAXPAH0H@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
@@ -57,8 +58,20 @@ void ModelConditionInfo::parseRealRange(INI *ini, void *instance, void *, const 
 // FUNCTION: BFME2 0x000B2DE3 size=40 name=?Rva000B2DE3_ParseShadowBool@INI@@SAXPAV1@PAX1PBX@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B2E14 size=21 name=?releaseShadows@W3DModelDraw@@UAEXXZ evidence=N:ledger tier=A
+void W3DScriptedModelDraw::releaseShadows()
+{
+	if (m_shadow)
+		m_shadow->release();
+	m_shadow = 0;
+}
 
 // FUNCTION: BFME2 0x000B2E29 size=35 name=?setShadowsEnabled@W3DModelDraw@@UAEX_N@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setShadowsEnabled(Bool enable)
+{
+	if (m_shadow)
+		m_shadow->enableShadowRender(enable && !m_unk0x4B);
+	m_shadowEnabled = enable;
+}
 
 // FUNCTION: BFME2 0x000B2E4C size=105 name=?Rva000B2E4CComplete@@YA_NPAVRenderAnimationObj@@PAUAnimSlot@@_N@Z evidence=?:placeholder tier=A
 
@@ -75,8 +88,18 @@ void ModelConditionInfo::parseRealRange(INI *ini, void *instance, void *, const 
 // FUNCTION: BFME2 0x000B3133 size=24 name=?rva000B3133@Rva000B3133Module@@UAEPAVRva000B3133Part@@XZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B314B size=32 name=?setTerrainDecalSize@W3DModelDraw@@UAEXMM@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setTerrainDecalSize(Real x, Real y)
+{
+	if (m_terrainDecal)
+		m_terrainDecal->setSize(x, y);
+}
 
 // FUNCTION: BFME2 0x000B316B size=34 name=?setTerrainDecalOpacity@W3DModelDraw@@UAEXM@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setTerrainDecalOpacity(Real opacity)
+{
+	if (m_terrainDecal)
+		m_terrainDecal->setOpacity((Int)(opacity * 255.0f));
+}
 
 // FUNCTION: BFME2 0x000B3198 size=33 name=?rva000B3198@Rva000B32EF@@QAEXABVCoord3D@@0@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
@@ -111,6 +134,10 @@ void ModelConditionInfo::parseRealRange(INI *ini, void *instance, void *, const 
 // FUNCTION: BFME2 0x000B377E size=114 name=?setPauseAnimation@W3DModelDraw@@UAEX_N@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x000B37F0 size=28 name=?isVisible@W3DModelDraw@@UBE_NXZ evidence=N:ledger tier=A
+Bool W3DScriptedModelDraw::isVisible() const
+{
+	return m_renderObject && m_renderObject->Is_Really_Visible();
+}
 
 // FUNCTION: BFME2 0x000B380C size=8 name=?enable@Rva000B380CByteOneSetter@@QAEXXZ evidence=?:placeholder tier=A
 

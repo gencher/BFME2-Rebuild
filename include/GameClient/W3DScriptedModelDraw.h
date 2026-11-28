@@ -18,8 +18,11 @@
 #define BFME2_W3DSCRIPTEDMODELDRAW_H
 
 #include "GameClient/DrawModule.h"
+#include "WW3D2/Shadow.h"
 
 class INI;
+class ModelConditionFlags;
+class RenderObjClass;
 
 // One model condition state of the draw module data. Only the fields the recovered code touches are named.
 struct ModelConditionInfo
@@ -31,7 +34,14 @@ struct ModelConditionInfo
 	Real m_animMaxSpeedFactor;		// 0x28
 };
 
-class W3DScriptedModelDraw : public DrawModule, public ObjectDrawInterface
+// The one-slot interface at +0x10 of the model draw module.
+class ModelConditionInterface
+{
+public:
+	virtual void onModelConditionChange(const ModelConditionFlags &flags, Bool a, Int b) = 0;	// 0
+};
+
+class W3DScriptedModelDraw : public DrawModule, public ObjectDrawInterface, public ModelConditionInterface
 {
 public:
 	W3DScriptedModelDraw(Thing *thing, const ModuleData *moduleData);		// 0x000C0DD8
@@ -156,6 +166,23 @@ protected:
 	virtual void adjustTransformMtx(Matrix3D &mtx) const {}				// 65: the shared `ret 4`; W3DSailModelDraw's override 0x000D08C3 transforms the matrix (Zero Hour's name)
 	virtual Int slot66();													// 66: 0x000C124C returns 100000
 	virtual Int slot67(Int count);											// 67: 0x000B3E96, a client random value in [0, count - 1]
+
+	Byte m_unk0x14[0x30];			// 0x14
+	RenderObjClass *m_unk0x44;		// 0x44
+	Byte m_unk0x48[2];				// 0x48
+	Bool m_shadowEnabled;			// 0x4A
+	Bool m_unk0x4B;					// 0x4B
+	Bool m_unk0x4C;					// 0x4C
+	Bool m_unk0x4D;					// 0x4D
+	Byte m_unk0x4E[2];				// 0x4E
+	RenderObjClass *m_renderObject;	// 0x50
+	Byte m_unk0x54[4];				// 0x54
+	Shadow *m_shadow;				// 0x58
+	Shadow *m_terrainDecal;			// 0x5C
+	Byte m_unk0x60[0x15];			// 0x60
+	Bool m_pauseAnimation;			// 0x75
+	Byte m_unk0x76[2];				// 0x76
+	Int m_animationMode;			// 0x78
 };
 
 #endif

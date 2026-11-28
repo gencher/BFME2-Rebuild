@@ -17,11 +17,9 @@ public:
     virtual void release();
 
     void initialize();
+    void enableShadowRender(Bool enable) { m_enabled = enable; }
     void setPosition(const Coord3D &pos) { m_position = pos; }
     void setAngle(Real angle) { m_angle = angle; }
-    void setColor(Int color);
-    void setOpacity(Int opacity);
-    void setSize(Real width, Real height);
 
     Bool m_enabled;
     Bool m_invisible;
@@ -58,6 +56,10 @@ public:
 
     Shadow();
     virtual ~Shadow();
+
+    void setColor(Int color);
+    void setOpacity(Int opacity);
+    void setSize(Real width, Real height) { m_width = width; m_height = height; }
 
     Real m_width, m_height;
     Real m_scale;
