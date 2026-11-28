@@ -5,6 +5,11 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: hypothesis:cohesion, hypothesis:padding
+#include "Draft/FireLogicSystem.h"
+#include "Common/Coord3D.h"
+#include "WWMath/FloatToLong.h"
+#include <math.h>
+
 // FUNCTION: BFME2 0x00285672 size=42 name=?rva00285672@Rva00285672@@QBE_NABV1@@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 // FUNCTION: BFME2 0x0028569C size=7 name=?get@Rva0028569CDwordField@@QBEHXZ evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
 // FUNCTION: BFME2 0x002856A3 size=13 name=?set@Rva002856A3DwordSlot@@QAEXH@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
@@ -114,10 +119,86 @@
 // FUNCTION: BFME2 0x00287015 size=399 name=?NewMap@FireLogicSystem@@QAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x002871A4 size=278 name=?ChangeBurnRateInArea@FireLogicSystem@@QAEXPBVCoord3D@@MH_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void FireLogicSystem::ChangeBurnRateInArea(const Coord3D *pos, Real radius, Int delta, Bool onlyBurning)
+{
+	if (radius <= 0.0f)
+		return;
+	if (delta == 0)
+		return;
+	Int centerX = Float_To_Long((float)floor(pos->x * 0.1f + 0.5));
+	Int centerY = Float_To_Long((float)floor(pos->y * 0.1f + 0.5));
+	Int cellRadius = Float_To_Long((float)ceil(radius * 0.1f));
+
+	// Midpoint circle: y walks down from the radius while the row span [left, right] widens.
+	Int y = cellRadius;
+	Int x = 0;
+	Int error = 2 - 2 * cellRadius;
+	Int right = centerX;
+	Int left = centerX;
+	while (true) {
+		if (error + y > 0) {
+			if (y == 0 && cellRadius == 1) {
+				x++;
+				right++;
+				left--;
+			}
+			ChangeBurnRate(left, right, centerY + y, delta, onlyBurning);
+			if (y == 0)
+				break;
+			ChangeBurnRate(left, right, centerY - y, delta, onlyBurning);
+			y--;
+			error += 1 - 2 * y;
+		}
+		if (x <= error)
+			continue;
+		x++;
+		right++;
+		left--;
+		error += 2 * x + 1;
+	}
+}
 
 // FUNCTION: BFME2 0x002872BA size=293 name=?rva002872BA@FireLogicSystem@@QAEXPBVPolygonTrigger@@H_N@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x002873DF size=314 name=?ChangeBurnRateInArea@FireLogicSystem@@QAEXPBVCoord3D@@M0MH_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void FireLogicSystem::ChangeBurnRateInArea(const Coord3D *pos, Real radius, const Coord3D *dir, Real threshold, Int delta, Bool onlyBurning)
+{
+	if (radius <= 0.0f)
+		return;
+	if (delta == 0)
+		return;
+	Int centerX = Float_To_Long((float)floor(pos->x * 0.1f + 0.5));
+	Int centerY = Float_To_Long((float)floor(pos->y * 0.1f + 0.5));
+	Int cellRadius = Float_To_Long((float)ceil(radius * 0.1f));
+
+	// Midpoint circle: y walks down from the radius while the row span [left, right] widens.
+	Int y = cellRadius;
+	Int x = 0;
+	Int error = 2 - 2 * cellRadius;
+	Int right = centerX;
+	Int left = centerX;
+	while (true) {
+		if (error + y > 0) {
+			if (y == 0 && cellRadius == 1) {
+				x++;
+				right++;
+				left--;
+			}
+			ChangeBurnRate(pos, dir, threshold, left, right, centerY + y, delta, onlyBurning);
+			if (y == 0)
+				break;
+			ChangeBurnRate(pos, dir, threshold, left, right, centerY - y, delta, onlyBurning);
+			y--;
+			error += 1 - 2 * y;
+		}
+		if (x <= error)
+			continue;
+		x++;
+		right++;
+		left--;
+		error += 2 * x + 1;
+	}
+}
 
 // FUNCTION: BFME2 0x00287519 size=57 name=?rva00287519@Rva00287519Host@@QAEXH@Z evidence=?:placeholder tier=A
 

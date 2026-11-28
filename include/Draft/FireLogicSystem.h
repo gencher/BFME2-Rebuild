@@ -2,7 +2,9 @@
 // DRAFT: X:vptr-store and retail slot targets
 #pragma once
 #include <stddef.h>
+#include "Common/GameType.h"
 class Xfer;
+class Coord3D;
 #pragma pack(push,1) // DRAFT layout policy; all known offsets asserted below
 class FireLogicSystem {
 public:
@@ -20,6 +22,13 @@ public:
   virtual void vfunc_0x2C(); // slot=0x2C target=0x005CB9FF mangled=?vslot24_01@AIUpdateInterface@@UAE_NH@Z
   virtual void vfunc_0x30(); // slot=0x30 target=0x000B3FD0 mangled=??1Region2D@@QAE@XZ
   virtual void vfunc_0x34(); // slot=0x34 target=0x0047A69C mangled=?DoXfer@EmissionVelocityInfo@FXParticleSystem@@UAEXAAVXfer@@@Z
+
+  // Burn-rate changes over cell rows: the span [left, right] of one row, optionally only the cells facing along dir.
+  void ChangeBurnRate(Int left, Int right, Int row, Int delta, Bool onlyBurning); // 0x00286926
+  void ChangeBurnRate(const Coord3D *pos, const Coord3D *dir, Real threshold, Int left, Int right, Int row, Int delta, Bool onlyBurning); // 0x00286AB4
+  // The same over a disc of cells around pos, walked row pair by row pair with a midpoint circle.
+  void ChangeBurnRateInArea(const Coord3D *pos, Real radius, Int delta, Bool onlyBurning); // 0x002871A4
+  void ChangeBurnRateInArea(const Coord3D *pos, Real radius, const Coord3D *dir, Real threshold, Int delta, Bool onlyBurning); // 0x002873DF
 };
 #pragma pack(pop)
 // DRAFT STILL NEEDS:
