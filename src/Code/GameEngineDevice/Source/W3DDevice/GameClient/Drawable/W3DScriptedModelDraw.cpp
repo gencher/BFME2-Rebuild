@@ -24,6 +24,10 @@ void rva000C48DB(void*,void*,void*,void*);
 // FUNCTION: BFME2 0x000B2B3B size=7 name=?get@LivingWorldBuildPlotIconSubObject@@UBEHXZ evidence=X:proven (vtable) tier=B hypothesis:mm1-neighbour-pointers-mixed
 // FUNCTION: BFME2 0x000B2B42 size=58 name=?Rva000B2B42Clamp@@YAXPAH0H@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 // FUNCTION: BFME2 0x000B2B7C size=11 name=?millisecondsToSeconds@@YAMM@Z evidence=N:ledger tier=B hypothesis:mm1-contiguity-callers
+float millisecondsToSeconds(float value)
+{
+	return value * 0.001f;
+}
 // FUNCTION: BFME2 0x000B2B87 size=14 name=?Rva000B2B87FloatMin@@YAMMM@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
 // FUNCTION: BFME2 0x000B2B95 size=14 name=?Rva000B2B95FloatMax@@YAMMM@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
 // FUNCTION: BFME2 0x000B2BA3 size=66 name=?Rva000B2BA3Get@@YAHPBURva000B2BE5Src@@PA_N@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
