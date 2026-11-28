@@ -4,7 +4,7 @@
 #include "GameLogic/Module/DieModuleInterface.h"
 #include "Common/ObjectIDList.h"
 
-enum BridgeTowerType { BRIDGE_TOWER_FROM_LEFT = 0, BRIDGE_MAX_TOWERS = 4 };
+enum BridgeTowerType { BRIDGE_TOWER_FROM_LEFT = 0, BRIDGE_TOWER_FROM_RIGHT, BRIDGE_TOWER_TO_LEFT, BRIDGE_TOWER_TO_RIGHT, BRIDGE_MAX_TOWERS = 4 };
 class FXList;
 class ObjectCreationList;
 class TerrainRoadType;

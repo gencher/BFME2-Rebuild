@@ -12,6 +12,10 @@
 #include "Common/CreateMask.h"
 #include "Common/ThingFactory.h"
 #include "GameClient/TerrainRoadCollection.h"
+#include "WWMath/wwmath.h"
+#include "GameLogic/Module/BridgeBehavior.h"
+#include "GameLogic/Module/BridgeTowerBehavior.h"
+#include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Waypoint.h"
 #include "Common/DataChunk.h"
@@ -251,6 +255,61 @@ Real TerrainLogic::getWaterDepth(Real x, Real y)
 // FUNCTION: BFME2 0x0027EAFC size=704 name=?Point_In_Triangle_2D@@YA_NABVVector3@@000HHAAE@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0027EDBC size=241 name=?createTower@Bridge@@QAEPAVObject@@PAVCoord3D@@W4BridgeTowerType@@PBVThingTemplate@@PAV2@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+Object *Bridge::createTower(Coord3D *worldPos, BridgeTowerType towerType, const ThingTemplate *towerTemplate, Object *bridge)
+{
+	if (towerTemplate == NULL || bridge == NULL)
+		return NULL;
+
+	CreateMask mask;
+	memset(&mask, 0, sizeof(mask));
+	Object *tower = TheThingFactory->newObject(towerTemplate, bridge->getTeam(), &mask, (ObjectID)0);
+
+	Real angle = 0;
+	switch (towerType)
+	{
+		case BRIDGE_TOWER_FROM_LEFT:
+			angle = bridge->getOrientation() + WWMATH_PI;
+			break;
+
+		case BRIDGE_TOWER_FROM_RIGHT:
+			angle = bridge->getOrientation() + WWMATH_PI;
+			break;
+
+		case BRIDGE_TOWER_TO_LEFT:
+			angle = bridge->getOrientation();
+			break;
+
+		case BRIDGE_TOWER_TO_RIGHT:
+			angle = bridge->getOrientation();
+			break;
+
+		default:
+			return NULL;
+	}
+
+	tower->setPosition(worldPos);
+	tower->setOrientation(angle);
+
+	BridgeBehaviorInterface *bridgeInterface = BridgeBehavior::getBridgeBehaviorInterfaceFromObject(bridge);
+	if (bridgeInterface)
+		bridgeInterface->setTower(towerType, tower);
+
+	BridgeTowerBehaviorInterface *bridgeTowerInterface = BridgeTowerBehavior::getBridgeTowerBehaviorInterfaceFromObject(tower);
+	if (bridgeTowerInterface)
+	{
+		bridgeTowerInterface->setBridge(bridge);
+		bridgeTowerInterface->setTowerType(towerType);
+	}
+
+	BodyModuleInterface *bridgeBody = bridge->getBodyModule();
+	if (bridgeBody->isIndestructible())
+	{
+		BodyModuleInterface *towerBody = tower->getBodyModule();
+		towerBody->setIndestructible(true);
+	}
+
+	return tower;
+}
 
 // FUNCTION: BFME2 0x0027EEAD size=348 name=?isPointOnBridge@Bridge@@QAE_NPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 Bool Bridge::isPointOnBridge(const Coord3D *pLoc)

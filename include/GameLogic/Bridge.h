@@ -20,6 +20,8 @@
 #include "Common/Region2D.h"
 
 enum PathfindLayerEnum;
+enum BridgeTowerType;
+class ThingTemplate;
 
 class BridgeInfo
 {
@@ -63,6 +65,7 @@ public:
 	Bool isPointOnBridge(const Coord3D *pos);
 	Drawable *getDrawable();
 	void updateDamageState();
+	Object *createTower(Coord3D *worldPos, BridgeTowerType towerType, const ThingTemplate *towerTemplate, Object *bridge);	// 0x0027EDBC
 	Bool isCellOnEnd(const Region2D *cell);	// 0x0027C79C
 	Real getBridgeHeight(const Coord3D *pos, Coord3D *normal);	// 0x0027FD2A
 
