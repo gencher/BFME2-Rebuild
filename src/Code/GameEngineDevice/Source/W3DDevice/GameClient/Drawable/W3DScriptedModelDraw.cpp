@@ -43,6 +43,12 @@ float millisecondsToSeconds(float value)
 // FUNCTION: BFME2 0x000B2D4D size=17 name=?rva000B2D4D@Rva000B2D4D@@QAEXHH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B2D5E size=53 name=?parseRealRange@ModelConditionInfo@@SAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=A
+void ModelConditionInfo::parseRealRange(INI *ini, void *instance, void *, const void *)
+{
+	ModelConditionInfo *info = (ModelConditionInfo *)instance;
+	info->m_animMinSpeedFactor = ini->scanReal(ini->getNextToken());
+	info->m_animMaxSpeedFactor = ini->scanReal(ini->getNextToken());
+}
 
 // FUNCTION: BFME2 0x000B2D93 size=40 name=?Rva000B2D93_ParseShadowReal@INI@@SAXPAV1@PAX1PBX@Z evidence=?:placeholder tier=A
 

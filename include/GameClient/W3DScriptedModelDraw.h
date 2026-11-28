@@ -19,7 +19,17 @@
 
 #include "GameClient/DrawModule.h"
 
-struct ModelConditionInfo;
+class INI;
+
+// One model condition state of the draw module data. Only the fields the recovered code touches are named.
+struct ModelConditionInfo
+{
+	static void parseRealRange(INI *ini, void *instance, void *store, const void *userData);
+
+	Byte m_unk0x00[0x24];
+	Real m_animMinSpeedFactor;		// 0x24
+	Real m_animMaxSpeedFactor;		// 0x28
+};
 
 class W3DScriptedModelDraw : public DrawModule, public ObjectDrawInterface
 {
