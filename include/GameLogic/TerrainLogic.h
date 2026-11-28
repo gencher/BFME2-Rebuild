@@ -26,8 +26,10 @@
 #define BFME2_TERRAINLOGIC_H
 
 #include <stddef.h>
+#include <map>
 #include "Common/GameType.h"
 #include "Common/AsciiString.h"
+#include "Common/Coord3D.h"
 #include "Common/Snapshot.h"
 #include "Common/SubsystemInterface.h"
 #include "GameLogic/Map/AreaSet.h"
@@ -52,6 +54,13 @@ class WaterArea;
 class Coord3D;
 struct Region3D;
 enum PathfindLayerEnum;
+
+// The two points a unit attacks a bridge from (Zero Hour's TBridgeAttackInfo).
+struct TBridgeAttackInfo
+{
+	Coord3D attackPoint1;
+	Coord3D attackPoint2;
+};
 
 class TerrainLogic : public Snapshot, public SubsystemInterface,
 	public AreaSetObserver<StandingWaterArea>, public AreaSetObserver<RiverArea>
@@ -145,6 +154,8 @@ public:
 	PathfindLayerEnum getLayerForDestination(Object *obj, const Coord3D *pos);
 	void deleteBridges();							// 0x0027D5AD (frees the bridge list; Zero Hour's name)
 	Bool isBridgeRepaired(const Object *bridge);	// 0x0027D40B
+	Int getPartitionBucket(Real *pos);	// 0x0027D0D6 (the 50 by 50 grid cell of an x, y pair, clamped to the map extent)
+	void getBridgeAttackPoints(const Object *bridge, TBridgeAttackInfo *attackInfo);	// 0x0027D483
 	Bool isBridgeBroken(const Object *bridge);	// 0x0027D447
 	void setActiveBoundary(Int boundary);	// 0x0028069E (ScriptActions::doBorderSwitch 0x003BC3A8)
 	// ScriptConditions::evaluateBridgeBroken/Repaired (0x003E3D95, 0x003E3DC6)
@@ -167,7 +178,7 @@ public:
 	unsigned char m_unk0x64[0x4];				// +0x64 a _List_base
 	unsigned char m_unk0x68[0x500];				// +0x68 (an array the ctor fills from +0x6C)
 	Int m_unk0x568;								// +0x568
-	unsigned char m_unk0x56C[0xC];				// +0x56C _STL::map<unsigned char, int>
+	_STL::map<UnsignedInt, Waypoint *> m_waypointsByID;	// +0x56C the id cache getWaypointByID fills (hits and misses)
 	unsigned char m_unk0x578[0xC];				// +0x578 a vector
 	void *m_unk0x584;							// +0x584 (new 0x00283081(Real, Int))
 	unsigned char m_unk0x588[0x1388];			// +0x588 (an array the ctor fills from here)
@@ -178,6 +189,17 @@ public:
 // SIZE 0x191C
 typedef char TerrainLogicSize[(sizeof(TerrainLogic) == 0x191C) ? 1 : -1];
 typedef char TerrainLogicWaterOffset[(offsetof(TerrainLogic, m_waterAreas) == 0x50) ? 1 : -1];
+
+// The tree-iteration callback state of TerrainLogic::iterateTreesNearAPoint (the map's spelling of the
+// class; its method is the callback body, and the free function wraps it for a plain C callback).
+class BfmeX1035;
+class BfmeT1035
+{
+public:
+	void bfmeUse1035(BfmeX1035 *tree, Int arg);		// 0x002842CD
+	Int m_bfmeV;
+};
+void __stdcall bfmeGo1035C(BfmeX1035 *tree, Int arg);	// 0x0028447F
 
 extern TerrainLogic *TheTerrainLogic;
 

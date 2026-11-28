@@ -17,13 +17,17 @@
 #include "Common/GameType.h"
 #include "Common/Coord3D.h"
 #include "Common/AsciiString.h"
+#include "Common/Region2D.h"
 
 enum PathfindLayerEnum;
+enum BridgeTowerType;
+class ThingTemplate;
 
 class BridgeInfo
 {
 public:
 	BridgeInfo();	// 0x0027C36A (the map spells the class Rva0027C36A)
+	BridgeInfo(const BridgeInfo &that);	// 0x0027C410 (out of line; the map spells the class Rva0027C36A)
 	BridgeInfo &operator=(const BridgeInfo &that);	// 0x00085420
 	Coord3D from;						// +0x00 (Bridge +0x0C)
 	Coord3D to;							// +0x0C
@@ -46,38 +50,49 @@ typedef char BridgeInfo_off_bridgeObjectID[(offsetof(BridgeInfo, bridgeObjectID)
 typedef char BridgeInfo_off_damageStateChanged[(offsetof(BridgeInfo, damageStateChanged) == 0x68) ? 1 : -1];
 typedef char BridgeInfo_size[(sizeof(BridgeInfo) == 0xA8) ? 1 : -1];
 
+// Pathfinder cell size and the height window within which an object counts as on a layer.
+#define PATHFIND_CELL_SIZE		10
+#define PATHFIND_CELL_SIZE_F	10.0f
+#define LAYER_Z_CLOSE_ENOUGH_F	10.0f
+
 class Drawable;
+class Dict;
+class Object;
+struct Region2D;
 class PolygonTrigger;
 class Vector3;
 class Bridge
 {
 public:
+	Bridge(BridgeInfo &theInfo, Dict *props, const AsciiString &bridgeTemplateName, PolygonTrigger *outline);	// 0x0027F882
+	Bridge(Object *bridgeObj);					// 0x00280C21 (a landmark bridge: the object is the bridge)
 	virtual ~Bridge();							// slot 0, 0x00280C05 (deleting)
 	Bool isPointOnBridge(const Coord3D *pos);
 	Drawable *getDrawable();
 	void updateDamageState();
+	Object *createTower(Coord3D *worldPos, BridgeTowerType towerType, const ThingTemplate *towerTemplate, Object *bridge);	// 0x0027EDBC
+	Bool isCellOnEnd(const Region2D *cell);	// 0x0027C79C
+	Real getBridgeHeight(const Coord3D *pos, Coord3D *normal);	// 0x0027FD2A
 
 	Bridge *getNext() const { return m_next; }
 	void setNext(Bridge *next) { m_next = next; }
 	const BridgeInfo *peekBridgeInfo() const { return &m_bridgeInfo; }
 	PathfindLayerEnum getLayer() const { return m_layer; }
+	void setLayer(PathfindLayerEnum layer) { m_layer = layer; }
 	AsciiString getBridgeTemplateName() const;	// 0x000AF1DD (27 B: the template name at +0x08; the map spells it Anim2DTemplate::getName)
 	void setBridgeObjectID(ObjectID id) { m_bridgeInfo.bridgeObjectID = id; }
 	void setTowerObjectID(ObjectID id, Int which) { m_bridgeInfo.towerObjectID[which] = id; }
 
 	Bridge *m_next;								// +0x04
-	unsigned char m_unk0x08[4];					// +0x08
+	AsciiString m_templateName;					// +0x08 the bridge template's name (getBridgeTemplateName 0x000AF1DD returns it)
 	BridgeInfo m_bridgeInfo;					// +0x0C
-	Real m_boundsLoX;							// +0xB4 the 2D bounds isPointOnBridge tests first (lo x, lo y, hi x, hi y)
-	Real m_boundsLoY;							// +0xB8
-	Real m_boundsHiX;							// +0xBC
-	Real m_boundsHiY;							// +0xC0
+	Region2D m_bounds;							// +0xB4 the 2D bounds isPointOnBridge tests first
 	PathfindLayerEnum m_layer;					// +0xC4
 	PolygonTrigger *m_polygonTrigger;			// +0xC8 isPointOnBridge 0x0027EEAD asks it first when it is set (a bridge placed by a polygon trigger)
 };
 typedef char Bridge_off_m_next[(offsetof(Bridge, m_next) == 0x04) ? 1 : -1];
 typedef char Bridge_off_m_bridgeInfo[(offsetof(Bridge, m_bridgeInfo) == 0x0C) ? 1 : -1];
-typedef char Bridge_off_m_boundsLoX[(offsetof(Bridge, m_boundsLoX) == 0xB4) ? 1 : -1];
+typedef char Bridge_off_m_bounds[(offsetof(Bridge, m_bounds) == 0xB4) ? 1 : -1];
 typedef char Bridge_off_m_layer[(offsetof(Bridge, m_layer) == 0xC4) ? 1 : -1];
 typedef char Bridge_off_m_polygonTrigger[(offsetof(Bridge, m_polygonTrigger) == 0xC8) ? 1 : -1];
 // 0x0027EAFC: the 2D point-in-triangle test (Zero Hour's Point_In_Triangle_2D); the last argument receives the edge flags.

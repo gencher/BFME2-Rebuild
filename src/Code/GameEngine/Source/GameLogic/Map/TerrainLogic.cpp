@@ -6,6 +6,16 @@
 // Extents and edges are hypotheses; byte verification alone does not establish original TU boundaries.
 // Edges: left=unknown-rows right=unknown-rows; proof_first=false
 // Hypothesis rules: none; hard membership, hypothetical extent
+#include <math.h>
+#include <string.h>
+#include <algorithm>
+#include "Common/CreateMask.h"
+#include "Common/ThingFactory.h"
+#include "GameClient/TerrainRoadCollection.h"
+#include "WWMath/wwmath.h"
+#include "GameLogic/Module/BridgeBehavior.h"
+#include "GameLogic/Module/BridgeTowerBehavior.h"
+#include "GameLogic/Module/BodyModule.h"
 #include "GameLogic/TerrainLogic.h"
 #include "GameLogic/Waypoint.h"
 #include "Common/DataChunk.h"
@@ -18,6 +28,8 @@
 #include "GameLogic/Object.h"
 #include "GameClient/TerrainRoadType.h"
 #include "GameLogic/AI.h"
+#include "Common/Region3D.h"
+#include "WWMath/FloatToLong.h"
 
 // The singleton (retail VA 0x00DFEC50).
 TerrainLogic *TheTerrainLogic = NULL;
@@ -57,6 +69,26 @@ Real TerrainLogic::getLayerHeight(Real x, Real y, PathfindLayerEnum layer, Coord
 // FUNCTION: BFME2 0x0027D098 size=62 name=?rva0027D098@Rva0027D098@@QAEXXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0027D0D6 size=206 name=?getPartitionBucket@TerrainLogic@@QAEHPAM@Z evidence=N:ledger tier=A
+Int TerrainLogic::getPartitionBucket(Real *pos)
+{
+	Real x = pos[0];
+	Real y = pos[1];
+	Region3D extent;
+	getExtentIncludingBorder(&extent);
+	if (extent.lo.x > x)
+		x = extent.lo.x;
+	if (extent.lo.y > y)
+		y = extent.lo.y;
+	if (x > extent.hi.x)
+		x = extent.hi.x;
+	if (y > extent.hi.y)
+		y = extent.hi.y;
+	x = floor((x - extent.lo.x) / (extent.hi.x - extent.lo.x) * 49.9f);
+	Int ix = Float_To_Long(x);
+	Real fy = floor((y - extent.lo.y) / (extent.hi.y - extent.lo.y) * 49.9f);
+	Int iy = Float_To_Long(fy);
+	return iy * 50 + ix;
+}
 
 // FUNCTION: BFME2 0x0027D1A4 size=34 name=?rva0027D1A4@TerrainLogic@@QAEXPBVCoord3D@@MH@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
@@ -133,6 +165,40 @@ Bool TerrainLogic::isBridgeBroken(const Object *bridge)
 }
 
 // FUNCTION: BFME2 0x0027D483 size=298 name=?getBridgeAttackPoints@TerrainLogic@@QAEXPBVObject@@PAUTBridgeAttackInfo@@@Z evidence=N:ledger tier=A
+void TerrainLogic::getBridgeAttackPoints(const Object *bridge, TBridgeAttackInfo *attackInfo)
+{
+	ObjectID id = bridge->getID();
+	Bridge *pBridge = getFirstBridge();
+	while (pBridge) {
+		const BridgeInfo *info = pBridge->peekBridgeInfo();
+		if (info->bridgeObjectID == id) {
+			// found the right bridge.
+			Coord3D delta;
+			delta.x = info->to.x - info->from.x;
+			delta.y = info->to.y - info->from.y;
+			delta.z = info->to.z - info->from.z;
+			delta.normalize();
+			Coord3D width;
+			width.x = info->fromRight.x - info->fromLeft.x;
+			width.y = info->fromRight.y - info->fromLeft.y;
+			width.z = info->fromRight.z - info->fromLeft.z;
+			Real len = width.length();
+			len /= 2.0f;
+			attackInfo->attackPoint1.x = info->from.x + delta.x * len;
+			attackInfo->attackPoint1.y = info->from.y + delta.y * len;
+			attackInfo->attackPoint1.z = info->from.z + delta.z * len;
+
+			attackInfo->attackPoint2.x = info->to.x - delta.x * len;
+			attackInfo->attackPoint2.y = info->to.y - delta.y * len;
+			attackInfo->attackPoint2.z = info->to.z - delta.z * len;
+
+			return;
+		}
+		pBridge = pBridge->getNext();
+	}
+	attackInfo->attackPoint1 = *bridge->getPosition();
+	attackInfo->attackPoint2 = *bridge->getPosition();
+}
 
 // FUNCTION: BFME2 0x0027D5AD size=51 name=?deleteBridges@TerrainLogic@@IAEXXZ evidence=N:ledger tier=A
 void TerrainLogic::deleteBridges()
@@ -189,14 +255,69 @@ Real TerrainLogic::getWaterDepth(Real x, Real y)
 // FUNCTION: BFME2 0x0027EAFC size=704 name=?Point_In_Triangle_2D@@YA_NABVVector3@@000HHAAE@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0027EDBC size=241 name=?createTower@Bridge@@QAEPAVObject@@PAVCoord3D@@W4BridgeTowerType@@PBVThingTemplate@@PAV2@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+Object *Bridge::createTower(Coord3D *worldPos, BridgeTowerType towerType, const ThingTemplate *towerTemplate, Object *bridge)
+{
+	if (towerTemplate == NULL || bridge == NULL)
+		return NULL;
+
+	CreateMask mask;
+	memset(&mask, 0, sizeof(mask));
+	Object *tower = TheThingFactory->newObject(towerTemplate, bridge->getTeam(), &mask, (ObjectID)0);
+
+	Real angle = 0;
+	switch (towerType)
+	{
+		case BRIDGE_TOWER_FROM_LEFT:
+			angle = bridge->getOrientation() + WWMATH_PI;
+			break;
+
+		case BRIDGE_TOWER_FROM_RIGHT:
+			angle = bridge->getOrientation() + WWMATH_PI;
+			break;
+
+		case BRIDGE_TOWER_TO_LEFT:
+			angle = bridge->getOrientation();
+			break;
+
+		case BRIDGE_TOWER_TO_RIGHT:
+			angle = bridge->getOrientation();
+			break;
+
+		default:
+			return NULL;
+	}
+
+	tower->setPosition(worldPos);
+	tower->setOrientation(angle);
+
+	BridgeBehaviorInterface *bridgeInterface = BridgeBehavior::getBridgeBehaviorInterfaceFromObject(bridge);
+	if (bridgeInterface)
+		bridgeInterface->setTower(towerType, tower);
+
+	BridgeTowerBehaviorInterface *bridgeTowerInterface = BridgeTowerBehavior::getBridgeTowerBehaviorInterfaceFromObject(tower);
+	if (bridgeTowerInterface)
+	{
+		bridgeTowerInterface->setBridge(bridge);
+		bridgeTowerInterface->setTowerType(towerType);
+	}
+
+	BodyModuleInterface *bridgeBody = bridge->getBodyModule();
+	if (bridgeBody->isIndestructible())
+	{
+		BodyModuleInterface *towerBody = tower->getBodyModule();
+		towerBody->setIndestructible(true);
+	}
+
+	return tower;
+}
 
 // FUNCTION: BFME2 0x0027EEAD size=348 name=?isPointOnBridge@Bridge@@QAE_NPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 Bool Bridge::isPointOnBridge(const Coord3D *pLoc)
 {
-	if (pLoc->x < m_boundsLoX) return false;
-	if (pLoc->x > m_boundsHiX) return false;
-	if (pLoc->y < m_boundsLoY) return false;
-	if (pLoc->y > m_boundsHiY) return false;
+	if (pLoc->x < m_bounds.lo.x) return false;
+	if (pLoc->x > m_bounds.hi.x) return false;
+	if (pLoc->y < m_bounds.lo.y) return false;
+	if (pLoc->y > m_bounds.hi.y) return false;
 
 	if (m_polygonTrigger)
 	{
@@ -337,6 +458,83 @@ AsciiString Waypoint::getPathLabel3() const
 // FUNCTION: BFME2 0x0027F5F7 size=651 name=?xfer@Waypoint@@QAEXPAVXfer@@@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0027F882 size=810 name=??0Bridge@@QAE@AAVRva0027C36A@@PAVDict@@ABVAsciiString@@PAVPolygonTrigger@@@Z evidence=N:ledger tier=A
+Bridge::Bridge(BridgeInfo &theInfo, Dict *props, const AsciiString &bridgeTemplateName, PolygonTrigger *outline) :
+m_next(NULL),
+m_bridgeInfo(theInfo),
+m_layer(LAYER_INVALID),
+m_polygonTrigger(outline)
+{
+	// save the template name
+	m_templateName = bridgeTemplateName;
+
+	m_bounds.lo.x = m_bridgeInfo.fromLeft.x;
+	m_bounds.lo.y = m_bridgeInfo.fromLeft.y;
+	m_bounds.hi = m_bounds.lo;
+	if (m_bounds.lo.x > m_bridgeInfo.fromRight.x) m_bounds.lo.x = m_bridgeInfo.fromRight.x;
+	if (m_bounds.lo.y > m_bridgeInfo.fromRight.y) m_bounds.lo.y = m_bridgeInfo.fromRight.y;
+	if (m_bounds.hi.x < m_bridgeInfo.fromRight.x) m_bounds.hi.x = m_bridgeInfo.fromRight.x;
+	if (m_bounds.hi.y < m_bridgeInfo.fromRight.y) m_bounds.hi.y = m_bridgeInfo.fromRight.y;
+	if (m_bounds.lo.x > m_bridgeInfo.toLeft.x) m_bounds.lo.x = m_bridgeInfo.toLeft.x;
+	if (m_bounds.lo.y > m_bridgeInfo.toLeft.y) m_bounds.lo.y = m_bridgeInfo.toLeft.y;
+	if (m_bounds.hi.x < m_bridgeInfo.toLeft.x) m_bounds.hi.x = m_bridgeInfo.toLeft.x;
+	if (m_bounds.hi.y < m_bridgeInfo.toLeft.y) m_bounds.hi.y = m_bridgeInfo.toLeft.y;
+	if (m_bounds.lo.x > m_bridgeInfo.toRight.x) m_bounds.lo.x = m_bridgeInfo.toRight.x;
+	if (m_bounds.lo.y > m_bridgeInfo.toRight.y) m_bounds.lo.y = m_bridgeInfo.toRight.y;
+	if (m_bounds.hi.x < m_bridgeInfo.toRight.x) m_bounds.hi.x = m_bridgeInfo.toRight.x;
+	if (m_bounds.hi.y < m_bridgeInfo.toRight.y) m_bounds.hi.y = m_bridgeInfo.toRight.y;
+
+	if (m_polygonTrigger)
+	{
+		IRegion2D outlineBounds;
+		outline->getBounds(&outlineBounds);
+		m_bounds.lo.x = _STL::min((Real)outlineBounds.lo.x, m_bounds.lo.x);
+		m_bounds.lo.y = _STL::min((Real)outlineBounds.lo.y, m_bounds.lo.y);
+		m_bounds.hi.x = _STL::max((Real)outlineBounds.hi.x, m_bounds.hi.x);
+		m_bounds.hi.y = _STL::max((Real)outlineBounds.hi.y, m_bounds.hi.y);
+	}
+
+	m_bridgeInfo.curDamageState = BODY_PRISTINE;
+	m_bridgeInfo.bridgeObjectID = INVALID_ID;
+
+	if (props)
+	{
+		static const ThingTemplate* genericBridgeTemplate = TheThingFactory->findTemplate("GenericBridge");
+		if (genericBridgeTemplate)
+		{
+			Object *bridge;
+			{
+				CreateMask mask;
+				memset(&mask, 0, sizeof(mask));
+				bridge = TheThingFactory->newObject(genericBridgeTemplate, NULL, &mask, (ObjectID)0);
+			}
+			Coord3D center;
+			center.x = (m_bridgeInfo.fromLeft.x + m_bridgeInfo.toRight.x)/2.0f;
+			center.y = (m_bridgeInfo.fromLeft.y + m_bridgeInfo.toRight.y)/2.0f;
+			center.z = (m_bridgeInfo.fromLeft.z + m_bridgeInfo.toRight.z)/2.0f;
+			bridge->setPosition(&center);
+			m_bridgeInfo.bridgeObjectID = bridge->getID();
+			bridge->updateObjValuesFromMapProperties(props);
+
+			//
+			// we'll say the angle of this object representing the bridge is from the 'from' side
+			// to the 'to' side.
+			//
+			{
+				Coord2D v;
+				v.x = m_bridgeInfo.toLeft.x - m_bridgeInfo.fromLeft.x;
+				v.y = m_bridgeInfo.toLeft.y - m_bridgeInfo.fromLeft.y;
+				bridge->setOrientation( v.toAngle() );
+
+				v.x = m_bridgeInfo.toLeft.x - m_bridgeInfo.toRight.x;
+				v.y = m_bridgeInfo.toLeft.y - m_bridgeInfo.toRight.y;
+				v.normalize();
+			}
+
+			// get the template of the bridge
+			TheTerrainRoads->findBridge(bridgeTemplateName);
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x0027FBAC size=82 name=??1Bridge@@UAE@XZ evidence=N:ledger tier=A
 
@@ -363,14 +561,130 @@ Bool TerrainLogic::parseWaypointData(DataChunkInput &file, DataChunkInfo *info, 
 // FUNCTION: BFME2 0x00280176 size=286 name=?rva00280176@TerrainLogic@@QAEXPBVThingTemplate@@PBVCoord3D@@PBVMatrix3D@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x00280294 size=106 name=?addBridgeToLogic@TerrainLogic@@UAEXPAVRva0027C36A@@PAVDict@@ABVAsciiString@@@Z evidence=N:ledger tier=A
+void TerrainLogic::addBridgeToLogic(BridgeInfo *info, Dict *props, const AsciiString &bridgeTemplateName)
+{
+	Bridge *pBridge = new Bridge(*info, props, bridgeTemplateName, NULL);
+	pBridge->setNext(m_bridgeListHead);
+	m_bridgeListHead = pBridge;
+	Int layer = TheAI->pathfinder()->AddBridge((Int)pBridge);
+	pBridge->setLayer((PathfindLayerEnum)layer);
+}
 
 // FUNCTION: BFME2 0x002802FE size=251 name=?getLayerForDestination@TerrainLogic@@QAE?AW4PathfindLayerEnum@@PAVObject@@PBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x002803F9 size=185 name=?getHighestLayerForDestination@TerrainLogic@@QAE?AW4PathfindLayerEnum@@PBVCoord3D@@_N@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+PathfindLayerEnum TerrainLogic::getHighestLayerForDestination(const Coord3D *pos, Bool onlyHealthyBridges)
+{
+	PathfindLayerEnum bestLayer = LAYER_GROUND;
+	Real bestDistance = pos->z - getGroundHeight(pos->x, pos->y);	// NOT fabs in this case.
+
+	for (Bridge *pBridge = getFirstBridge(); pBridge != NULL; pBridge = pBridge->getNext()) {
+
+		if (onlyHealthyBridges && pBridge->peekBridgeInfo()->curDamageState == BODY_RUBBLE)
+			continue;
+
+		if (pBridge->isPointOnBridge(pos)) {
+			Real delta = pos->z - pBridge->getBridgeHeight(pos, NULL);
+			// must be ABOVE (or on) the bridge for this call.
+			if (delta >= 0 && fabs(delta) < fabs(bestDistance)) {
+				bestLayer = pBridge->getLayer();
+				bestDistance = delta;
+			}
+		}
+	}
+	return bestLayer;
+}
 
 // FUNCTION: BFME2 0x002804B2 size=271 name=?objectInteractsWithBridgeLayer@TerrainLogic@@UBE_NPAVObject@@H_N@Z evidence=N:ledger tier=A
+Bool TerrainLogic::objectInteractsWithBridgeLayer(Object *obj, Int layer, Bool considerBridgeHealth) const
+{
+	if (layer == LAYER_GROUND)
+		return false;
+	Bridge *pBridge = getFirstBridge();
+
+	while (pBridge) {
+		if (pBridge->getLayer() == layer) {
+			Bool match = false;
+			if (pBridge->isPointOnBridge(obj->getPosition())) {
+				match = true;
+			}
+
+			Real radius = obj->getGeometryInfo()->getMajorRadius();
+			radius += PATHFIND_CELL_SIZE_F / 2.0f;
+			Region2D bounds;
+			bounds.lo.x = obj->getPosition()->x;
+			bounds.lo.y = obj->getPosition()->y;
+			bounds.hi = bounds.lo;
+			bounds.lo.x -= radius;
+			bounds.lo.y -= radius;
+			bounds.hi.x += radius;
+			bounds.hi.y += radius;
+			if (pBridge->isCellOnEnd(&bounds)) {
+				match = true;
+			}
+
+			if (match) {
+				Real bridgeHeight = pBridge->getBridgeHeight(obj->getPosition(), NULL);
+				Real delta = fabs(obj->getPosition()->z - bridgeHeight);
+				if (delta > LAYER_Z_CLOSE_ENOUGH_F) {
+					return false;
+				}
+
+				// A destroyed bridge cannot be interacted with.
+				if (considerBridgeHealth && pBridge->peekBridgeInfo()->curDamageState == BODY_RUBBLE) {
+					return false;
+				}
+
+				return true;
+			}
+			return false;
+		}
+
+		pBridge = pBridge->getNext();
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x002805C1 size=221 name=?objectInteractsWithBridgeEnd@TerrainLogic@@UBE_NPAVObject@@H@Z evidence=N:ledger tier=A
+Bool TerrainLogic::objectInteractsWithBridgeEnd(Object *obj, Int layer) const
+{
+	if (layer == LAYER_GROUND)
+		return false;
+	Bridge *pBridge = getFirstBridge();
+
+	while (pBridge) {
+		if (pBridge->getLayer() == layer) {
+			Bool match = false;
+
+			Real radius = obj->getGeometryInfo()->getMajorRadius();
+			radius += PATHFIND_CELL_SIZE_F / 2.0f;
+			Region2D bounds;
+			bounds.lo.x = obj->getPosition()->x;
+			bounds.lo.y = obj->getPosition()->y;
+			bounds.hi = bounds.lo;
+			bounds.lo.x -= radius;
+			bounds.lo.y -= radius;
+			bounds.hi.x += radius;
+			bounds.hi.y += radius;
+			if (pBridge->isCellOnEnd(&bounds)) {
+				match = true;
+			}
+
+			if (match) {
+				Real bridgeHeight = pBridge->getBridgeHeight(obj->getPosition(), NULL);
+				Real delta = fabs(obj->getPosition()->z - bridgeHeight);
+				if (delta > LAYER_Z_CLOSE_ENOUGH_F) {
+					return false;
+				}
+				return true;
+			}
+			return false;
+		}
+
+		pBridge = pBridge->getNext();
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x0028069E size=220 name=?setActiveBoundary@TerrainLogic@@QAEXH@Z evidence=N:ledger tier=A
 
@@ -396,6 +710,14 @@ Bool TerrainLogic::parseWaypointDataChunk(DataChunkInput &file, DataChunkInfo *i
 // FUNCTION: BFME2 0x002811DD size=127 name=?Rva002811DD@W3DTerrainLogic@@UAE?AW4PathfindLayerEnum@@MABVCoord3D@@_NAAVMatrix3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x0028125C size=99 name=?addLandmarkBridgeToLogic@TerrainLogic@@UAEXPAVObject@@@Z evidence=N:ledger tier=A
+void TerrainLogic::addLandmarkBridgeToLogic(Object *bridgeObj)
+{
+	Bridge *pBridge = new Bridge(bridgeObj);
+	pBridge->setNext(m_bridgeListHead);
+	m_bridgeListHead = pBridge;
+	Int layer = TheAI->pathfinder()->AddBridge((Int)pBridge);
+	pBridge->setLayer((PathfindLayerEnum)layer);
+}
 
 // FUNCTION: BFME2 0x002812BF size=299 name=?getClosestWaypointOnPath@TerrainLogic@@UAEPAVWaypoint@@PBVCoord3D@@ABVAsciiString@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 Waypoint *TerrainLogic::getClosestWaypointOnPath(const Coord3D *pos, const AsciiString &label)
@@ -613,6 +935,21 @@ void TerrainLogic::loadPostProcess()
 // FUNCTION: BFME2 0x00283262 size=221 name=?rva00283262@TerrainLogic@@QAEXPBVCoord3D@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
 // FUNCTION: BFME2 0x0028333F size=92 name=?getWaypointByID@TerrainLogic@@UAEPAVWaypoint@@I@Z evidence=N:ledger tier=A
+Waypoint *TerrainLogic::getWaypointByID(UnsignedInt id)
+{
+	_STL::map<UnsignedInt, Waypoint *>::iterator it = m_waypointsByID.find(id);
+	if (it != m_waypointsByID.end())
+		return (*it).second;
+
+	for (Waypoint *way = TheWaypointListHead; way; way = way->m_next)
+		if (way->m_id == id) {
+			m_waypointsByID[id] = way;
+			return way;
+		}
+
+	m_waypointsByID[id] = NULL;
+	return NULL;
+}
 
 // FUNCTION: BFME2 0x002833A3 size=34 name=?vslot3@TerrainLogicListenerA@@UAEXPAX0@Z evidence=N:ledger tier=A
 
@@ -665,6 +1002,15 @@ void TerrainLogic::newMap(Bool saveGame)
 // FUNCTION: BFME2 0x002842CD size=434 name=?bfmeUse1035@BfmeT1035@@QAEXPAVBfmeX1035@@H@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0028447F size=32 name=?bfmeGo1035C@@YGXPAVBfmeX1035@@H@Z evidence=N:ledger tier=A
+void __stdcall bfmeGo1035C(BfmeX1035 *tree, Int arg)
+{
+	if (tree == NULL)
+		return;
+
+	BfmeT1035 state;
+	state.m_bfmeV = 0;
+	state.bfmeUse1035(tree, arg);
+}
 
 // FUNCTION: BFME2 0x0028449F size=240 name=?rva0028449F@TerrainLogic@@QAEXPBVCoord3D@@ABVGeometryInfo@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
