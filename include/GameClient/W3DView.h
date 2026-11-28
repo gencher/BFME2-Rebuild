@@ -303,6 +303,7 @@ private:
 	void fieldOfViewCameraOneFrame();		// 0x00086D73: advances the record at +0x22C and writes the field of view (+0x6C) in radians
 public:
 	void calcDeltaScroll(Real *screenDelta);	// The screen-space movement of the look-at point since the last frame (the view filters read it)
+	void setZoomToDefault();				// Zoom so the camera sits the maximum camera height above the highest nearby ground (Zero Hour's name)
 
 	// ---- slots 153..165, W3DView's own ----
 	virtual void slot153(Int);				// slot 153, 0x0047A69C (the shared `ret 4` stub)

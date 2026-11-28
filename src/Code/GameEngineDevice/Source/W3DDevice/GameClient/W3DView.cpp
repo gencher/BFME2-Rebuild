@@ -1385,6 +1385,42 @@ void W3DView::slot29(Int value)
 // FUNCTION: BFME2 0x0008BE6B size=953 name=?setCameraTransform@W3DView@@AAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0008C224 size=392 name=?init@W3DView@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
+void W3DView::init()
+{
+	// extend View functionality
+	View::init();
+	setName("W3DView");
+	// set default camera "lookat" point
+	Coord3D pos;
+	pos.x = 87.0f;
+	pos.y = 77.0f;
+	pos.z = 0;
+
+	pos.x *= 10.0f;
+	pos.y *= 10.0f;
+
+	m_pos = pos;
+
+	// create our 3D camera
+	m_3DCamera = new CameraClass;
+
+	m_cameraSettings.reload();
+	setCameraTransform();
+
+	// create our 2D camera for the GUI overlay
+	m_2DCamera = new CameraClass;
+	m_2DCamera->Set_Position(Vector3(0, 0, 1));
+	Vector2 min = Vector2(-1, -0.75f);
+	Vector2 max = Vector2(+1, +0.75f);
+	m_2DCamera->Set_View_Plane(min, max);
+	m_2DCamera->Set_Clip_Planes(0.995f, 2.0f);
+
+	m_cameraConstraintValid = false;
+
+	m_scrollAmountCutoff = TheWritableGlobalData->m_scrollAmountCutoff;
+	m_unk0x24C4 = 0;
+	m_cameraSettings.reset();
+}
 
 // FUNCTION: BFME2 0x0008C3AC size=2690 name=?update@W3DView@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 
@@ -1449,6 +1485,31 @@ void W3DView::setAngleAndPitchToDefault()
 }
 
 // FUNCTION: BFME2 0x0008D2B8 size=265 name=?setHeightAboveGround@W3DView@@UAEXM@Z evidence=N:ledger tier=B hypothesis:cohesion
+void W3DView::setHeightAboveGround(Real z)
+{
+	if (TheGameClient->m_unk0xC0[0] && m_zoomLimited)
+		return;
+	if (m_cameraHeightLocked)
+		return;
+	if (m_cameraMovementMode || m_doingRotateCamera || m_doingPitchCamera || m_doingZoomCamera || m_doingScriptedCameraLock || m_doingScriptedPitch)
+		return;
+	Real delta = z - m_heightAboveGround;
+	m_heightTravelled += fabsf(delta);
+	m_heightAboveGround = z;
+	if (m_zoomLimited) {
+		if (m_cameraSettings.getMinimum() > m_heightAboveGround)
+			m_heightAboveGround = m_cameraSettings.getMinimum();
+		if (m_heightAboveGround > m_cameraSettings.getMaximum())
+			m_heightAboveGround = m_cameraSettings.getMaximum();
+	}
+	m_doingRotateCamera = false;
+	m_doingPitchCamera = false;
+	m_doingZoomCamera = false;
+	m_doingScriptedPitch = false;
+	m_doingScriptedCameraLock = false;
+	m_cameraConstraintValid = false;
+	setCameraTransform();
+}
 
 
 // FUNCTION: BFME2 0x0008D3C1 size=182 name=?setZoom@W3DView@@UAEXM@Z evidence=N:ledger tier=B hypothesis:cohesion
@@ -1473,6 +1534,33 @@ void W3DView::setZoom(Real zoom)
 }
 
 // FUNCTION: BFME2 0x0008D477 size=230 name=?setZoomToDefault@W3DView@@QAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
+void W3DView::setZoomToDefault()
+{
+	if (m_cameraMovementMode || m_doingRotateCamera || m_doingPitchCamera || m_doingZoomCamera || m_doingScriptedCameraLock || m_doingScriptedPitch)
+		return;
+
+	// default zoom has to be max, otherwise players will just zoom to max always
+
+	// terrain height + desired height offset == cameraOffset * actual zoom
+	// find best approximation of max terrain height we can see
+	Real terrainHeightMax = getHeightAroundPos(m_pos.x, m_pos.y);
+	if (m_smoothCameraHeightField.m_initialized)
+		terrainHeightMax = m_smoothCameraHeightField.getHeight(m_pos.x, m_pos.y);
+
+	Real desiredHeight = (terrainHeightMax + m_cameraSettings.getMaximum());
+	Real desiredZoom = desiredHeight / m_cameraOffset.z;
+
+	m_zoom = desiredZoom;
+	m_heightAboveGround = m_cameraSettings.getMaximum();
+
+	m_doingRotateCamera = false;
+	m_doingPitchCamera = false;
+	m_doingScriptedPitch = false;
+	m_doingZoomCamera = false;
+	m_doingScriptedCameraLock = false;
+	m_cameraConstraintValid = false; // recalc it.
+	setCameraTransform();
+}
 
 // FUNCTION: BFME2 0x0008D55D size=682 name=?lookAt@W3DView@@UAEXPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=B hypothesis:cohesion
 

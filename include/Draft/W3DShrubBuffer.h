@@ -2,7 +2,15 @@
 // DRAFT: X:vptr-store and retail slot targets
 #pragma once
 #include <stddef.h>
+#include "Common/Region2D.h"
 class Xfer;
+
+// A world-space x/y pair (the ledger spelling of getPartitionBucket's argument).
+struct FloatPair {
+  Real x;
+  Real y;
+};
+
 #pragma pack(push,1) // DRAFT layout policy; all known offsets asserted below
 class W3DShrubBuffer {
 public:
@@ -12,8 +20,14 @@ public:
   virtual void DoXfer(Xfer *); // slot=0xC target=0x000E96B4 mangled=?DoXfer@W3DShrubBuffer@@QAEXPAVXfer@@@Z
   virtual bool vslot10(void); // slot=0x10 target=0x0050B5C6 mangled=?vslot10@GameWindow@@UAE_NXZ
   virtual void vfunc_0x14(); // slot=0x14 target=0x000E9C15 mangled=?enable@Rva000E9C15ByteOneSetter@@QAEXXZ
+
+  int getPartitionBucket(const FloatPair *pos); // 0x000E6EF0: the 50x50 grid cell of a position clamped to m_partitionRegion
+
+  unsigned char m_unk04[0x1944]; // +0x04 not yet recovered
+  Region2D m_partitionRegion; // +0x1948 the extent getPartitionBucket divides into its grid
 };
 #pragma pack(pop)
+typedef char W3DShrubBufferPartitionRegionOffset[(offsetof(W3DShrubBuffer, m_partitionRegion) == 0x1948) ? 1 : -1];
 // DRAFT STILL NEEDS:
 // - binary allocation size unknown
 // - slot 0x0 target 0x000E9CDF: no real translatable mangled signature

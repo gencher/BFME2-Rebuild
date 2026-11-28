@@ -72,6 +72,13 @@ public:
 	Vector2 *Get_UV_Array_By_Index(int index, bool create = true) { return CurMatDesc->Get_UV_Array_By_Index(index, create); }
 	VertexMaterialClass *Peek_Material(int vidx, int pass = 0) const { return CurMatDesc->Peek_Material(vidx, pass); }
 	VertexMaterialClass *Peek_Single_Material(int pass = 0) const { return CurMatDesc->Peek_Single_Material(pass); }
+	// Forwarders through CurMatDesc (+0x94), expanded by read_per_tri_materials 0x00189790.
+	void Set_Single_Material(VertexMaterialClass *vmat, int pass = 0) { CurMatDesc->Set_Single_Material(vmat, pass); }
+	void Set_Single_Texture(const TextureAsset &tex, int pass = 0, int stage = 0) { CurMatDesc->Set_Single_Texture(tex, pass, stage); }
+	void Set_Single_Shader(ShaderClass shader, int pass = 0) { CurMatDesc->Set_Single_Shader(shader, pass); }
+	void Set_Material(int vidx, VertexMaterialClass *vmat, int pass = 0) { CurMatDesc->Set_Material(vidx, vmat, pass); }
+	void Set_Shader(int pidx, ShaderClass shader, int pass = 0) { CurMatDesc->Set_Shader(pidx, shader, pass); }
+	void Set_Texture(int pidx, const TextureAsset &tex, int pass = 0, int stage = 0) { CurMatDesc->Set_Texture(pidx, tex, pass, stage); }
 
 	// The FVF container of the first polygon renderer's texture category.
 	DX8FVFCategoryContainer *Peek_FVF_Category_Container(void);			// 0x00172030
