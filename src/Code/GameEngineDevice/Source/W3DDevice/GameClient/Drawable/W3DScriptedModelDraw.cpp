@@ -23,6 +23,8 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "WW3D2/VertexMaterialClass.h"
 #include "GameLogic/Object.h"
 #include "Common/BfmeFixedObject60.h"
+#include "GameClient/AnimConditionInfo.h"
+#include "Common/RandomValue.h"
 #include "Lib/trig.h"
 #include "WW3D2/RenderObjClass.h"
 #include "WW3D2/HLodClass.h"
@@ -314,6 +316,34 @@ VertexMaterialClass *MaterialInfoClass::Get_Vertex_Material(int index)
 // FUNCTION: BFME2 0x000B49F9 size=35 name=?rva000B49F9@Rva000B49F9@@QAEEXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B4A1C size=131 name=?pickRandomAnimation@AnimConditionInfo@@QAEHHH@Z evidence=N:ledger tier=A
+Int AnimConditionInfo::pickRandomAnimation(Int avoid, Int maximum)
+{
+	Int count = (Int)m_animations.size();
+	if (count > maximum)
+		count = maximum;
+	if (count < 2)
+		return 0;
+	Int total = 0;
+	for (Int i = 0; i < count; ++i)
+	{
+		Int weight = m_animations[i].m_weight;
+		if (i == avoid)
+			--weight;
+		total += weight;
+	}
+	Int pick = GetGameClientRandomValue(0, total - 1,
+		(char *)"C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngineDevice\\Source\\W3DDevice\\GameClient\\Drawable\\W3DScriptedModelDraw.cpp", 1118);
+	for (Int j = 0; j < count; ++j)
+	{
+		Int weight = m_animations[j].m_weight;
+		if (j == avoid)
+			--weight;
+		pick -= weight;
+		if (pick < 0)
+			return j;
+	}
+	return 0;
+}
 
 // FUNCTION: BFME2 0x000B4A9F size=22 name=?rva000B4A9F@Rva000B4A9F@@QAEPBDXZ evidence=?:placeholder tier=A
 
