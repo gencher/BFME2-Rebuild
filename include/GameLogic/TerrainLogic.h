@@ -189,6 +189,17 @@ public:
 typedef char TerrainLogicSize[(sizeof(TerrainLogic) == 0x191C) ? 1 : -1];
 typedef char TerrainLogicWaterOffset[(offsetof(TerrainLogic, m_waterAreas) == 0x50) ? 1 : -1];
 
+// The tree-iteration callback state of TerrainLogic::iterateTreesNearAPoint (the map's spelling of the
+// class; its method is the callback body, and the free function wraps it for a plain C callback).
+class BfmeX1035;
+class BfmeT1035
+{
+public:
+	void bfmeUse1035(BfmeX1035 *tree, Int arg);		// 0x002842CD
+	Int m_bfmeV;
+};
+void __stdcall bfmeGo1035C(BfmeX1035 *tree, Int arg);	// 0x0028447F
+
 extern TerrainLogic *TheTerrainLogic;
 
 #endif

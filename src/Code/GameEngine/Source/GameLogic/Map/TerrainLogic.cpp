@@ -830,6 +830,15 @@ void TerrainLogic::newMap(Bool saveGame)
 // FUNCTION: BFME2 0x002842CD size=434 name=?bfmeUse1035@BfmeT1035@@QAEXPAVBfmeX1035@@H@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x0028447F size=32 name=?bfmeGo1035C@@YGXPAVBfmeX1035@@H@Z evidence=N:ledger tier=A
+void __stdcall bfmeGo1035C(BfmeX1035 *tree, Int arg)
+{
+	if (tree == NULL)
+		return;
+
+	BfmeT1035 state;
+	state.m_bfmeV = 0;
+	state.bfmeUse1035(tree, arg);
+}
 
 // FUNCTION: BFME2 0x0028449F size=240 name=?rva0028449F@TerrainLogic@@QAEXPBVCoord3D@@ABVGeometryInfo@@M@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
