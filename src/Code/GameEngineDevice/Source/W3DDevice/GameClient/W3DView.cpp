@@ -1385,6 +1385,42 @@ void W3DView::slot29(Int value)
 // FUNCTION: BFME2 0x0008BE6B size=953 name=?setCameraTransform@W3DView@@AAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 
 // FUNCTION: BFME2 0x0008C224 size=392 name=?init@W3DView@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
+void W3DView::init()
+{
+	// extend View functionality
+	View::init();
+	setName("W3DView");
+	// set default camera "lookat" point
+	Coord3D pos;
+	pos.x = 87.0f;
+	pos.y = 77.0f;
+	pos.z = 0;
+
+	pos.x *= 10.0f;
+	pos.y *= 10.0f;
+
+	m_pos = pos;
+
+	// create our 3D camera
+	m_3DCamera = new CameraClass;
+
+	m_cameraSettings.reload();
+	setCameraTransform();
+
+	// create our 2D camera for the GUI overlay
+	m_2DCamera = new CameraClass;
+	m_2DCamera->Set_Position(Vector3(0, 0, 1));
+	Vector2 min = Vector2(-1, -0.75f);
+	Vector2 max = Vector2(+1, +0.75f);
+	m_2DCamera->Set_View_Plane(min, max);
+	m_2DCamera->Set_Clip_Planes(0.995f, 2.0f);
+
+	m_cameraConstraintValid = false;
+
+	m_scrollAmountCutoff = TheWritableGlobalData->m_scrollAmountCutoff;
+	m_unk0x24C4 = 0;
+	m_cameraSettings.reset();
+}
 
 // FUNCTION: BFME2 0x0008C3AC size=2690 name=?update@W3DView@@UAEXXZ evidence=N:ledger tier=B hypothesis:cohesion
 
