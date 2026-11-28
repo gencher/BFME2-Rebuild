@@ -63,6 +63,8 @@ public:
 
 	enum { MAX_HEADLESS_CLIENTS = 7 };
 
+	void startHeadlessClients(Int count);					// 0x00225F81, called by AptLanLobby.
+
 private:
 	Int m_frameRateLimit;									// +0x0C, used for frame pacing in execute.
 	Bool m_quitting;										// +0x10, tested at 0x0022D45E.
@@ -76,7 +78,13 @@ public:
 	Real m_clientFrameRatio;									// +0x3C, used by Drawable's interpolation.
 
 private:
-	UnsignedByte m_unk0x40[0x20];
+	UnsignedByte m_unk0x40[0x18];
+
+public:
+	Real m_instantNetFPS;									// +0x58, the "Instant_Net_FPS" column of the play stats.
+
+private:
+	UnsignedByte m_unk0x5C[4];
 
 	void updateClientFrameCounter();						// 0x00225D68
 	void updateClientFrameRatio();							// 0x00225D78

@@ -16,6 +16,9 @@
 #include "GameClient/GadgetTextEntry.h"
 #include "GameClient/AptOptions.h"
 #include "GameNetwork/LANAPI.h"
+#include "GameNetwork/LANGameInfo.h"
+#include "GameClient/MapCache.h"
+#include "GameClient/MapMetaData.h"
 #include "GameClient/Shell.h"
 #include "GameClient/LanguageFilter.h"
 #include "GameClient/GameText.h"
@@ -298,12 +301,108 @@ int AptLanLobby::rva00444826(int message, unsigned int data1, unsigned int data2
 }
 
 // FUNCTION: BFME2 0x004448E5 size=280 name=?MpOwnerPrintMessage@AptLanLobby@@QAEXABVUnicodeString@@H@Z evidence=N:ledger tier=A
+void AptLanLobby::MpOwnerPrintMessage(const UnicodeString &message, int type)
+{
+	if (TheLAN == 0)
+		return;
+	switch (type)
+	{
+	case 0:
+		TheLAN->OnChat(UnicodeString(L"SYSTEM"), TheLAN->GetLocalAddress(), message, LANAPIInterface::LANCHAT_SYSTEM);
+		break;
+	case 1:
+		if (g_aptMessenger == 0)
+			MessageBoxOk(UnicodeString(L""), message, 0);
+		TheLAN->OnChat(UnicodeString(L"SYSTEM"), TheLAN->GetLocalAddress(), message, LANAPIInterface::LANCHAT_SYSTEM);
+		break;
+	case 2:
+		TheLAN->RequestChat(message, LANAPIInterface::LANCHAT_SYSTEM, 0);
+		break;
+	}
+}
 
 // FUNCTION: BFME2 0x004449FD size=198 name=?MpOwnerSelectTeam@AptLanLobby@@QAE_NPAVGameSlot@@H@Z evidence=N:ledger tier=A
+bool AptLanLobby::MpOwnerSelectTeam(GameSlot *slot, int team)
+{
+	if (TheLAN == 0)
+		return false;
+	LANGameInfo *game = TheLAN->GetMyGame();
+	if (game == 0)
+		return false;
+	slot->m_teamNumber = team;
+	game->resetAccepted();
+	if (game->LANGameInfo::amIHost())
+	{
+		BfmeNetAddress noAddress;
+		TheLAN->RequestGameOptionsPacked(true, &noAddress);
+	}
+	else
+	{
+		AsciiString options;
+		options.format("Team=%d", slot->m_teamNumber);
+		BfmeNetAddress noAddress;
+		TheLAN->RequestGameOptions(options, 1, (UnsignedInt)&noAddress);
+	}
+	return true;
+}
 
 // FUNCTION: BFME2 0x00444AC3 size=205 name=?MpOwnerSelectHandicap@AptLanLobby@@QAE_NPAVGameSlot@@H@Z evidence=N:ledger tier=A
+bool AptLanLobby::MpOwnerSelectHandicap(GameSlot *slot, int handicap)
+{
+	if (TheLAN == 0)
+		return false;
+	LANGameInfo *game = TheLAN->GetMyGame();
+	if (game == 0)
+		return false;
+	slot->m_unk0x20 = handicap;
+	game->resetAccepted();
+	if (game->LANGameInfo::amIHost())
+	{
+		game->resetAccepted();
+		BfmeNetAddress noAddress;
+		TheLAN->RequestGameOptionsPacked(true, &noAddress);
+	}
+	else
+	{
+		AsciiString options;
+		options.format("Handicap=%d", slot->m_unk0x20);
+		BfmeNetAddress noAddress;
+		TheLAN->RequestGameOptions(options, 1, (UnsignedInt)&noAddress);
+	}
+	return true;
+}
 
 // FUNCTION: BFME2 0x00444B90 size=276 name=?MpOwnerSelectPlayer@AptLanLobby@@QAE_NPAVGameSlot@@W4SlotState@@H@Z evidence=N:ledger tier=A
+bool AptLanLobby::MpOwnerSelectPlayer(GameSlot *slot, SlotState state, const UnicodeString &)
+{
+	if (TheLAN == 0)
+		return false;
+	LANGameInfo *game = TheLAN->GetMyGame();
+	if (game == 0)
+		return false;
+	GameSlotConnectInfo info;
+	if (slot->m_state == SLOT_PLAYER)
+	{
+		UnicodeString leaving = slot->m_name;
+		info.m_ip = 0;
+		info.m_port = 0;
+		slot->setState(state, UnicodeString::TheEmptyString, &info);
+		game->resetAccepted();
+		TheLAN->OnPlayerLeave(leaving);
+	}
+	else if (slot->m_state != state)
+	{
+		bool wasAI = slot->isAI();
+		info.m_ip = 0;
+		info.m_port = 0;
+		slot->setState(state, UnicodeString::TheEmptyString, &info);
+		if (slot->isAI() ^ wasAI)
+			game->resetAccepted();
+		BfmeNetAddress noAddress;
+		TheLAN->RequestGameOptionsPacked(true, &noAddress);
+	}
+	return true;
+}
 
 // FUNCTION: BFME2 0x00444CA4 size=215 name=?MpOwnerSelectStartPosition@AptLanLobby@@QAE_NPAVGameSlot@@H@Z evidence=N:ledger tier=A
 
@@ -360,6 +459,28 @@ void AptLanLobby::OnCreateGameBttn(const char *)
 }
 
 // FUNCTION: BFME2 0x00444F9C size=234 name=?bfmeMapChanged@AptLanLobby@@QAE_NPBVAsciiString@@@Z evidence=N:ledger tier=A
+bool AptLanLobby::MpOwnerSelectMap(const AsciiString &mapName)
+{
+	LANGameInfo *game = TheLAN->GetMyGame();
+	if (game == 0)
+		return false;
+	AsciiString lowerMap = mapName;
+	lowerMap.toLower();
+	game->setMapForwarder(lowerMap);
+	const MapMetaData *map = TheMapCache->findMap(lowerMap);
+	if (map != 0)
+	{
+		game->getSlot(0)->setMapAvailability(true);
+		game->setMapCRC(map->m_fileCRC);
+		game->setMapSize(map->m_fileSize);
+		game->resetStartSpots();
+		game->adjustSlotsForMap();
+		game->resetAccepted();
+		BfmeNetAddress noAddress;
+		TheLAN->RequestGameOptionsPacked(true, &noAddress);
+	}
+	return true;
+}
 
 // FUNCTION: BFME2 0x00445086 size=184 name=?Rva00445086ClientStateName@@YA?AVAsciiString@@W4Rva00445086ClientState@@@Z evidence=?:placeholder tier=A
 

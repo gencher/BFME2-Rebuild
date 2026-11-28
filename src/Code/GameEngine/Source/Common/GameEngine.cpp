@@ -2,7 +2,10 @@
 // platformsdk
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include <map>
+#include <stdio.h>
+#include <string.h>
 #include "Common/GameEngine.h"
+#include "Common/GameMemory.h"
 #include "Common/GameState.h"
 #include "GameClient/GameClient.h"
 #include "GameLogic/GameLogic.h"
@@ -58,6 +61,58 @@ bool GameEngine::isMultiplayerSession()
 }
 
 // FUNCTION: BFME2 0x00225F81 size=374 name=?startHeadlessClients@GameEngine@@QAEXH@Z evidence=N:ledger tier=A
+void GameEngine::startHeadlessClients(Int count)
+{
+	if (m_headlessClientCount > 0 || count < 1)
+		return;
+	if (count > MAX_HEADLESS_CLIENTS)
+		count = MAX_HEADLESS_CLIENTS;
+
+	char exePath[0x200];
+	GetModuleFileNameA(NULL, exePath, sizeof(exePath));
+
+	const char *environment = GetEnvironmentStringsA();
+	Int environmentSize = 0;
+	for (const char *variable = environment; *variable != 0; )
+	{
+		Int length = strlen(variable);
+		variable += length + 1;
+		environmentSize += length + 1;
+	}
+
+	char *commandLine = GetCommandLineA();
+	char *block = static_cast<char *>(allocateBlock(environmentSize + 1000, 0));
+
+	Int i;
+	for (i = 0; i < count; ++i)
+	{
+		char *out = block;
+		out += sprintf(out, "_EA_RTS_HEADLESS=%i", i + 1) + 1;
+		out += sprintf(out, "_EA_RTS_FILENAME=");
+		GetModuleFileNameA(NULL, out, 0x100);
+		char *extension = strrchr(out, '.');
+		out = extension + sprintf(extension, "-%i.exe", i + 1) + 1;
+
+		for (const char *variable = environment; *variable != 0; )
+		{
+			do
+			{
+				*out++ = *variable++;
+			}
+			while (out[-1] != 0);
+		}
+		*out = 0;
+
+		STARTUPINFOA startup;
+		memset(&startup, 0, sizeof(startup));
+		startup.cb = sizeof(startup);
+		PROCESS_INFORMATION process;
+		CreateProcessA(exePath, commandLine, NULL, NULL, FALSE, 0x208, block, NULL, &startup, &process);
+		m_headlessClients[i] = process.hProcess;
+	}
+	m_headlessClientCount = i;
+	freeBlock(block);
+}
 
 // FUNCTION: BFME2 0x002260F7 size=42 name=?stopHeadlessClients@GameEngine@@AAEXXZ evidence=N:ledger tier=A
 void GameEngine::stopHeadlessClients()

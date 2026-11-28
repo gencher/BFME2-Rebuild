@@ -70,6 +70,7 @@ public:
 	virtual bool MpOwnerSelectStartPosition(GameSlot *, int);	// slot 11, 0x00444CA4
 	virtual bool MpOwnerSelectTeam(GameSlot *, int);	// slot 12, 0x004449FD
 	virtual void MpOwnerGetLocalPlayerName(UnicodeString &);	// slot 14, 0x00444D7B
+	virtual void MpOwnerPrintMessage(const UnicodeString &, int);	// slot 17, 0x004448E5
 
 	void OnStartGameBttn(const char *);
 	void OnJoinGameBttn(const char *);
