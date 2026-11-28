@@ -53,7 +53,7 @@ float millisecondsToSeconds(float value)
 // FUNCTION: BFME2 0x000B2D5E size=53 name=?parseRealRange@ModelConditionInfo@@SAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=A
 void ModelConditionInfo::parseRealRange(INI *ini, void *instance, void *, const void *)
 {
-	ModelConditionInfo *info = (ModelConditionInfo *)instance;
+	ModelConditionInfo *info = static_cast<ModelConditionInfo *>(instance);
 	info->m_animMinSpeedFactor = ini->scanReal(ini->getNextToken());
 	info->m_animMaxSpeedFactor = ini->scanReal(ini->getNextToken());
 }
@@ -272,7 +272,7 @@ Real Object::GetRelativeAngle(const Coord3D *pos) const
 	Coord3D delta;
 	delta.x = pos->x - m_cachedPos.x;
 	delta.y = pos->y - m_cachedPos.y;
-	Real distance = (Real)sqrt(delta.x * delta.x + delta.y * delta.y);
+	Real distance = sqrt(delta.x * delta.x + delta.y * delta.y);
 	if (distance == 0.0f)
 		return 0.0f;
 	Real scale = 1.0f / distance;
@@ -321,7 +321,7 @@ VertexMaterialClass *MaterialInfoClass::Get_Vertex_Material(int index)
 // FUNCTION: BFME2 0x000B4A1C size=131 name=?pickRandomAnimation@AnimConditionInfo@@QAEHHH@Z evidence=N:ledger tier=A
 Int AnimConditionInfo::pickRandomAnimation(Int avoid, Int maximum)
 {
-	Int count = (Int)m_animations.size();
+	Int count = m_animations.size();
 	if (count > maximum)
 		count = maximum;
 	if (count < 2)
@@ -335,7 +335,7 @@ Int AnimConditionInfo::pickRandomAnimation(Int avoid, Int maximum)
 		total += weight;
 	}
 	Int pick = GetGameClientRandomValue(0, total - 1,
-		(char *)"C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngineDevice\\Source\\W3DDevice\\GameClient\\Drawable\\W3DScriptedModelDraw.cpp", 1118);
+		"C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngineDevice\\Source\\W3DDevice\\GameClient\\Drawable\\W3DScriptedModelDraw.cpp", 1118);
 	for (Int j = 0; j < count; ++j)
 	{
 		Int weight = m_animations[j].m_weight;
