@@ -18,10 +18,30 @@
 #define BFME2_W3DSCRIPTEDMODELDRAW_H
 
 #include "GameClient/DrawModule.h"
+#include "WW3D2/Shadow.h"
 
-struct ModelConditionInfo;
+class INI;
+class ModelConditionFlags;
+class RenderObjClass;
 
-class W3DScriptedModelDraw : public DrawModule, public ObjectDrawInterface
+// One model condition state of the draw module data. Only the fields the recovered code touches are named.
+struct ModelConditionInfo
+{
+	static void parseRealRange(INI *ini, void *instance, void *store, const void *userData);
+
+	Byte m_unk0x00[0x24];
+	Real m_animMinSpeedFactor;		// 0x24
+	Real m_animMaxSpeedFactor;		// 0x28
+};
+
+// The one-slot interface at +0x10 of the model draw module.
+class ModelConditionInterface
+{
+public:
+	virtual void onModelConditionChange(const ModelConditionFlags &flags, Bool a, Int b) = 0;	// 0
+};
+
+class W3DScriptedModelDraw : public DrawModule, public ObjectDrawInterface, public ModelConditionInterface
 {
 public:
 	W3DScriptedModelDraw(Thing *thing, const ModuleData *moduleData);		// 0x000C0DD8
@@ -68,7 +88,7 @@ public:
 	virtual const Image *getPortraitImage();								// 51
 	virtual const Image *getButtonImage();									// 52
 	virtual void vslot53(Int a);											// 53
-	virtual void vslot54(const char *a, Int b);								// 54
+	virtual void SetRampMeshOverload(const char *name, Int index);								// 54
 	virtual Bool vslot55();													// 55
 	virtual void vslot56(AsciiString *a, Int b);							// 56
 	virtual void vslot57();													// 57
@@ -146,6 +166,23 @@ protected:
 	virtual void adjustTransformMtx(Matrix3D &mtx) const {}				// 65: the shared `ret 4`; W3DSailModelDraw's override 0x000D08C3 transforms the matrix (Zero Hour's name)
 	virtual Int slot66();													// 66: 0x000C124C returns 100000
 	virtual Int slot67(Int count);											// 67: 0x000B3E96, a client random value in [0, count - 1]
+
+	Byte m_unk0x14[0x36];			// 0x14
+	Bool m_shadowEnabled;			// 0x4A
+	Bool m_unk0x4B;					// 0x4B
+	Bool m_unk0x4C;					// 0x4C
+	Bool m_unk0x4D;					// 0x4D
+	Byte m_unk0x4E[2];				// 0x4E
+	RenderObjClass *m_renderObject;	// 0x50
+	Byte m_unk0x54[4];				// 0x54
+	Shadow *m_shadow;				// 0x58
+	Shadow *m_terrainDecal;			// 0x5C
+	Byte m_unk0x60[0x21];			// 0x60
+	Bool m_pauseAnimation;			// 0x81
+	Byte m_unk0x82[2];				// 0x82
+	Int m_animationMode;			// 0x84
+	Byte m_unk0x88[0x1DC];			// 0x88
+	AsciiString m_rampNames[2];		// 0x264
 };
 
 #endif

@@ -21,9 +21,24 @@ void rva000C48DB(void*,void*,void*,void*);
 #include "Common/BitFlagsIO.h"
 #include "WW3D2/MaterialInfoClass.h"
 #include "WW3D2/VertexMaterialClass.h"
+#include "GameLogic/Object.h"
+#include "Common/BfmeFixedObject60.h"
+#include "Common/BfmeThingVKE.h"
+#include "GameClient/AnimConditionInfo.h"
+#include "Common/AsciiStringRef.h"
+#include "GameClient/BfmeStringTailRecord180.h"
+#include "Common/RandomValue.h"
+#include "Lib/trig.h"
+#include "WW3D2/RenderObjClass.h"
+#include "WW3D2/HLodClass.h"
+#include <math.h>
 // FUNCTION: BFME2 0x000B2B3B size=7 name=?get@LivingWorldBuildPlotIconSubObject@@UBEHXZ evidence=X:proven (vtable) tier=B hypothesis:mm1-neighbour-pointers-mixed
 // FUNCTION: BFME2 0x000B2B42 size=58 name=?Rva000B2B42Clamp@@YAXPAH0H@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 // FUNCTION: BFME2 0x000B2B7C size=11 name=?millisecondsToSeconds@@YAMM@Z evidence=N:ledger tier=B hypothesis:mm1-contiguity-callers
+float millisecondsToSeconds(float value)
+{
+	return value * 0.001f;
+}
 // FUNCTION: BFME2 0x000B2B87 size=14 name=?Rva000B2B87FloatMin@@YAMMM@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
 // FUNCTION: BFME2 0x000B2B95 size=14 name=?Rva000B2B95FloatMax@@YAMMM@Z evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
 // FUNCTION: BFME2 0x000B2BA3 size=66 name=?Rva000B2BA3Get@@YAHPBURva000B2BE5Src@@PA_N@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
@@ -36,6 +51,12 @@ void rva000C48DB(void*,void*,void*,void*);
 // FUNCTION: BFME2 0x000B2D4D size=17 name=?rva000B2D4D@Rva000B2D4D@@QAEXHH@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B2D5E size=53 name=?parseRealRange@ModelConditionInfo@@SAXPAVINI@@PAX1PBX@Z evidence=N:ledger tier=A
+void ModelConditionInfo::parseRealRange(INI *ini, void *instance, void *, const void *)
+{
+	ModelConditionInfo *info = static_cast<ModelConditionInfo *>(instance);
+	info->m_animMinSpeedFactor = ini->scanReal(ini->getNextToken());
+	info->m_animMaxSpeedFactor = ini->scanReal(ini->getNextToken());
+}
 
 // FUNCTION: BFME2 0x000B2D93 size=40 name=?Rva000B2D93_ParseShadowReal@INI@@SAXPAV1@PAX1PBX@Z evidence=?:placeholder tier=A
 
@@ -44,8 +65,20 @@ void rva000C48DB(void*,void*,void*,void*);
 // FUNCTION: BFME2 0x000B2DE3 size=40 name=?Rva000B2DE3_ParseShadowBool@INI@@SAXPAV1@PAX1PBX@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B2E14 size=21 name=?releaseShadows@W3DModelDraw@@UAEXXZ evidence=N:ledger tier=A
+void W3DScriptedModelDraw::releaseShadows()
+{
+	if (m_shadow)
+		m_shadow->release();
+	m_shadow = 0;
+}
 
 // FUNCTION: BFME2 0x000B2E29 size=35 name=?setShadowsEnabled@W3DModelDraw@@UAEX_N@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setShadowsEnabled(Bool enable)
+{
+	if (m_shadow)
+		m_shadow->enableShadowRender(enable && !m_unk0x4B);
+	m_shadowEnabled = enable;
+}
 
 // FUNCTION: BFME2 0x000B2E4C size=105 name=?Rva000B2E4CComplete@@YA_NPAVRenderAnimationObj@@PAUAnimSlot@@_N@Z evidence=?:placeholder tier=A
 
@@ -62,8 +95,18 @@ void rva000C48DB(void*,void*,void*,void*);
 // FUNCTION: BFME2 0x000B3133 size=24 name=?rva000B3133@Rva000B3133Module@@UAEPAVRva000B3133Part@@XZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B314B size=32 name=?setTerrainDecalSize@W3DModelDraw@@UAEXMM@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setTerrainDecalSize(Real x, Real y)
+{
+	if (m_terrainDecal)
+		m_terrainDecal->setSize(x, y);
+}
 
 // FUNCTION: BFME2 0x000B316B size=34 name=?setTerrainDecalOpacity@W3DModelDraw@@UAEXM@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setTerrainDecalOpacity(Real opacity)
+{
+	if (m_terrainDecal)
+		m_terrainDecal->setOpacity((Int)(opacity * 255.0f));
+}
 
 // FUNCTION: BFME2 0x000B3198 size=33 name=?rva000B3198@Rva000B32EF@@QAEXABVCoord3D@@0@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
 
@@ -96,8 +139,38 @@ void rva000C48DB(void*,void*,void*,void*);
 // FUNCTION: BFME2 0x000B373D size=60 name=?setDuration@Rva000B373D@@QAEXI@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B377E size=114 name=?setPauseAnimation@W3DModelDraw@@UAEX_N@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::setPauseAnimation(Bool pauseAnim)
+{
+	if (m_pauseAnimation == pauseAnim)
+		return;
+
+	m_pauseAnimation = pauseAnim;
+	if (m_renderObject && m_renderObject->Class_ID() == RenderObjClass::CLASSID_HLOD)
+	{
+		float framenum, dummy;
+		int mode, numFrames;
+		HLodClass *hlod = static_cast<HLodClass *>(m_renderObject);
+		HAnimClass *anim = hlod->Peek_Animation_And_Info(framenum, numFrames, mode, dummy);
+		if (anim)
+		{
+			if (m_pauseAnimation)
+			{
+				m_animationMode = mode;
+				hlod->Set_Animation(anim, framenum, RenderObjClass::ANIM_MODE_MANUAL);
+			}
+			else
+			{
+				hlod->Set_Animation(anim, framenum, m_animationMode);
+			}
+		}
+	}
+}
 
 // FUNCTION: BFME2 0x000B37F0 size=28 name=?isVisible@W3DModelDraw@@UBE_NXZ evidence=N:ledger tier=A
+Bool W3DScriptedModelDraw::isVisible() const
+{
+	return m_renderObject && m_renderObject->Is_Really_Visible();
+}
 
 // FUNCTION: BFME2 0x000B380C size=8 name=?enable@Rva000B380CByteOneSetter@@QAEXXZ evidence=?:placeholder tier=A
 
@@ -165,6 +238,11 @@ Bool ModelConditionFlags::rva000B3EB3() const
 // FUNCTION: BFME2 0x000B40BD size=14 name=?get@Rva000B40BDDivMovField@@QBEHXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B41EF size=122 name=??0BfmeFixedObject60@@QAE@ABU0@@Z evidence=N:ledger tier=A
+BfmeFixedObject60::BfmeFixedObject60(const BfmeFixedObject60 &src)
+	: m_word0(src.m_word0), m_word4(src.m_word4), m_word8(src.m_word8)
+{
+	m_matrix = src.m_matrix;
+}
 
 // FUNCTION: BFME2 0x000B4269 size=9 name=?get@Rva000B4269SarAvgField@@QBEHXZ evidence=?:placeholder tier=A
 
@@ -173,6 +251,14 @@ Bool ModelConditionFlags::rva000B3EB3() const
 // FUNCTION: BFME2 0x000B4299 size=20 name=?rva000B4299@Rva000B4299@@QAEPAV1@ABUGapWords7@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B4384 size=97 name=??4BfmeFixedObject60@@QAEAAU0@ABU0@@Z evidence=N:ledger tier=A
+BfmeFixedObject60 &BfmeFixedObject60::operator=(const BfmeFixedObject60 &src)
+{
+	m_word0 = src.m_word0;
+	m_word4 = src.m_word4;
+	m_word8 = src.m_word8;
+	m_matrix = src.m_matrix;
+	return *this;
+}
 
 // FUNCTION: BFME2 0x000B44F0 size=27 name=?write@Rva000B3F84Pair@@QAEHPAD@Z evidence=?:placeholder tier=A
 
@@ -181,6 +267,29 @@ Bool ModelConditionFlags::rva000B3EB3() const
 // FUNCTION: BFME2 0x000B4536 size=12 name=?get@Rva000B4536CmpBoolField@@QBE_NXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B4542 size=273 name=?GetRelativeAngle@Object@@QBEMPBVCoord3D@@@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+Real Object::GetRelativeAngle(const Coord3D *pos) const
+{
+	Coord3D delta;
+	delta.x = pos->x - m_cachedPos.x;
+	delta.y = pos->y - m_cachedPos.y;
+	Real distance = sqrt(delta.x * delta.x + delta.y * delta.y);
+	if (distance == 0.0f)
+		return 0.0f;
+	Real scale = 1.0f / distance;
+	delta.x *= scale;
+	delta.y *= scale;
+	const Coord3D *facing = getUnitDirectionVector2D();
+	Real cosine = delta.x * facing->x;
+	cosine += delta.y * facing->y;
+	if (cosine < -1.0)
+		cosine = -1.0f;
+	else if (cosine > 1.0)
+		cosine = 1.0f;
+	Real angle = ACos(cosine);
+	if (delta.y * facing->x - delta.x * facing->y < 0.0f)
+		angle = -angle;
+	return angle;
+}
 
 // FUNCTION: BFME2 0x000B4653 size=29 name=?rva000B4653@Rva000B4653@@QAEPAXH@Z evidence=?:placeholder tier=A
 
@@ -210,6 +319,34 @@ VertexMaterialClass *MaterialInfoClass::Get_Vertex_Material(int index)
 // FUNCTION: BFME2 0x000B49F9 size=35 name=?rva000B49F9@Rva000B49F9@@QAEEXZ evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B4A1C size=131 name=?pickRandomAnimation@AnimConditionInfo@@QAEHHH@Z evidence=N:ledger tier=A
+Int AnimConditionInfo::pickRandomAnimation(Int avoid, Int maximum)
+{
+	Int count = m_animations.size();
+	if (count > maximum)
+		count = maximum;
+	if (count < 2)
+		return 0;
+	Int total = 0;
+	for (Int i = 0; i < count; ++i)
+	{
+		Int weight = m_animations[i].m_weight;
+		if (i == avoid)
+			--weight;
+		total += weight;
+	}
+	Int pick = GetGameClientRandomValue(0, total - 1,
+		"C:\\projects\\bfme2patch103\\bfme2\\Code\\GameEngineDevice\\Source\\W3DDevice\\GameClient\\Drawable\\W3DScriptedModelDraw.cpp", 1118);
+	for (Int j = 0; j < count; ++j)
+	{
+		Int weight = m_animations[j].m_weight;
+		if (j == avoid)
+			--weight;
+		pick -= weight;
+		if (pick < 0)
+			return j;
+	}
+	return 0;
+}
 
 // FUNCTION: BFME2 0x000B4A9F size=22 name=?rva000B4A9F@Rva000B4A9F@@QAEPBDXZ evidence=?:placeholder tier=A
 
@@ -264,6 +401,10 @@ VertexMaterialClass *MaterialInfoClass::Get_Vertex_Material(int index)
 // FUNCTION: BFME2 0x000B5D7F size=564 name=?rva000B5D7F@W3DScriptedModelDraw@@QAEXPAVHAnimClass@@EHMMMEM@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000B5FBE size=23 name=?SetRampMeshOverload@W3DScriptedModelDraw@@UAEXPBDH@Z evidence=N:ledger tier=A
+void W3DScriptedModelDraw::SetRampMeshOverload(const char *name, Int index)
+{
+	m_rampNames[index].set(name);
+}
 
 // FUNCTION: BFME2 0x000B5FD5 size=17 name=?rva000B5FD5@W3DScriptedModelDraw@@UAEHXZ evidence=?:placeholder tier=A
 
@@ -328,6 +469,16 @@ AsciiString ModuleData::getBestModelNameForWB(const ModelConditionFlags &) const
 // FUNCTION: BFME2 0x000B6BF0 size=257 name=?findSingleSubObj@@YA_NPAVRenderObjClass@@ABVAsciiString@@AAVMatrix3D@@AAH@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x000B6D4B size=64 name=?bfmeInitVKE@BfmeThingVKE@@QAEPAV1@ABV1@@Z evidence=N:ledger tier=A
+BfmeThingVKE::BfmeThingVKE(const BfmeThingVKE &other)
+	: m_name(other.m_name)
+{
+	m_flag = other.m_flag;
+	m_word08 = other.m_word08;
+	m_word0C = other.m_word0C;
+	m_word10 = other.m_word10;
+	m_word14 = other.m_word14;
+	m_block = other.m_block;
+}
 
 // FUNCTION: BFME2 0x000B6D8B size=65 name=??0DelayedLuaEventList@@QAE@XZ evidence=N:ledger tier=A
 DelayedLuaEventList::DelayedLuaEventList()
@@ -453,6 +604,11 @@ template void BitFlags<591>::parseFromINI(INI *ini, void *instance, void *store,
 // FUNCTION: BFME2 0x000BBBF3 size=38 name=?Rva000BBBF3UninitializedCopy@@YAPAUTreeKey00242F5E@@PBU1@0PAU1@ABU__false_type@_STL@@@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000BBD1C size=37 name=?write@AsciiStringPlusString@@QAEHPAD@Z evidence=N:ledger tier=A
+int AsciiStringPlusString::write(char *dst)
+{
+	int written = AsciiStringRef::write(dst);
+	return written + m_second.write(dst + written);
+}
 
 // FUNCTION: BFME2 0x000BBD41 size=37 name=?write@AsciiStringPlusText@@QAEHPAD@Z evidence=N:ledger tier=A
 
@@ -547,6 +703,9 @@ template void BitFlags<591>::parseFromINI(INI *ini, void *instance, void *store,
 // FUNCTION: BFME2 0x000C0CE1 size=50 name=?Rva000C0CE1Copy@@YAPAUBfmeVectorRecord000C0BEC@@PAU1@00@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x000C0D7A size=41 name=??0BfmeStringTailRecord180@@QAE@XZ evidence=N:ledger tier=A
+BfmeStringTailRecord180::BfmeStringTailRecord180()
+{
+}
 
 // FUNCTION: BFME2 0x000C0DA3 size=53 name=??1BfmeStringTailRecord180@@QAE@XZ evidence=N:ledger tier=A
 
