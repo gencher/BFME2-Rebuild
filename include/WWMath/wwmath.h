@@ -16,6 +16,7 @@
 
 // Zero Hour's constants (wwmath.h).
 #define WWMATH_PI				3.141592654f
+#define RAD_TO_DEGF(x)			((x) * (180.0f / WWMATH_PI))
 
 // ----------------------------------------------------------------------------
 // Cos

@@ -8,6 +8,7 @@
 // Hypothesis rules: hypothesis:cohesion
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "WWMath/PlaneClass.h"
+#include "WWMath/wwmath.h"
 #include "GameClient/BaseHeightMapRenderObjClass.h"
 #include "GameClient/WorldHeightMap.h"
 #include "WW3D2/SceneClass.h"
@@ -19,6 +20,7 @@
 #include "Common/Xfer.h"
 #include "WW3D2/DX8DeviceLock.h"
 #include "WW3D2/dxwrapper.h"
+#include <math.h>
 #include <stdlib.h>
 // FUNCTION: BFME2 0x000664BE size=49 name=?Rva006C5BE0@@YANNH@Z evidence=?:placeholder tier=B hypothesis:mm1-neighbour-callers
 // FUNCTION: BFME2 0x000664EF size=5 name=?enable@Rva000664EFOneSetter@@QAEXXZ evidence=?:placeholder tier=B hypothesis:mm1-contiguity-callers
@@ -100,6 +102,61 @@ Real BaseHeightMapRenderObjClass::getMaxCellHeight(Real x, Real y) const
 // FUNCTION: BFME2 0x0006737E size=278 name=?evaluateAsVisibleCliff@BaseHeightMapRenderObjClass@@QAE_NHHM@Z evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x00067494 size=822 name=?CheckCorners@BaseHeightMapRenderObjClass@@QAEXHHHHHHPA_N0@Z evidence=N:ledger tier=A
+void BaseHeightMapRenderObjClass::CheckCorners(Int x, Int y, Int heightMax, Int heightMin, Int slopeMax, Int slopeMin, Bool *heightIn, Bool *slopeIn)
+{
+	*heightIn = true;
+	*slopeIn = true;
+
+	Coord3D normal;
+	Real py = y * MAP_XY_FACTOR;
+	Real px = x * MAP_XY_FACTOR;
+	Int height;
+	Real slopeX;
+	Real slopeY;
+	height = getHeightMapHeight(px, py, &normal);
+	if (height < heightMin || height > heightMax) {
+		*heightIn = false;
+	}
+	slopeX = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.x)));
+	slopeY = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.y)));
+	if (slopeMin > slopeX || slopeX > slopeMax || slopeMin > slopeY || slopeY > slopeMax) {
+		*slopeIn = false;
+	}
+
+	x++;
+	Real px2 = x * MAP_XY_FACTOR;
+	height = getHeightMapHeight(px2, py, &normal);
+	if (height < heightMin || height > heightMax) {
+		*heightIn = false;
+	}
+	slopeX = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.x)));
+	slopeY = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.y)));
+	if (slopeMin > slopeX || slopeX > slopeMax || slopeMin > slopeY || slopeY > slopeMax) {
+		*slopeIn = false;
+	}
+
+	y++;
+	Real py2 = y * MAP_XY_FACTOR;
+	height = getHeightMapHeight(px2, py2, &normal);
+	if (height < heightMin || height > heightMax) {
+		*heightIn = false;
+	}
+	slopeX = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.x)));
+	slopeY = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.y)));
+	if (slopeMin > slopeX || slopeX > slopeMax || slopeMin > slopeY || slopeY > slopeMax) {
+		*slopeIn = false;
+	}
+
+	height = getHeightMapHeight(px, py2, &normal);
+	if (height < heightMin || height > heightMax) {
+		*heightIn = false;
+	}
+	slopeX = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.x)));
+	slopeY = fabs(90.0f - RAD_TO_DEGF(atan2(normal.z, normal.y)));
+	if (slopeMin > slopeX || slopeX > slopeMax || slopeMin > slopeY || slopeY > slopeMax) {
+		*slopeIn = false;
+	}
+}
 
 // FUNCTION: BFME2 0x000677CA size=54 name=?rva000677CA@Rva000677CAHost@@QAE_NHHM@Z evidence=?:placeholder tier=A
 
