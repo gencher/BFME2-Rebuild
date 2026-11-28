@@ -32,6 +32,10 @@ class Xfer;
 #include "GameLogic/PathfindZoneManager.h"
 #include "GameLogic/PathfindCell.h"
 
+#define PATHFIND_CELL_SIZE		10
+#define PATHFIND_CELL_SIZE_F	10.0f
+#define LAYER_Z_CLOSE_ENOUGH_F	10.0f
+
 // Layers: getCell 0x002E6D62 indexes m_layers only for 1 < layer <= 15 and
 // otherwise reads the ground grid.
 enum PathfindLayerEnum

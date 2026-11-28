@@ -47,6 +47,7 @@ typedef char BridgeInfo_off_damageStateChanged[(offsetof(BridgeInfo, damageState
 typedef char BridgeInfo_size[(sizeof(BridgeInfo) == 0xA8) ? 1 : -1];
 
 class Drawable;
+struct Region2D;
 class PolygonTrigger;
 class Vector3;
 class Bridge
@@ -56,6 +57,7 @@ public:
 	Bool isPointOnBridge(const Coord3D *pos);
 	Drawable *getDrawable();
 	void updateDamageState();
+	Bool isCellOnEnd(const Region2D *cell);	// 0x0027C79C
 	Real getBridgeHeight(const Coord3D *pos, Coord3D *normal);	// 0x0027FD2A
 
 	Bridge *getNext() const { return m_next; }

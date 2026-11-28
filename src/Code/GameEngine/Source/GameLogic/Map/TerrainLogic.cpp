@@ -391,8 +391,95 @@ PathfindLayerEnum TerrainLogic::getHighestLayerForDestination(const Coord3D *pos
 }
 
 // FUNCTION: BFME2 0x002804B2 size=271 name=?objectInteractsWithBridgeLayer@TerrainLogic@@UBE_NPAVObject@@H_N@Z evidence=N:ledger tier=A
+Bool TerrainLogic::objectInteractsWithBridgeLayer(Object *obj, Int layer, Bool considerBridgeHealth) const
+{
+	if (layer == LAYER_GROUND)
+		return false;
+	Bridge *pBridge = getFirstBridge();
+
+	while (pBridge) {
+		if (pBridge->getLayer() == layer) {
+			Bool match = false;
+			if (pBridge->isPointOnBridge(obj->getPosition())) {
+				match = true;
+			}
+
+			Real radius = obj->getGeometryInfo()->getMajorRadius();
+			radius += PATHFIND_CELL_SIZE_F / 2.0f;
+			Region2D bounds;
+			bounds.lo.x = obj->getPosition()->x;
+			bounds.lo.y = obj->getPosition()->y;
+			bounds.hi = bounds.lo;
+			bounds.lo.x -= radius;
+			bounds.lo.y -= radius;
+			bounds.hi.x += radius;
+			bounds.hi.y += radius;
+			if (pBridge->isCellOnEnd(&bounds)) {
+				match = true;
+			}
+
+			if (match) {
+				Real bridgeHeight = pBridge->getBridgeHeight(obj->getPosition(), NULL);
+				Real delta = fabs(obj->getPosition()->z - bridgeHeight);
+				if (delta > LAYER_Z_CLOSE_ENOUGH_F) {
+					return false;
+				}
+
+				// A destroyed bridge cannot be interacted with.
+				if (considerBridgeHealth && pBridge->peekBridgeInfo()->curDamageState == BODY_RUBBLE) {
+					return false;
+				}
+
+				return true;
+			}
+			return false;
+		}
+
+		pBridge = pBridge->getNext();
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x002805C1 size=221 name=?objectInteractsWithBridgeEnd@TerrainLogic@@UBE_NPAVObject@@H@Z evidence=N:ledger tier=A
+Bool TerrainLogic::objectInteractsWithBridgeEnd(Object *obj, Int layer) const
+{
+	if (layer == LAYER_GROUND)
+		return false;
+	Bridge *pBridge = getFirstBridge();
+
+	while (pBridge) {
+		if (pBridge->getLayer() == layer) {
+			Bool match = false;
+
+			Real radius = obj->getGeometryInfo()->getMajorRadius();
+			radius += PATHFIND_CELL_SIZE_F / 2.0f;
+			Region2D bounds;
+			bounds.lo.x = obj->getPosition()->x;
+			bounds.lo.y = obj->getPosition()->y;
+			bounds.hi = bounds.lo;
+			bounds.lo.x -= radius;
+			bounds.lo.y -= radius;
+			bounds.hi.x += radius;
+			bounds.hi.y += radius;
+			if (pBridge->isCellOnEnd(&bounds)) {
+				match = true;
+			}
+
+			if (match) {
+				Real bridgeHeight = pBridge->getBridgeHeight(obj->getPosition(), NULL);
+				Real delta = fabs(obj->getPosition()->z - bridgeHeight);
+				if (delta > LAYER_Z_CLOSE_ENOUGH_F) {
+					return false;
+				}
+				return true;
+			}
+			return false;
+		}
+
+		pBridge = pBridge->getNext();
+	}
+	return false;
+}
 
 // FUNCTION: BFME2 0x0028069E size=220 name=?setActiveBoundary@TerrainLogic@@QAEXH@Z evidence=N:ledger tier=A
 
