@@ -6,6 +6,11 @@
 #include "Common/PlayerList.h"
 #include "Common/NameKeyGenerator.h"
 #include "Common/ScienceStore.h"
+#include "Common/Upgrade.h"
+#include "GameClient/ControlBar.h"
+#include "GameClient/CommandSet.h"
+#include "GameClient/CommandButton.h"
+#include "GameLogic/Module/ProductionUpdate.h"
 #include "GameLogic/TeamInQueue.h"
 #include "Common/Team.h"
 #include "Common/TeamFactory.h"
@@ -789,6 +794,97 @@ Bool AIPlayer::isSupplySourceSafe(Int minSupplies)
 
 
 // FUNCTION: BFME2 0x004F2C14 size=850 name=?buildUpgrade@AIPlayer@@QAEXABVAsciiString@@@Z evidence=N:ledger tier=A
+void AIPlayer::buildUpgrade(const AsciiString &upgrade)
+{
+	const UpgradeTemplate *theUpgrade = TheUpgradeCenter->findUpgrade(upgrade);
+	if (theUpgrade == NULL)
+	{
+		AsciiString msg = "Upgrade ";
+		msg.concat(upgrade);
+		msg.concat(" does not exist.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (theUpgrade->getUpgradeType() == UPGRADE_TYPE_OBJECT)
+	{
+		AsciiString msg = "Player build upgrade: Upgrade ";
+		msg.concat(upgrade);
+		msg.concat(" is an object, not a player upgrade.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (m_player->hasUpgradeInProduction(theUpgrade))
+	{
+		AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+		msg.concat(" already has upgrade ");
+		msg.concat(upgrade);
+		msg.concat(" queued.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (m_player->rva002AB87D(theUpgrade))
+	{
+		AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+		msg.concat(" already has upgrade ");
+		msg.concat(upgrade);
+		msg.concat(" completed.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+	if (!TheUpgradeCenter->canAffordUpgrade(m_player, theUpgrade, 0, false))
+	{
+		AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+		msg.concat(" lacks money to build upgrade ");
+		msg.concat(upgrade);
+		msg.concat(" at this time.  Ignoring request.");
+		TheScriptEngine->AppendDebugMessage(msg, false);
+		return;
+	}
+
+	for (Object *obj = TheGameLogic->getFirstObject(); obj != NULL; obj = obj->getNextObject())
+	{
+		if (obj->getControllingPlayer() != m_player)
+			continue;
+		if (obj->testStatus(OBJECT_STATUS_UNDER_CONSTRUCTION) || obj->testStatus(OBJECT_STATUS_SOLD))
+			continue;
+		Bool canBuild = false;
+		const CommandSet *commandSet = TheControlBar->findCommandSet(*obj->rva00290E67());
+		if (commandSet != NULL)
+		{
+			for (Int i = 0; i < 32; i++)
+			{
+				const CommandButton *button = commandSet->getCommandButton(i);
+				if (button != NULL && !button->getName().isEmpty())
+				{
+					const UpgradeTemplate *buttonUpgrade = button->getUpgradeTemplate();
+					if (buttonUpgrade != NULL && buttonUpgrade->getUpgradeName().compare(theUpgrade->getUpgradeName()) == 0)
+						canBuild = true;
+				}
+			}
+		}
+		if (!canBuild)
+			continue;
+		ProductionUpdateInterface *production = obj->getProductionUpdateInterface(false);
+		if (production == NULL)
+			continue;
+		if (production->queueUpgrade(theUpgrade))
+		{
+			AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+			msg.concat(" queues ");
+			msg.concat(theUpgrade->getUpgradeName());
+			msg.concat(" at ");
+			msg.concat(obj->getTemplate()->getName());
+			TheScriptEngine->AppendDebugMessage(msg, false);
+			return;
+		}
+	}
+
+	AsciiString msg = TheNameKeyGenerator->keyToName(m_player->getPlayerNameKey());
+	msg.concat(" lacks factory to build upgrade ");
+	msg.concat(upgrade);
+	msg.concat(" at this time.  Ignoring request.");
+	TheScriptEngine->AppendDebugMessage(msg, false);
+}
 
 // FUNCTION: BFME2 0x004F2F66 size=94 name=?repairStructure@AIPlayer@@UAEXW4ObjectID@@@Z evidence=N:ledger tier=A
 void AIPlayer::repairStructure(ObjectID structure)
