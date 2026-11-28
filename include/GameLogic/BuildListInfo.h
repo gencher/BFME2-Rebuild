@@ -30,6 +30,7 @@ public:
 	// memberwise ones: the ten dwords at +0x50 are copied in member order (rep movs).
 	BuildListInfo *duplicate();
 	AsciiString getScript() const;
+	AsciiString getTemplateName() const;				// 0x000AF1DD (the shared 27-byte copy of the string at +0x08: AIPlayer::computeCenterAndRadiusOfBase calls it for every entry)
 	void setBuildingName(AsciiString name);				// 0x0032A438 (m_buildingName = name; the map spells it ?rva0032A438@Rva0032A438@@QAEXVAsciiString@@@Z; callers 0x0032CF16, 0x0032F22D, 0x0032F6BC are the build list parsers)
 	void setScript(AsciiString script);					// 0x0032A46C (m_script = script; the map spells it ?rva0032A46C@Rva0032A46C@@QAEXVAsciiString@@@Z; callers 0x0032CFAA, 0x0032F2B9)
 	void setSupplyBuilding(Bool isSupplyBuilding);

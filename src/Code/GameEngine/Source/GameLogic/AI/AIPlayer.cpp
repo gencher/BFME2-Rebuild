@@ -642,6 +642,63 @@ Bool AIPlayer::isAGoodIdeaToBuildTeam(TeamPrototype *proto)
 // FUNCTION: BFME2 0x004F1653 size=430 name=?checkQueuedTeams@AIPlayer@@MAEXXZ evidence=N:ledger tier=A
 
 // FUNCTION: BFME2 0x004F1801 size=466 name=?computeCenterAndRadiusOfBase@AIPlayer@@IAEXPAVCoord3D@@PAM@Z evidence=X:retail PE exports class Coord3D: ??0Matrix4D@@QAE@ABVCoord3D@@@Z tier=A
+void AIPlayer::computeCenterAndRadiusOfBase(Coord3D *center, Real *radius)
+{
+	BuildListInfo *info;
+	Coord2D totalPos;
+	totalPos.x = 0;
+	totalPos.y = 0;
+	Int numBldg = 0;
+	for (info = m_player->getBuildList(); info; info = info->m_next)
+	{
+		AsciiString name = info->getTemplateName();
+		if (name.isEmpty())
+			continue;
+		const ThingTemplate *bldgPlan = TheThingFactory->findTemplate(name);
+		if (!bldgPlan)
+			continue;
+		Real px = info->m_location.x;
+		Real py = info->m_location.y;
+		totalPos.x += px;
+		totalPos.y += py;
+		numBldg++;
+	}
+	if (numBldg > 0)
+	{
+		totalPos.x /= numBldg;
+		totalPos.y /= numBldg;
+	}
+
+	m_baseCenterSet = numBldg > 0;
+	center->x = totalPos.x;
+	center->y = totalPos.y;
+
+	Real maxRadSqr = 0;
+	for (info = m_player->getBuildList(); info; info = info->m_next)
+	{
+		AsciiString name = info->getTemplateName();
+		if (name.isEmpty())
+			continue;
+		const ThingTemplate *bldgPlan = TheThingFactory->findTemplate(name);
+		if (!bldgPlan)
+			continue;
+		Real px = info->m_location.x;
+		Real py = info->m_location.y;
+		Real dx = px - center->x;
+		Real dy = py - center->y;
+		if (dx < 0)
+			dx = -dx;
+		if (dy < 0)
+			dy = -dy;
+		Real bldgRadius = bldgPlan->m_geometryInfo.m_majorRadius * 0.4f;
+		dx += bldgRadius;
+		dy += bldgRadius;
+		Real radSqr = dx * dx + dy * dy;
+		if (radSqr > maxRadSqr)
+			maxRadSqr = radSqr;
+	}
+	*radius = sqrt(maxRadSqr);
+}
 
 // FUNCTION: BFME2 0x004F19D3 size=35 name=?dozerInQueue@AIPlayer@@IAE_NXZ evidence=N:ledger tier=A
 Bool AIPlayer::dozerInQueue()
