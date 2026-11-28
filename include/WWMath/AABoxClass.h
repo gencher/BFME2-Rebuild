@@ -33,6 +33,7 @@ public:
 	}
 
 	void Init(const MinMaxAABoxClass &minmaxbox);
+	__forceinline void Init(Vector3 *points, int num);
 	void Init_Random(float min_center, float max_center, float min_extent, float max_extent);	// 0x00719730
 	static void Transform(const Matrix3D &tm, const AABoxClass &in, AABoxClass *out);		// 0x007197B0
 	// Zero Hour aabox.h: MeshClass::Update_Cached_Bounding_Volumes 0x0014B650 copies the centre and
@@ -71,6 +72,25 @@ public:
 	Vector3 MinCorner;		// +0x00
 	Vector3 MaxCorner;		// +0x0C
 };
+
+__forceinline void AABoxClass::Init(Vector3 *points, int num)
+{
+	Vector3 Min = points[0];
+	Vector3 Max = points[0];
+
+	for (int i = 1; i < num; i++) {
+		if (Min.X > points[i].X) Min.X = points[i].X;
+		if (Min.Y > points[i].Y) Min.Y = points[i].Y;
+		if (Min.Z > points[i].Z) Min.Z = points[i].Z;
+
+		if (Max.X < points[i].X) Max.X = points[i].X;
+		if (Max.Y < points[i].Y) Max.Y = points[i].Y;
+		if (Max.Z < points[i].Z) Max.Z = points[i].Z;
+	}
+
+	Center = (Max + Min) * 0.5f;
+	Extent = (Max - Min) * 0.5f;
+}
 
 inline void AABoxClass::Init(const MinMaxAABoxClass &minmaxbox)
 {

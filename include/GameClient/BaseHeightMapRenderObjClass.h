@@ -19,6 +19,7 @@
 #include "WW3D2/DX8CleanupHook.h"
 
 class W3DTerrainLogic;
+class FrustumClass;
 class DataChunkOutput;
 class WorldHeightMap;
 class W3DShroud;
@@ -84,6 +85,7 @@ public:
 	virtual Real getMaxCellHeight(Real x, Real y) const;
 	virtual Int vslot147() = 0;
 
+	Bool getMaximumVisibleBox(const FrustumClass &frustum, AABoxClass *box, Bool ignoreMaxHeight);
 	void CheckCorners(Int x, Int y, Int heightMax, Int heightMin, Int slopeMax, Int slopeMin, Bool *heightIn, Bool *slopeIn);
 	Bool isClearLineOfSight(const Coord3D &start, const Coord3D &end) const;
 	void removeAllTerrainBibs();

@@ -9,6 +9,7 @@
 // Portions derived from Command & Conquer Generals and Command & Conquer Generals Zero Hour, (c) Electronic Arts Inc., GPL-3.0-or-later; see LICENSE and NOTICE.
 #include "WWMath/PlaneClass.h"
 #include "WWMath/wwmath.h"
+#include "WWMath/FrustumClass.h"
 #include "GameClient/BaseHeightMapRenderObjClass.h"
 #include "GameClient/WorldHeightMap.h"
 #include "WW3D2/SceneClass.h"
@@ -433,6 +434,31 @@ void BaseHeightMapRenderObjClass::Get_Obj_Space_Bounding_Box(AABoxClass &box) co
 // FUNCTION: BFME2 0x0006B187 size=115 name=?rva0006B187@BaseHeightMapRenderObjClass@@QAEEMM@Z evidence=?:placeholder tier=A
 
 // FUNCTION: BFME2 0x0006B1FA size=505 name=?getMaximumVisibleBox@BaseHeightMapRenderObjClass@@QAE_NABVFrustumClass@@PAVAABoxClass@@_N@Z evidence=N:ledger tier=A
+Bool BaseHeightMapRenderObjClass::getMaximumVisibleBox(const FrustumClass &frustum, AABoxClass *box, Bool ignoreMaxHeight)
+{
+	// create a plane from the lowest point on the terrain
+	PlaneClass groundPlane(Vector3(0, 0, 1), m_minHeight);
+
+	// clip each side of the view frustum to the ground plane
+	float clipFraction;
+	Vector3 ClippedCorners[8];
+	ClippedCorners[0] = frustum.Corners[0];
+	for (Int i = 0; i < 4; i++) {
+		ClippedCorners[i] = frustum.Corners[i];
+		if (groundPlane.Compute_Intersection(frustum.Corners[i], frustum.Corners[i + 4], &clipFraction)) {
+			// edge intersects the terrain
+			ClippedCorners[i + 4] = frustum.Corners[i] + (frustum.Corners[i + 4] - frustum.Corners[i]) * clipFraction;
+		} else {
+			ClippedCorners[i + 4] = frustum.Corners[i + 4];
+		}
+	}
+
+	if (box) {
+		box->Init(ClippedCorners, 8);
+	}
+
+	return true;
+}
 
 // FUNCTION: BFME2 0x0006B3F3 size=217 name=?rva0006B3F3@BaseHeightMapRenderObjClass@@QAEXXZ evidence=?:placeholder tier=A
 
